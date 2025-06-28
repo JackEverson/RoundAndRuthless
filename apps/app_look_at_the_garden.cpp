@@ -3,19 +3,12 @@
 
 
 int main() {
+	std::string name = "Look At The Garden!";
+	GardenEngine engine(name, 1920, 1080);
 
-	std::cout << "Hello Garden!" << std::endl;
-	
-	int test = 6;
+	int engine_test_result = engine.Start();
 
-	test += 6;
-
-	GardenEngine engine;
-
-	std::string name = "Look At The Garden";
-	int engine_test_result = engine.testengine(name);
-
-	std::cout << "engine test result: " << engine_test_result << std::endl;
+	std::cout << "Engine Exit code: " << engine_test_result << std::endl;
 	
 	return engine_test_result;
 }

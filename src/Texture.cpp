@@ -1,8 +1,10 @@
 #include "Texture.hpp"
-
 #include "Renderer.hpp"
-#include "stb_image.h"
+
 #include <GL/gl.h>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 
 Texture::Texture(const std::string & path)
