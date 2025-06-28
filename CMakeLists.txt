@@ -25,12 +25,32 @@ target_include_directories(glfw INTERFACE ${CMAKE_SOURCE_DIR}/external/glfw3/inc
 # find_library(glfw NAMES glfw3 PATHS external/glfw3/lib)
 # target_include_directories(glfw PUBLIC external/glfw3/include)
 
+#stb_image
+add_library(stb_image INTERFACE)
+target_include_directories(stb_image INTERFACE external/stb_image/)
 
 #GardenEngine
-add_library(GardenEngine STATIC src/Engine.cpp include/Engine.hpp)
-target_include_directories(GardenEngine PUBLIC include external/glfw3/include)
+set(GargenEngine_src src)
+set(GardenEngine_include include)
+set(GardenEngine_src_files
+	${GargenEngine_src}/Engine.cpp
+	${GargenEngine_src}/IndexBuffer.cpp
+	${GargenEngine_src}/Renderer.cpp
+	${GargenEngine_src}/Shader.cpp
+	${GargenEngine_src}/Texture.cpp
+	${GargenEngine_src}/VertexArray.cpp
+	${GargenEngine_src}/VertexBuffer.cpp
+	${GargenEngine_src}/VertexBufferLayout.cpp
+)
+
+add_library(GardenEngine STATIC ${GardenEngine_src_files})
+target_include_directories(GardenEngine PUBLIC ${GardenEngine_include} )
 target_compile_features(GardenEngine PUBLIC cxx_std_17)
-target_link_libraries(GardenEngine PUBLIC glad glfw)
+target_link_libraries(GardenEngine PUBLIC 
+	glad 
+	glfw
+	stb_image 
+)
 
 #Copy shaders and textures into build
 file(GLOB res_files "${PROJECT_SOURCE_DIR}/res/*")
@@ -42,5 +62,5 @@ add_custom_target(res_files
 )
 
 #LookAtTheGarden executable
-add_executable(${PROJECT_NAME} APP_look_at_the_garden/main.cpp)
+add_executable(${PROJECT_NAME} apps/app_look_at_the_garden.cpp)
 target_link_libraries(${PROJECT_NAME} PUBLIC GardenEngine)
