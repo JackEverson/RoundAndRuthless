@@ -11,13 +11,15 @@ public:
 	void AddBug(int index) override;
 
 private:
-
+	
+	VertexArray m_vao;
+	VertexBuffer m_vbo;
+	IndexBuffer m_ebo;
 	Texture m_texture;
 	Shader m_shader;
 
-	unsigned int VAO = 0;
-	unsigned int VBO = 0;
-	unsigned int EBO = 0;
 
+	float* m_vertices;
+	unsigned int m_verticesCount = 0;
 
 };

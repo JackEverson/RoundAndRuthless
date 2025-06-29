@@ -35,6 +35,7 @@ GardenEngine::GardenEngine(std::string name, int win_width, int win_height)
 
     // set windowed
     m_window = glfwCreateWindow(win_width, win_height, name.c_str(), NULL, NULL);
+    //glfwSwapInterval(1);
 
     if (!m_window)
     {
@@ -67,7 +68,7 @@ int GardenEngine::Start(){
 
     
     GrubWrangler grubs;
-    grubs.AddBug(1);
+    //grubs.AddBug(1);
 
 
     // Render loop!!!!!
