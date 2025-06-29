@@ -1,0 +1,19 @@
+{
+  "OutputFoldersPerTargetSystem": {
+    "Local Machine": [
+      "out\\build\\x64-Debug",
+      "out\\install\\x64-Debug"
+    ]
+  },
+  "ExpandedNodes": [
+    "",
+    "\\include",
+    "\\include\\bugs",
+    "\\res",
+    "\\res\\shaders",
+    "\\src",
+    "\\src\\bugs"
+  ],
+  "SelectedNode": "\\res\\shaders\\basictexture.shader",
+  "PreviewInSolutionExplorer": false
+}

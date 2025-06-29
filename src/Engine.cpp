@@ -1,13 +1,9 @@
 #include <iostream>  
 #include <string>
 
+#include "bugs/GrubWrangler.hpp"
+
 #include "Engine.hpp"
-#include "Renderer.hpp"
-#include "IndexBuffer.hpp"
-#include "Shader.hpp"
-#include "Texture.hpp"
-#include "VertexArray.hpp"
-#include "VertexBuffer.hpp"
 
 
 GardenEngine::GardenEngine(std::string name, int win_width, int win_height)
@@ -68,55 +64,23 @@ GardenEngine::~GardenEngine()
 int GardenEngine::Start(){
     std::cout << "GardenEngine Warming Up...." << std::endl;
 
-    // some hard coded stuff
-    const float vertices[] = {
- 0.5f,  0.5f, 0.0f, 1.0f, 1.0f,  // top right
- 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, // bottom right
--0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // bottom left
--0.5f,  0.5f, 0.0f, 0.0f, 1.0f// top left 
-    };
 
-    unsigned int indices[] = {
-    0, 1, 3,
-    1, 2, 3,
-    };
-
-    GLCall(glEnable(GL_BLEND));
-    GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-
-    Renderer renderer;
-    VertexArray va;
-    VertexBuffer vb(vertices, 4 * 5 * sizeof(float));
-
-    VertexBufferLayout layout;
-    layout.Push<float>(3);
-    layout.Push<float>(2);
-    va.AddBuffer(vb, layout);
-
-    IndexBuffer ib(indices, 6);
-
-    // Shader shader ("res/shaders/basic.shader");
-    Shader shader("res/shaders/basictexture.shader");
-    shader.Bind();
-
-    // Texture texture("res/textures/container.jpg");
-    // Texture texture("res/textures/container2.png");
-    Texture texture("res/textures/sushi.png");
-    texture.Bind();
     
+    GrubWrangler grubs;
+    grubs.AddBug(1);
+
+
     // Render loop!!!!!
     std::cout << "GardenEngine finished warming up! Starting Rendering..." << std::endl;
 
     while (!glfwWindowShouldClose(m_window)) {
         processInput();
 
-        renderer.Clear(red, 0.2f, 0.2f, 0.2f);
-        shader.SetUniform3f("aColor", 0.0f, 0.0f, 0.0f);
-        shader.SetUniform3f("aLoc", locx, locy, locz);
-        shader.SetUniform1i("atexCoord", 0);
+        glClearColor(0.1, 0.4f, 0.2f, 1.0f);
+        GLCall(glClear(GL_COLOR_BUFFER_BIT));
 
-        renderer.Draw(va, ib, shader);
 
+        grubs.Render();
 
         GLCall(glfwSwapBuffers(m_window));
         GLCall(glfwPollEvents());
@@ -142,21 +106,21 @@ void GardenEngine::processInput() {
         std::cout << "left click detected at x: " << xpos << ", y: " << ypos << std::endl;
     }
 
-    if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS) {
-        locy += 0.001f;
-    }
-    if (glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS) {
-        locy -= 0.001f;
-    }
-    if (glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS) {
-        locx -= 0.001f;
-    }
-    if (glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS) {
-        locx += 0.001f;
-    }
-    if (glfwGetKey(m_window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-        approach = true;
-    }
+    //if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS) {
+    //    locy += 0.001f;
+    //}
+    //if (glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS) {
+    //    locy -= 0.001f;
+    //}
+    //if (glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS) {
+    //    locx -= 0.001f;
+    //}
+    //if (glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS) {
+    //    locx += 0.001f;
+    //}
+    //if (glfwGetKey(m_window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+    //    approach = true;
+    //}
 
     //if (approach) {
     //    //locz -= 0.0001f;

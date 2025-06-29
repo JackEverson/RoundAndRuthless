@@ -28,10 +28,11 @@ target_include_directories(glfw INTERFACE ${CMAKE_SOURCE_DIR}/external/glfw3/inc
 add_library(stb_image INTERFACE)
 target_include_directories(stb_image INTERFACE external/stb_image/)
 
-#my libraries
+#my libraries and resources
 #GardenEngine
 set(GardenEngine_src src)
-set(GardenEngine_include include)
+set(GardenEngine_include include )
+set(GardenEngine_include_bugs include/bugs )
 set(GardenEngine_src_files
 	${GardenEngine_src}/Engine.cpp
 	${GardenEngine_src}/IndexBuffer.cpp
@@ -41,6 +42,10 @@ set(GardenEngine_src_files
 	${GardenEngine_src}/VertexArray.cpp
 	${GardenEngine_src}/VertexBuffer.cpp
 	${GardenEngine_src}/VertexBufferLayout.cpp
+
+	${GardenEngine_src}/bugs/BugWrangler.cpp
+	${GardenEngine_src}/bugs/GrubWrangler.cpp
+
 	# include files included for IDE sake
 	${GardenEngine_include}/Engine.hpp
 	${GardenEngine_include}/IndexBuffer.hpp
@@ -50,10 +55,13 @@ set(GardenEngine_src_files
 	${GardenEngine_include}/VertexArray.hpp
 	${GardenEngine_include}/VertexBuffer.hpp
 	${GardenEngine_include}/VertexBufferLayout.hpp
+
+	${GardenEngine_include_bugs}/BugWrangler.hpp
+	${GardenEngine_include_bugs}/GrubWrangler.hpp
 )
 
 add_library(GardenEngine STATIC ${GardenEngine_src_files})
-target_include_directories(GardenEngine PUBLIC ${GardenEngine_include} )
+target_include_directories(GardenEngine PUBLIC ${GardenEngine_include} ${GardenEngine_include_bugs} )
 target_compile_features(GardenEngine PUBLIC cxx_std_17)
 target_link_libraries(GardenEngine PUBLIC 
 	glad 
@@ -61,7 +69,7 @@ target_link_libraries(GardenEngine PUBLIC
 	stb_image 
 )
 
-#Copy shaders and textures into build
+#Copy Resources
 add_custom_target(copy_resources
 	COMMENT "Copying Resources"
 )
