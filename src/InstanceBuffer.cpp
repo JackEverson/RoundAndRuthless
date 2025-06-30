@@ -1,7 +1,6 @@
-#include "VertexBuffer.hpp"
-#include "Renderer.hpp"
+#include "InstanceBuffer.hpp"
 
-VertexBuffer::VertexBuffer(const void* data, unsigned int size) :
+InstanceBuffer::InstanceBuffer(const void* data, unsigned int size) :
     m_init_size(size)
 {
     GLCall(glGenBuffers(1, &m_RendererID));
@@ -9,8 +8,7 @@ VertexBuffer::VertexBuffer(const void* data, unsigned int size) :
     GLCall(glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW));
 }
 
-VertexBuffer::VertexBuffer():
-    m_init_size(20) {
+VertexBuffer::VertexBuffer() {
     float vertices[] = {
      0.1f,  0.1f, 1.0f, 1.0f, 1.0f,  // top right
      0.1f, -0.1f, 1.0f, 1.0f, 0.0f, // bottom right
@@ -24,7 +22,7 @@ VertexBuffer::VertexBuffer():
 }
 
 
-VertexBuffer::~VertexBuffer(){
+VertexBuffer::~VertexBuffer() {
     GLCall(glDeleteBuffers(1, &m_RendererID));
 }
 
@@ -44,9 +42,9 @@ void VertexBuffer::Update(const void* data, unsigned int size) {
 
 }
 
-void VertexBuffer::Bind() const{
+void VertexBuffer::Bind() const {
     GLCall(glBindBuffer(GL_ARRAY_BUFFER, m_RendererID));
 }
-void VertexBuffer::Unbind() const{
+void VertexBuffer::Unbind() const {
     GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }

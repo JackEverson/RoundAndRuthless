@@ -11,7 +11,7 @@ public:
 	virtual ~BugWrangler() = default;
 
 	virtual void Render() = 0;
-	virtual void AddBug(int index) = 0;
+	virtual void AddBug(int index, float x, float y) = 0;
 
 
 

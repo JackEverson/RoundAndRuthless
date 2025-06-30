@@ -1,5 +1,6 @@
 #include <iostream>  
 #include <string>
+#include <print>
 
 #include "bugs/GrubWrangler.hpp"
 
@@ -8,7 +9,7 @@
 
 GardenEngine::GardenEngine(std::string name, int win_width, int win_height)
 {
-    std::cout << "Creating Window and GardenEngine..." << std::endl;
+    std::println("Creating Window and GardenEngine...");
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
@@ -18,10 +19,10 @@ GardenEngine::GardenEngine(std::string name, int win_width, int win_height)
     int monitor_count;
     GLFWmonitor** _monitors = glfwGetMonitors(&monitor_count);
     if (!monitor_count) {
-        std::cout << "GLFWmonitor found monitors to be null" << std::endl;
+        std::println("GLFWmonitor found monitors to be null");
         throw std::runtime_error("GLFWMonitor found monitors to be null");
     }
-    std::cout << "GLFWmonitors has found " << monitor_count << " monitors" << std::endl;
+    std::println("GLFWmonitors has found {} monitors", monitor_count);
     for (int i = 0; i < monitor_count; i++) {
         const GLFWvidmode* mode = glfwGetVideoMode(_monitors[i]);
         std::cout << "Monitor " << i << ", " << _monitors[i] << ", has resolution " << mode->width << "x" << mode->height << std::endl;
@@ -39,7 +40,7 @@ GardenEngine::GardenEngine(std::string name, int win_width, int win_height)
 
     if (!m_window)
     {
-        std::cout << "Failed to create GLFW window" << std::endl;
+        std::println("Failed to create GLFW window");
         glfwTerminate();
         throw std::runtime_error("Failed to create GLFW window");
     }
@@ -48,12 +49,12 @@ GardenEngine::GardenEngine(std::string name, int win_width, int win_height)
     glfwSetFramebufferSizeCallback(m_window, framebuffer_size_callback);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cout << "Failed to initialize OpenGL context" << std::endl;
+        std::println("Failed to initialize OpenGL context");
         throw std::runtime_error("Failed to initialize OpenGL context through gladLoadGLLoader");
     }
     GLCall(glViewport(0, 0, win_width, win_height));
 
-    std::cout << "Window and GardenEngine Created!" << std::endl;
+    std::println("Window and GardenEngine Created!");
 }
 
 GardenEngine::~GardenEngine()
@@ -63,16 +64,14 @@ GardenEngine::~GardenEngine()
 
 
 int GardenEngine::Start(){
-    std::cout << "GardenEngine Warming Up...." << std::endl;
+    std::println("GardenEngine Warming Up....");
 
-
-    
     GrubWrangler grubs;
     //grubs.AddBug(1);
 
 
     // Render loop!!!!!
-    std::cout << "GardenEngine finished warming up! Starting Rendering..." << std::endl;
+    std::println("GardenEngine finished warming up! Starting Rendering...");
 
     while (!glfwWindowShouldClose(m_window)) {
         processInput();
@@ -92,7 +91,7 @@ int GardenEngine::Start(){
 
     
     glfwTerminate();
-    std::cout << "GardenEngine Exited Successfully!" << std::endl;
+    std::println("GardenEngine Exited Successfully!");
     return 0;
 }
 
@@ -104,7 +103,7 @@ void GardenEngine::processInput() {
         double xpos, ypos;
         glfwGetCursorPos(m_window, &xpos, &ypos);
 
-        std::cout << "left click detected at x: " << xpos << ", y: " << ypos << std::endl;
+        std::println("left click detected at x: {}, y: {}", xpos, ypos);
     }
 
     //if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS) {
