@@ -20,6 +20,7 @@ private:
 	Shader m_shader;
 
 	unsigned int m_grub_count = 0;
+	const unsigned int m_max_grub = 100000;
 
 	float* m_vertices;
 	unsigned int m_verticesCount = 0;

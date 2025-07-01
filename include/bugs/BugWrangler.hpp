@@ -1,3 +1,6 @@
+#ifndef BUG_WRANGLER_HPP
+#define BUG_WRANGLER_HPP
+
 #include "IndexBuffer.hpp"
 #include "VertexBuffer.hpp"
 #include "VertexArray.hpp"
@@ -8,6 +11,7 @@
 class BugWrangler {
 
 public:
+	
 	virtual ~BugWrangler() = default;
 
 	virtual void Render() = 0;
@@ -20,3 +24,5 @@ private:
 
 
 };
+
+#endif

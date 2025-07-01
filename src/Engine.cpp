@@ -1,10 +1,11 @@
 #include <iostream>  
 #include <string>
 #include <print>
+#include <chrono>
+#include <thread>
 
 
 #include "Engine.hpp"
-#include "bugs/GrubWrangler.hpp"
 
 
 
@@ -36,7 +37,7 @@ GardenEngine::GardenEngine(std::string name, int win_width, int win_height)
 
     // set windowed
     m_window = glfwCreateWindow(win_width, win_height, name.c_str(), NULL, NULL);
-    //glfwSwapInterval(1);
+    glfwSwapInterval(0);
 
     if (!m_window)
     {
@@ -54,41 +55,49 @@ GardenEngine::GardenEngine(std::string name, int win_width, int win_height)
     }
     GLCall(glViewport(0, 0, win_width, win_height));
 
+    m_grubs = new GrubWrangler();
+
     std::println("Window and GardenEngine Created!");
 }
 
 GardenEngine::~GardenEngine()
 {
-
+    delete m_grubs;
+    m_grubs = nullptr;
 }
 
 
-int GardenEngine::Start(){
+int GardenEngine::Start(float fps){
     std::println("GardenEngine Warming Up....");
-
-    GrubWrangler grubs;
-    /*grubs.AddBug(1);*/
-
-    GrubWrangler grubs2;
-
 
     // Render loop!!!!!
     std::println("GardenEngine finished warming up! Starting Rendering...");
+    glClearColor(0.1, 0.4f, 0.2f, 1.0f);
+
+    int frame_time_limit_ms = (int)((1 / fps) * 1000);
 
     while (!glfwWindowShouldClose(m_window)) {
-        processInput();
+        
+        // start
+        auto start_time = std::chrono::high_resolution_clock::now();
 
-        glClearColor(0.1, 0.4f, 0.2f, 1.0f);
+        processInput();
         GLCall(glClear(GL_COLOR_BUFFER_BIT));
 
-
-        grubs.Render();
+        m_grubs->Render();
 
         GLCall(glfwSwapBuffers(m_window));
         GLCall(glfwPollEvents());
 
 
-        glClear(GL_COLOR_BUFFER_BIT);
+        //finish and fps limit
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto duration = end_time - start_time;
+        int ms = (int)std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+        //std::println("Time elapsed to generate frame: {}", ms);
+        int waittime = frame_time_limit_ms - ms;
+        if (waittime < 0) std::println("WARNING, cannot keep up with set FPS. FPS currently at {}", 1000 / ms);
+        else std::this_thread::sleep_for(std::chrono::milliseconds(waittime));
     }
 
     
@@ -104,8 +113,16 @@ void GardenEngine::processInput() {
     if (glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
         double xpos, ypos;
         glfwGetCursorPos(m_window, &xpos, &ypos);
+        
+        int w, h;
+        glfwGetWindowSize(m_window, &w, &h);
 
-        std::println("left click detected at x: {}, y: {}", xpos, ypos);
+        double nxpos = xpos / w;
+        double nypos = 1 - (ypos / h);
+
+        //std::println("left click detected at x: {}-{}, y: {}-{}", nxpos, xpos, nypos, ypos);
+
+        m_grubs->AddBug(1, nxpos - 0.5f, nypos - 0.5f);
     }
 
     //if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS) {

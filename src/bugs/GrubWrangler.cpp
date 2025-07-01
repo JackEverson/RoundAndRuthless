@@ -1,6 +1,8 @@
 #include <iostream>  
 #include <string>
 
+#include <glm/glm.hpp>
+
 #include "GrubWrangler.hpp"
 #include "Texture.hpp"
 #include "Shader.hpp"
@@ -12,10 +14,10 @@ GrubWrangler::GrubWrangler() :
 {
 
     float vertices[] = {
-         1.0f,  1.0f, 1.0f, 1.0f, 1.0f,  // top right
-         1.0f, -1.0f, 1.0f, 1.0f, 0.0f, // bottom right
-        -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, // bottom left
-        -1.0f,  1.0f, 1.0f, 0.0f, 1.0f  // top left 
+         0.1f,  0.1f, 0.0f, 1.0f, 1.0f,  // top right
+         0.1f, -0.1f, 0.0f, 1.0f, 0.0f, // bottom right
+        -0.1f, -0.1f, 0.0f, 0.0f, 0.0f, // bottom left
+        -0.1f,  0.1f, 0.0f, 0.0f, 1.0f  // top left 
     };
     m_vbo.Update(vertices, sizeof(vertices));
 
@@ -24,29 +26,21 @@ GrubWrangler::GrubWrangler() :
     layout.Push<float>(2);
     m_vao.AddBuffer(m_vbo, layout);
 
-    //////
-    float instance[] = {
-        0.8f, 0.5f,  0.0f,
-        -0.8f, 0.5f,  0.0f,
-        0.0f,  0.0f,  0.0f,
-         0.8f, -1.0f,  0.0f,
-        -0.8f, -1.0f,  0.0f,
-    };
-    m_grub_count = 5;
-    /////
-
-    m_ivbo.Update(instance, sizeof(instance));
+    m_vertices = new float[m_max_grub * 3];
+    m_ivbo.Update(m_vertices, sizeof(float) * m_max_grub * 3);
     m_vao.AddInstancedBuffer(m_ivbo, 3);
 
     //unsigned int indices[]{
-        //0, 1, 3,
-        //1, 2, 3
-            //};
+    //    0, 1, 3,
+    //    1, 2, 3
+    //        };
     //m_ebo = IndexBuffer(indices, 6);
 }
 
 GrubWrangler::~GrubWrangler()
 {
+    delete m_vertices;
+    m_vertices = nullptr;
 }
 
 void GrubWrangler::Render()
@@ -70,16 +64,20 @@ void GrubWrangler::Render()
 
 void GrubWrangler::AddBug(int index, float x, float y) 
 {
-    /*GLCall(glBindVertexArray(m_vao));
-    GLCall(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
-    GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo));*/
+    m_grub_count++;
+    m_grub_count = m_grub_count % m_max_grub;
 
-    //const float vertices[] = {
-    //     0.6f,  0.6f, 1.0f, 1.0f, 1.0f,  // top right
-    //     0.6f, -0.6f, 1.0f, 1.0f, 0.0f, // bottom right
-    //    -0.6f, -0.6f, 1.0f, 0.0f, 0.0f, // bottom left
-    //    -0.6f,  0.6f, 1.0f, 0.0f, 1.0f// top left 
-    //};
-    //GLCall(glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * 5 * 4, &vertices));
+    m_vertices[m_grub_count * 3 + 0] = x;
+    m_vertices[m_grub_count * 3 + 1] = y;
+    m_vertices[m_grub_count * 3 + 2] = 0.0f;
 
+
+    m_ivbo.Bind();
+    m_vao.Bind();
+
+
+    GLCall(glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * m_max_grub * 3, m_vertices));
+
+    m_ivbo.Unbind();
+    m_vao.Unbind();
 }

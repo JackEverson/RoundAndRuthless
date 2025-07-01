@@ -3,6 +3,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include "bugs/GrubWrangler.hpp"
+
 
 
 class GardenEngine
@@ -11,12 +13,15 @@ public:
 	GardenEngine(std::string, int win_width, int win_height);
 	~GardenEngine();
 	
-	int Start();
+	int Start(float fps);
 
 
 private:
 	
 	GLFWwindow* m_window;
+
+	GrubWrangler* m_grubs;
+
 
 	void processInput();
 	//void processInput(GLFWwindow* window);
