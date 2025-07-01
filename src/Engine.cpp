@@ -2,9 +2,10 @@
 #include <string>
 #include <print>
 
-#include "bugs/GrubWrangler.hpp"
 
 #include "Engine.hpp"
+#include "bugs/GrubWrangler.hpp"
+
 
 
 GardenEngine::GardenEngine(std::string name, int win_width, int win_height)
@@ -27,7 +28,6 @@ GardenEngine::GardenEngine(std::string name, int win_width, int win_height)
         const GLFWvidmode* mode = glfwGetVideoMode(_monitors[i]);
         std::cout << "Monitor " << i << ", " << _monitors[i] << ", has resolution " << mode->width << "x" << mode->height << std::endl;
     }
-
 
     //// set fullscreen
     // GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
@@ -67,7 +67,9 @@ int GardenEngine::Start(){
     std::println("GardenEngine Warming Up....");
 
     GrubWrangler grubs;
-    //grubs.AddBug(1);
+    /*grubs.AddBug(1);*/
+
+    GrubWrangler grubs2;
 
 
     // Render loop!!!!!

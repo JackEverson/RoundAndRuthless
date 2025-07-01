@@ -16,17 +16,20 @@ endif()
 add_library(glad STATIC external/glad/src/glad.c)
 target_include_directories(glad PUBLIC external/glad/include)
 
+##GLFW
+add_subdirectory(external/glfw)
 ##GLFW - prebuilt
-add_library(glfw STATIC IMPORTED)
-set_target_properties(glfw PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/external/glfw3/lib/glfw3.lib)
-target_include_directories(glfw INTERFACE ${CMAKE_SOURCE_DIR}/external/glfw3/include)
-
-# find_library(glfw NAMES glfw3 PATHS external/glfw3/lib)
-# target_include_directories(glfw PUBLIC external/glfw3/include)
+# add_library(glfw STATIC IMPORTED)
+# set_target_properties(glfw PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/external/glfw3/lib/glfw3.lib)
+# target_include_directories(glfw INTERFACE ${CMAKE_SOURCE_DIR}/external/glfw3/include)
 
 ##stb_image
 add_library(stb_image INTERFACE)
 target_include_directories(stb_image INTERFACE external/stb_image/)
+
+##glm
+# target_include_directories(glm PRIVATE external/glm)
+add_subdirectory(external/glm)
 
 #my libraries and resources
 #GardenEngine
@@ -62,11 +65,12 @@ set(GardenEngine_src_files
 
 add_library(GardenEngine STATIC ${GardenEngine_src_files})
 target_include_directories(GardenEngine PUBLIC ${GardenEngine_include} ${GardenEngine_include_bugs} )
-target_compile_features(GardenEngine PUBLIC cxx_std_17)
+target_compile_features(GardenEngine PUBLIC cxx_std_23)
 target_link_libraries(GardenEngine PUBLIC 
 	glad 
 	glfw
 	stb_image 
+	glm
 )
 
 #Copy Resources
