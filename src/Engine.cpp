@@ -4,10 +4,7 @@
 #include <chrono>
 #include <thread>
 
-
 #include "Engine.hpp"
-
-
 
 GardenEngine::GardenEngine(std::string name, int win_width, int win_height)
 {
@@ -55,7 +52,6 @@ GardenEngine::GardenEngine(std::string name, int win_width, int win_height)
     }
     GLCall(glViewport(0, 0, win_width, win_height));
 
-    m_grubs = new GrubWrangler();
 
     std::println("Window and GardenEngine Created!");
 }
@@ -70,9 +66,11 @@ GardenEngine::~GardenEngine()
 int GardenEngine::Start(float fps){
     std::println("GardenEngine Warming Up....");
 
+    m_grubs = new GrubWrangler();
+
     // Render loop!!!!!
     std::println("GardenEngine finished warming up! Starting Rendering...");
-    glClearColor(0.1, 0.4f, 0.2f, 1.0f);
+    glClearColor(0.1, 0.6f, 0.2f, 1.0f);
 
     int frame_time_limit_ms = (int)((1 / fps) * 1000);
 
