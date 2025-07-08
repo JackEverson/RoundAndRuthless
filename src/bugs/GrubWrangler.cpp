@@ -30,6 +30,8 @@ GrubWrangler::GrubWrangler() :
     m_ivbo.Update(m_vertices, sizeof(float) * m_max_grub * 3);
     m_vao.AddInstancedBuffer(m_ivbo, 3);
 
+
+	this->AddBug(0, 0.0f, 05.0f); // Add the first bug at the origin
     //unsigned int indices[]{
     //    0, 1, 3,
     //    1, 2, 3
@@ -43,7 +45,7 @@ GrubWrangler::~GrubWrangler()
     m_vertices = nullptr;
 }
 
-void GrubWrangler::Render()
+void GrubWrangler::Render(const glm::mat4& view, const glm::mat4& projection)
 {
     m_vao.Bind();
     m_vbo.Bind();
@@ -51,6 +53,9 @@ void GrubWrangler::Render()
     m_ivbo.Bind();
     m_shader.Bind();
     m_texture.Bind();
+
+    m_shader.SetUniformMat4f("view", view);
+	m_shader.SetUniformMat4f("projection", projection);
 
     GLCall(glEnable(GL_BLEND));
     GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
@@ -66,6 +71,7 @@ void GrubWrangler::AddBug(int index, float x, float y)
 {
     m_grub_count++;
     m_grub_count = m_grub_count % m_max_grub;
+
 
     m_vertices[m_grub_count * 3 + 0] = x;
     m_vertices[m_grub_count * 3 + 1] = y;

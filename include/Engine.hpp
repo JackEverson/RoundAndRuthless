@@ -3,6 +3,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include "Camera.hpp"
 #include "bugs/GrubWrangler.hpp"
 
 
@@ -19,6 +20,8 @@ public:
 private:
 	
 	GLFWwindow* m_window;
+
+	Camera m_camera;
 
 	GrubWrangler* m_grubs;
 

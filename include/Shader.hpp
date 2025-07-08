@@ -8,6 +8,7 @@
 #include <glad/glad.h>
 #include <GL/gl.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 #include <unordered_map>
 
 struct ShaderSource{
@@ -32,6 +33,7 @@ public:
 	void SetUniform1f(const std::string& name, float f);
 	void SetUniform3f(const std::string& name, float v0, float v1, float v2);
 	void SetUniform4f(const std::string& name, float v0, float v1, float v2, float v3);
+	void SetUniformMat4f(const std::string& name, const glm::mat4& matrix);
 private: 
 	ShaderSource ParseShader(std::string& filepath);
 	unsigned int CompileShaders(std::string vertexshaderstring, std::string fragmentshaderstring);

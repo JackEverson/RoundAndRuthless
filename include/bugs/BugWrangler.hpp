@@ -14,7 +14,7 @@ public:
 	
 	virtual ~BugWrangler() = default;
 
-	virtual void Render() = 0;
+	virtual void Render(const glm::mat4& view, const glm::mat4& projection) = 0;
 	virtual void AddBug(int index, float x, float y) = 0;
 
 

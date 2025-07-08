@@ -28,13 +28,14 @@ GardenEngine::GardenEngine(std::string name, int win_width, int win_height)
     }
 
     //// set fullscreen
-    // GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
-    // std::cout << "Using monitor: " << pMonitor << std::endl;
-    // window = glfwCreateWindow(win_width, win_height, name.c_str(), pMonitor, NULL);
+     //GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
+     //std::cout << "Using monitor: " << pMonitor << std::endl;
+     //m_window = glfwCreateWindow(win_width, win_height, name.c_str(), pMonitor, NULL);
 
     // set windowed
     m_window = glfwCreateWindow(win_width, win_height, name.c_str(), NULL, NULL);
     glfwSwapInterval(0);
+
 
     if (!m_window)
     {
@@ -82,11 +83,16 @@ int GardenEngine::Start(float fps){
         processInput();
         GLCall(glClear(GL_COLOR_BUFFER_BIT));
 
-        m_grubs->Render();
+        int w, h;
+		glfwGetWindowSize(m_window, &w, &h);
+
+		glm::mat4 view = m_camera.GetViewMat();
+		glm::mat4 projection = m_camera.GetProjectionMat(w, h);
+
+        m_grubs->Render(view, projection);
 
         GLCall(glfwSwapBuffers(m_window));
         GLCall(glfwPollEvents());
-
 
         //finish and fps limit
         auto end_time = std::chrono::high_resolution_clock::now();
@@ -115,29 +121,45 @@ void GardenEngine::processInput() {
         int w, h;
         glfwGetWindowSize(m_window, &w, &h);
 
-        double nxpos = xpos / w;
-        double nypos = 1 - (ypos / h);
+        glm::vec3 cam_loc = m_camera.GetLocation();
 
-        //std::println("left click detected at x: {}-{}, y: {}-{}", nxpos, xpos, nypos, ypos);
+        double nxpos = xpos / w + cam_loc.x;
+        double nypos = (1 - (ypos / h)) + cam_loc.y;
+
+        std::println("left click detected at x: {}:{}, y: {}:{}", nxpos, xpos, nypos, ypos);
 
         m_grubs->AddBug(1, nxpos - 0.5f, nypos - 0.5f);
     }
 
-    //if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS) {
-    //    locy += 0.001f;
-    //}
-    //if (glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS) {
-    //    locy -= 0.001f;
-    //}
-    //if (glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS) {
-    //    locx -= 0.001f;
-    //}
-    //if (glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS) {
-    //    locx += 0.001f;
-    //}
-    //if (glfwGetKey(m_window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-    //    approach = true;
-    //}
+
+	float sensitivity = 1.0f;
+    if (glfwGetKey(m_window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+        sensitivity = 1.5f;
+    }
+	float move = 0.01f * sensitivity;
+
+    if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS) {
+        //locy += 0.001f;
+		m_camera.ShiftCamera(0.0f, move, 0.0f);
+    }
+    if (glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS) {
+        //locy -= 0.001f;
+		m_camera.ShiftCamera(0.0f, -move, 0.0f);
+    }
+    if (glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS) {
+        //locx -= 0.001f;
+		m_camera.ShiftCamera(-move, 0.0f, 0.0f);
+    }
+    if (glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS) {
+        //locx += 0.001f;
+		m_camera.ShiftCamera(move, 0.0f, 0.0f);
+    }
+    if (glfwGetKey(m_window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+		m_camera.ShiftCamera(0.0f, 0.0f, -move);
+    }
+    if (glfwGetKey(m_window, GLFW_KEY_C) == GLFW_PRESS) {
+        m_camera.ShiftCamera(0.0f, 0.0f, move);
+    }
 
     //if (approach) {
     //    //locz -= 0.0001f;
@@ -147,10 +169,6 @@ void GardenEngine::processInput() {
 
 
 }
-
-
-
-
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {

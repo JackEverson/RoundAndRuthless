@@ -6,8 +6,8 @@ class GrubWrangler : public BugWrangler {
 public:
 	GrubWrangler();
 	~GrubWrangler();
-
-	void Render() override;
+	
+	void Render(const glm::mat4& view, const glm::mat4& projection) override;
 	void AddBug(int index, float x, float y) override;
 
 private:
