@@ -17,6 +17,25 @@ add_subdirectory(external/glfw)
 add_subdirectory(external/stb_image)
 add_subdirectory(external/glm)
 
+#ImGui
+file(GLOB imgui_src 
+	"external/imgui/*.cpp" 
+	"external/imgui/*.h"
+	"external/imgui/misc/cpp/imgui_stdlib.*"
+	external/imgui/backends/imgui_impl_opengl3.cpp
+	external/imgui/backends/imgui_impl_opengl3.h
+	external/imgui/backends/imgui_impl_glfw.cpp
+	external/imgui/backends/imgui_impl_glfw.h
+)
+add_library(imgui STATIC ${imgui_src})
+target_include_directories(imgui PUBLIC 
+	external/imgui
+	external/imgui/backends
+)
+target_link_libraries(imgui PUBLIC
+	glfw
+)
+
 #my libraries and resources
 #GardenEngine
 set(GardenEngine_src src)
@@ -59,6 +78,7 @@ target_link_libraries(GardenEngine PUBLIC
 	glfw
 	stb_image 
 	glm
+	imgui
 )
 
 #Copy Resources

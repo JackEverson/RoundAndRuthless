@@ -4,6 +4,10 @@
 #include <chrono>
 #include <thread>
 
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
 #include "Engine.hpp"
 
 GardenEngine::GardenEngine(std::string name, int win_width, int win_height)
@@ -54,11 +58,17 @@ GardenEngine::GardenEngine(std::string name, int win_width, int win_height)
     GLCall(glViewport(0, 0, win_width, win_height));
 
 
+
+
     std::println("Window and GardenEngine Created!");
 }
 
 GardenEngine::~GardenEngine()
 {
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
     delete m_grubs;
     m_grubs = nullptr;
 }
@@ -66,6 +76,16 @@ GardenEngine::~GardenEngine()
 
 int GardenEngine::Start(float fps){
     std::println("GardenEngine Warming Up....");
+
+
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    //io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
+    ImGui_ImplGlfw_InitForOpenGL(m_window, true);          // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
+    ImGui_ImplOpenGL3_Init();
+
 
     m_grubs = new GrubWrangler();
 
@@ -75,10 +95,17 @@ int GardenEngine::Start(float fps){
 
     int frame_time_limit_ms = (int)((1 / fps) * 1000);
 
+
+
     while (!glfwWindowShouldClose(m_window)) {
-        
-        // start
+       
         auto start_time = std::chrono::high_resolution_clock::now();
+        GLCall(glfwPollEvents());
+
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        ImGui::ShowDemoWindow(); // Show demo window! :)
 
         processInput();
         GLCall(glClear(GL_COLOR_BUFFER_BIT));
@@ -86,13 +113,41 @@ int GardenEngine::Start(float fps){
         int w, h;
 		glfwGetWindowSize(m_window, &w, &h);
 
+		bool boolle = true;
+        {
+            static float f = 0.0f;
+            static int counter = 0;
+
+            ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+
+            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+            ImGui::Checkbox("Demo Window", &boolle);      // Edit bools storing our window open/close state
+            ImGui::Checkbox("Another Window", &boolle);
+
+            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+            //ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+
+            if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+                counter++;
+            ImGui::SameLine();
+            ImGui::Text("counter = %d", counter);
+
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+            ImGui::End();
+        }
+
+
 		glm::mat4 view = m_camera.GetViewMat();
 		glm::mat4 projection = m_camera.GetProjectionMat(w, h);
 
         m_grubs->Render(view, projection);
+        
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
 
         GLCall(glfwSwapBuffers(m_window));
-        GLCall(glfwPollEvents());
+
 
         //finish and fps limit
         auto end_time = std::chrono::high_resolution_clock::now();
