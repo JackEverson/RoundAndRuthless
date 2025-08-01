@@ -2,9 +2,12 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include "imgui.h"
+
 
 #include "Camera.hpp"
 #include "bugs/GrubWrangler.hpp"
+
 
 
 
@@ -28,7 +31,7 @@ private:
 
 	void processInput();
 	//void processInput(GLFWwindow* window);
-
+	void RunImGuiDemo(const ImGuiIO& io, bool& boolle);
 };
 
 // callbacks

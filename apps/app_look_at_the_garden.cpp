@@ -8,7 +8,8 @@ int main() {
 	//GardenEngine engine(name, 1920, 1080);
 
 	//float fps = 30.0f;
-	float fps = 60.0f;
+	//float fps = 60.0f;
+	float fps = 144.0f;
 	int engine_test_result = engine.Start(fps);
 
 	std::cout << "Engine Exit code: " << engine_test_result << std::endl;

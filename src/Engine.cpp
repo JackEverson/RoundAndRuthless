@@ -4,7 +4,6 @@
 #include <chrono>
 #include <thread>
 
-#include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
@@ -94,48 +93,20 @@ int GardenEngine::Start(float fps){
     glClearColor(0.1, 0.6f, 0.2f, 1.0f);
 
     int frame_time_limit_ms = (int)((1 / fps) * 1000);
-
+	bool boolle = true; // ImGui demo window open/close state
 
 
     while (!glfwWindowShouldClose(m_window)) {
        
         auto start_time = std::chrono::high_resolution_clock::now();
         GLCall(glfwPollEvents());
-
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-        ImGui::ShowDemoWindow(); // Show demo window! :)
-
         processInput();
         GLCall(glClear(GL_COLOR_BUFFER_BIT));
 
         int w, h;
-		glfwGetWindowSize(m_window, &w, &h);
+        glfwGetWindowSize(m_window, &w, &h);
 
-		bool boolle = true;
-        {
-            static float f = 0.0f;
-            static int counter = 0;
-
-            ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-
-            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &boolle);      // Edit bools storing our window open/close state
-            ImGui::Checkbox("Another Window", &boolle);
-
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-            //ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-            if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
-
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-            ImGui::End();
-        }
-
+        RunImGuiDemo(io, boolle);
 
 		glm::mat4 view = m_camera.GetViewMat();
 		glm::mat4 projection = m_camera.GetProjectionMat(w, h);
@@ -144,7 +115,6 @@ int GardenEngine::Start(float fps){
         
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
 
         GLCall(glfwSwapBuffers(m_window));
 
@@ -175,15 +145,16 @@ void GardenEngine::processInput() {
         
         int w, h;
         glfwGetWindowSize(m_window, &w, &h);
+		float aspect_ratio = (float)w / (float)h;
 
         glm::vec3 cam_loc = m_camera.GetLocation();
 
-        double nxpos = xpos / w + cam_loc.x;
+        double nxpos = (xpos / w + cam_loc.x);
         double nypos = (1 - (ypos / h)) + cam_loc.y;
 
-        std::println("left click detected at x: {}:{}, y: {}:{}", nxpos, xpos, nypos, ypos);
+        //std::println("left click detected at x: {}:{}, y: {}:{}", nxpos, xpos, nypos, ypos);
 
-        m_grubs->AddBug(1, nxpos - 0.5f, nypos - 0.5f);
+        m_grubs->AddBug(1, (nxpos - 0.5f) * aspect_ratio, nypos - 0.5f);
     }
 
 
@@ -228,4 +199,38 @@ void GardenEngine::processInput() {
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
+}
+
+
+
+void GardenEngine::RunImGuiDemo(const ImGuiIO& io, bool& boolle) {
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    if (boolle) 
+    {
+        static float f = 0.0f;
+        static int counter = 0;
+
+        ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+
+        ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+        ImGui::Checkbox("Demo Window", &boolle);        // Edit bools storing our window open/close state
+        ImGui::Checkbox("Another Window", &boolle);
+
+        ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+        //ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+
+        if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+            counter++;
+        ImGui::SameLine();
+        ImGui::Text("counter = %d", counter);
+
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+        ImGui::End();
+    }
+
+    ImGui::ShowDemoWindow(); // Show demo window! :)
+
 }
