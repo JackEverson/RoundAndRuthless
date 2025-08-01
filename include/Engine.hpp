@@ -6,6 +6,7 @@
 
 
 #include "Camera.hpp"
+#include "ClickCounter.hpp"
 #include "bugs/GrubWrangler.hpp"
 
 
@@ -18,13 +19,14 @@ public:
 	~GardenEngine();
 	
 	int Start(float fps);
-
+	
 
 private:
 	
 	GLFWwindow* m_window;
 
 	Camera m_camera;
+	ClickCounter m_clickCounter;
 
 	GrubWrangler* m_grubs;
 

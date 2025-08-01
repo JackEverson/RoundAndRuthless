@@ -51,6 +51,7 @@ set(GardenEngine_src_files
 	${GardenEngine_src}/VertexBuffer.cpp
 	${GardenEngine_src}/VertexBufferLayout.cpp
 	${GardenEngine_src}/Camera.cpp
+	${GardenEngine_src}/ClickCounter.cpp
 
 	${GardenEngine_src}/bugs/BugWrangler.cpp
 	${GardenEngine_src}/bugs/GrubWrangler.cpp
@@ -65,6 +66,7 @@ set(GardenEngine_src_files
 	${GardenEngine_include}/VertexBuffer.hpp
 	${GardenEngine_include}/VertexBufferLayout.hpp
 	${GardenEngine_include}/Camera.hpp
+	${GardenEngine_include}/ClickCounter.hpp
 
 	${GardenEngine_include_bugs}/BugWrangler.hpp
 	${GardenEngine_include_bugs}/GrubWrangler.hpp
