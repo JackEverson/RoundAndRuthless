@@ -4,6 +4,8 @@ project(LookAtTheGarden VERSION 1.0
                     DESCRIPTION "GardenEngine for look at the garden"
 		    LANGUAGES C CXX)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 set(CMAKE_CXX_STANDARD 23)
 if(MSVC)
                     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -WX-")
