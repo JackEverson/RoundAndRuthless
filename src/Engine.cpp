@@ -1,4 +1,3 @@
-#include <iostream>  
 #include <string>
 #include <print>
 #include <chrono>
@@ -11,55 +10,14 @@
 
 GardenEngine::GardenEngine(std::string name, int win_width, int win_height)
 {
-    std::println("Creating Window and GardenEngine...");
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    std::println("Creating GardenEngine...");
 
-    int monitor_count;
-    GLFWmonitor** _monitors = glfwGetMonitors(&monitor_count);
-    if (!monitor_count) {
-        std::println("GLFWmonitor found monitors to be null");
-        throw std::runtime_error("GLFWMonitor found monitors to be null");
-    }
-    std::println("GLFWmonitors has found {} monitors", monitor_count);
-    for (int i = 0; i < monitor_count; i++) {
-        const GLFWvidmode* mode = glfwGetVideoMode(_monitors[i]);
-        std::cout << "Monitor " << i << ", " << _monitors[i] << ", has resolution " << mode->width << "x" << mode->height << std::endl;
-    }
+    setupGlfwWindow(name, win_width, win_height);
+    setupOpenGl();
+    setupImGui();
+    setupGameState();
 
-    //// set fullscreen
-     //GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
-     //std::cout << "Using monitor: " << pMonitor << std::endl;
-     //m_window = glfwCreateWindow(win_width, win_height, name.c_str(), pMonitor, NULL);
-
-    // set windowed
-    m_window = glfwCreateWindow(win_width, win_height, name.c_str(), NULL, NULL);
-    glfwSwapInterval(0);
-
-
-    if (!m_window)
-    {
-        std::println("Failed to create GLFW window");
-        glfwTerminate();
-        throw std::runtime_error("Failed to create GLFW window");
-    }
-
-    glfwMakeContextCurrent(m_window);
-    glfwSetFramebufferSizeCallback(m_window, framebuffer_size_callback);
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::println("Failed to initialize OpenGL context");
-        throw std::runtime_error("Failed to initialize OpenGL context through gladLoadGLLoader");
-    }
-    GLCall(glViewport(0, 0, win_width, win_height));
-
-
-
-
-    std::println("Window and GardenEngine Created!");
+    std::println("GardenEngine Created!");
 }
 
 GardenEngine::~GardenEngine()
@@ -68,56 +26,32 @@ GardenEngine::~GardenEngine()
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
+    glfwDestroyWindow(m_window);
+    glfwTerminate();
+
+    delete m_clickCounter;
+    m_clickCounter = nullptr;
     delete m_grubs;
     m_grubs = nullptr;
 }
 
 
 int GardenEngine::Start(float fps){
-    std::println("GardenEngine Warming Up....");
-
-
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
-    ImGui_ImplGlfw_InitForOpenGL(m_window, true);          // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
-    ImGui_ImplOpenGL3_Init();
-
-
-    m_grubs = new GrubWrangler();
+    std::println("GardenEngine Starting...");
 
     // Render loop!!!!!
-    std::println("GardenEngine finished warming up! Starting Rendering...");
     glClearColor(0.1, 0.6f, 0.2f, 1.0f);
 
     int frame_time_limit_ms = (int)((1 / fps) * 1000);
 	bool boolle = true; // ImGui demo window open/close state
 
-
     while (!glfwWindowShouldClose(m_window)) {
-       
-        auto start_time = std::chrono::high_resolution_clock::now();
-        GLCall(glfwPollEvents());
-        processInput();
-        GLCall(glClear(GL_COLOR_BUFFER_BIT));
-
-        int w, h;
-        glfwGetWindowSize(m_window, &w, &h);
-
-        RunImGuiDemo(io, boolle);
-
-		glm::mat4 view = m_camera.GetViewMat();
-		glm::mat4 projection = m_camera.GetProjectionMat(w, h);
-
-        m_grubs->Render(view, projection);
         
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        auto start_time = std::chrono::high_resolution_clock::now();
 
-        GLCall(glfwSwapBuffers(m_window));
-
+        processInput();
+        updateGameState();
+        renderScene();
 
         //finish and fps limit
         auto end_time = std::chrono::high_resolution_clock::now();
@@ -130,14 +64,89 @@ int GardenEngine::Start(float fps){
     }
 
     
-    glfwTerminate();
+    //glfwTerminate();
     std::println("GardenEngine Exited Successfully!");
     return 0;
 }
 
+void GardenEngine::setupGlfwWindow(std::string win_name, int win_width, int win_height) {
+    std::println("Creating GLFW Window...");
+    glfwInit();
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+
+    int monitor_count;
+    GLFWmonitor** _monitors = glfwGetMonitors(&monitor_count);
+    if (!monitor_count) {
+        std::println("GLFWmonitor found monitors to be null");
+        throw std::runtime_error("GLFWMonitor found monitors to be null");
+    }
+
+    std::println("GLFWmonitors has found {} monitors", monitor_count);
+    for (int i = 0; i < monitor_count; i++) {
+        const GLFWvidmode* mode = glfwGetVideoMode(_monitors[i]);
+        std::println("Monitor {} has resolution {} x {}", i, mode->width, mode->height);
+    }
+
+    //// set fullscreen
+     //GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
+     //std::cout << "Using monitor: " << pMonitor << std::endl;
+     //m_window = glfwCreateWindow(win_width, win_height, name.c_str(), pMonitor, NULL);
+
+    // set windowed
+    m_window = glfwCreateWindow(win_width, win_height, win_name.c_str(), NULL, NULL);
+    glfwSwapInterval(0);
+
+    if (!m_window)
+    {
+        std::println("Failed to create GLFW window");
+        glfwTerminate();
+        throw std::runtime_error("Failed to create GLFW window");
+    }
+
+    glfwMakeContextCurrent(m_window);
+
+
+
+
+    glfwSetFramebufferSizeCallback(m_window, framebuffer_size_callback);
+    std::println("Creating GLFW Window...");
+}
+
+void GardenEngine::setupOpenGl(){
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        std::println("Failed to initialize OpenGL context");
+        throw std::runtime_error("Failed to initialize OpenGL context through gladLoadGLLoader");
+    }
+}
+
+void GardenEngine::setupImGui(){
+    std::println("Creating ImGui Context...");
+    ImGui::CreateContext();
+    ImGuiIO& m_imgui_io = ImGui::GetIO();
+    m_imgui_io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    m_imgui_io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    //m_imgui_io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
+    ImGui_ImplGlfw_InitForOpenGL(m_window, true);          // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
+    ImGui_ImplOpenGL3_Init();
+    std::println("ImGui Context Created!");
+}
+
+void GardenEngine::setupGameState()
+{
+    m_clickCounter = new ClickCounter();
+    m_grubs = new GrubWrangler();
+
+}
+
 void GardenEngine::processInput() {
+    
+    GLCall(glfwPollEvents());
+
     if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(m_window, true);
+        glfwSetWindowShouldClose(m_window, true); 
 
     if (glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
         double xpos, ypos;
@@ -192,21 +201,36 @@ void GardenEngine::processInput() {
     //    if (red < 1.0f) red += 0.00001;
     //    if (other > 0.0f) other -= 0.00001;
     //}
+}
+
+void GardenEngine::updateGameState(){
+
 
 
 }
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-    glViewport(0, 0, width, height);
+void GardenEngine::renderScene(){
+    
+    GLCall(glClear(GL_COLOR_BUFFER_BIT));
+
+    int w, h;
+    glfwGetWindowSize(m_window, &w, &h);
+    glm::mat4 view = m_camera.GetViewMat();
+    glm::mat4 projection = m_camera.GetProjectionMat(w, h);
+
+    m_grubs->Render(view, projection);
+    
+    renderImgui();
+
+    GLCall(glfwSwapBuffers(m_window));
 }
 
-
-
-void GardenEngine::RunImGuiDemo(const ImGuiIO& io, bool& boolle) {
+void GardenEngine::renderImgui() {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+
+    bool boolle = true;
 
     if (boolle) 
     {
@@ -221,14 +245,21 @@ void GardenEngine::RunImGuiDemo(const ImGuiIO& io, bool& boolle) {
         //ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
         if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-            m_clickCounter.click();
+            m_clickCounter->click();
         ImGui::SameLine();
-        ImGui::Text("Clicks = %d", m_clickCounter.GetClicks());
+        ImGui::Text("Clicks = %d", m_clickCounter->GetClicks());
 
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+        //ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / m_imgui_io->Framerate, m_imgui_io->Framerate);
         ImGui::End();
     }
 
     //ImGui::ShowDemoWindow(); // Show demo window! :)
+    
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
+}
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height){
+    glViewport(0, 0, width, height);
 }

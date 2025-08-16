@@ -31,7 +31,7 @@ GrubWrangler::GrubWrangler() :
     m_vao.AddInstancedBuffer(m_ivbo, 3);
 
 
-	this->AddBug(0, 0.0f, 0.0f); // Add the first bug at the origin
+	//this->AddBug(0, 0.0f, 0.0f); // Add the first bug at the origin
     //unsigned int indices[]{
     //    0, 1, 3,
     //    1, 2, 3
