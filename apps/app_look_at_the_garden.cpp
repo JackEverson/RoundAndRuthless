@@ -1,4 +1,5 @@
-﻿#include <iostream>
+﻿#include <print>
+
 #include "Engine.hpp"
 
 
@@ -12,7 +13,7 @@ int main() {
 	float fps = 144.0f;
 	int engine_test_result = engine.Start(fps);
 
-	std::cout << "Engine Exit code: " << engine_test_result << std::endl;
+	std::println("Engine Exit code: {}", engine_test_result);
 	
 	return engine_test_result;
 }

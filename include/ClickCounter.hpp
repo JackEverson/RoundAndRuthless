@@ -11,12 +11,7 @@ private:
 	unsigned int clicks = 0;
 	unsigned int m_click_value = 1;
 	
-	VertexArray m_vao;
-	VertexBuffer m_vbo;
-	VertexBuffer m_ivbo;
-	IndexBuffer m_ebo;
-	Texture m_texture;
-	Shader m_shader;
+
 
 
 

@@ -45,33 +45,21 @@ set(GardenEngine_include include )
 set(GardenEngine_include_bugs include/bugs )
 set(GardenEngine_src_files
 	${GardenEngine_src}/Engine.cpp
-	${GardenEngine_src}/IndexBuffer.cpp
 	${GardenEngine_src}/Renderer.cpp
 	${GardenEngine_src}/Shader.cpp
 	${GardenEngine_src}/Texture.cpp
-	${GardenEngine_src}/VertexArray.cpp
-	${GardenEngine_src}/VertexBuffer.cpp
-	${GardenEngine_src}/VertexBufferLayout.cpp
 	${GardenEngine_src}/Camera.cpp
 	${GardenEngine_src}/ClickCounter.cpp
 
-	${GardenEngine_src}/bugs/BugWrangler.cpp
-	${GardenEngine_src}/bugs/GrubWrangler.cpp
-
 	# include files included for IDE sake
 	${GardenEngine_include}/Engine.hpp
-	${GardenEngine_include}/IndexBuffer.hpp
 	${GardenEngine_include}/Renderer.hpp
 	${GardenEngine_include}/Shader.hpp
 	${GardenEngine_include}/Texture.hpp
-	${GardenEngine_include}/VertexArray.hpp
-	${GardenEngine_include}/VertexBuffer.hpp
-	${GardenEngine_include}/VertexBufferLayout.hpp
 	${GardenEngine_include}/Camera.hpp
 	${GardenEngine_include}/ClickCounter.hpp
+	${GardenEngine_include}/gl_debug.hpp
 
-	${GardenEngine_include_bugs}/BugWrangler.hpp
-	${GardenEngine_include_bugs}/GrubWrangler.hpp
 )
 
 add_library(GardenEngine STATIC ${GardenEngine_src_files})

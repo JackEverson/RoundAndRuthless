@@ -1,11 +1,12 @@
 #include <ostream>
 #include "Shader.hpp"
-#include "Renderer.hpp"
+
+#include "gl_debug.hpp"
+
 
 unsigned int m_RendererID;
 Shader::Shader(const std::string& filepath)
     : m_RendererID(0), m_FilePath(filepath) 
-
 {
     ShaderSource shaders = ParseShader(m_FilePath);
     m_RendererID = CompileShaders(shaders.VertexSource, shaders.FragmentSource);
@@ -119,8 +120,16 @@ void Shader::SetUniform3f(const std::string& name, float v0, float v1, float v2)
     GLCall(glUniform3f(GetUniformLocation(name), v0, v1, v2));
 }
 
+void Shader::SetUniform3f(const std::string& name, glm::vec3 vec) {
+    GLCall(glUniform3f(GetUniformLocation(name), vec.x, vec.y, vec.z));
+}
+
 void Shader::SetUniform4f(const std::string& name, float v0, float v1, float v2, float v3){
     GLCall(glUniform4f(GetUniformLocation(name), v0, v1, v2, v3));
+}
+
+void Shader::SetUniform4f(const std::string& name, glm::vec4 vec) {
+    GLCall(glUniform4f(GetUniformLocation(name), vec.x, vec.y, vec.z, vec.w));
 }
 
 void Shader::SetUniformMat4f(const std::string& name, const glm::mat4& matrix){

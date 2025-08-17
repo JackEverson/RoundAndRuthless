@@ -1,28 +1,43 @@
 #pragma once
-#include <glad/glad.h>
-#include <GL/gl.h>
-#include <GLFW/glfw3.h>
+
+#include <glm/glm.hpp>
 
 #include "Shader.hpp"
-#include "IndexBuffer.hpp"
-#include "VertexArray.hpp"
-#include "IndexBuffer.hpp"
+#include "Texture.hpp"
 
-// #define ASSERT(x) if (!(x)) __debugbreak(); // for MSVC 
-#define ASSERT(x) if (!(x)) std::cout << "OpenGL Error" << std::endl;
 
-#define GLCall(x) GLClearError();\
-    x;\
-    ASSERT(GLLogCall(#x, __FILE__, __LINE__))
-
-void GLClearError();
-bool GLLogCall(const char* function, const char* file, int line);
+struct SpriteInstance {
+    glm::vec2 position;
+    glm::vec2 size;
+    float rotation;
+    glm::vec4 color;
+    Texture* texture; // optional, if you batch by texture
+};
 
 
 class Renderer{
+
+private:
+    Shader shader;
+    unsigned int quadVAO = 0;
+    unsigned int quadVBO = 0;
+    unsigned int quadEBO = 0;
+    unsigned int instanceVBO = 0;
+	std::vector<SpriteInstance> batch;
+
 public:
+    Renderer();
+    ~Renderer();
+    
     void Clear(float r, float g, float b, float a) const;
-    void Draw(const VertexArray& va, const IndexBuffer& ib, const Shader& shader) const;
+
+    void DrawSprite(Texture& texture, glm::vec2 position, glm::vec2 size, float rotate, glm::vec4 color);
+	void BeginBatchDraw(int countEstimate);
+	void SubmitSprite(const SpriteInstance& sprite);
+	void RendBatch(glm::mat4 view, glm::mat4 projection);
 
 
+private:
+
+    void initRenderData();
 };

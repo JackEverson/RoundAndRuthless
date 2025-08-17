@@ -4,9 +4,9 @@
 #include <GLFW/glfw3.h>
 #include "imgui.h"
 
+#include "Renderer.hpp"
 #include "Camera.hpp"
 #include "ClickCounter.hpp"
-#include "bugs/GrubWrangler.hpp"
 
 
 class GardenEngine
@@ -15,16 +15,17 @@ class GardenEngine
 private:
 	
 	GLFWwindow* m_window;
-	ImGuiIO* m_imgui_io;
+	Renderer* m_renderer;
+	Texture* test_texture;
 
 	Camera m_camera;
 
+
 	ClickCounter* m_clickCounter;
-	GrubWrangler* m_grubs;
 
 
 	//void processInput(GLFWwindow* window);
-	void RunImGuiDemo();
+	//void RunImGuiDemo();
 
 
 public:

@@ -1,7 +1,10 @@
+
+
 #pragma once
 
-#include "Renderer.hpp"
-#include <GL/gl.h>
+#include <string>
+
+
 
 class Texture{
 private:

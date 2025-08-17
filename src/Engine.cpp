@@ -3,12 +3,16 @@
 #include <chrono>
 #include <thread>
 
+#include <glad/glad.h>
+
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
+#include "gl_debug.hpp"
 #include "Engine.hpp"
 
-GardenEngine::GardenEngine(std::string name, int win_width, int win_height)
+
+GardenEngine::GardenEngine(std::string name, int win_width, int win_height) 
 {
     std::println("Creating GardenEngine...");
 
@@ -16,6 +20,8 @@ GardenEngine::GardenEngine(std::string name, int win_width, int win_height)
     setupOpenGl();
     setupImGui();
     setupGameState();
+
+    test_texture = new Texture("./res/textures/sushi.png");
 
     std::println("GardenEngine Created!");
 }
@@ -26,13 +32,14 @@ GardenEngine::~GardenEngine()
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
-    glfwDestroyWindow(m_window);
-    glfwTerminate();
+    delete m_renderer;
+    m_renderer = nullptr;
 
     delete m_clickCounter;
     m_clickCounter = nullptr;
-    delete m_grubs;
-    m_grubs = nullptr;
+
+    glfwDestroyWindow(m_window);
+    glfwTerminate();
 }
 
 
@@ -71,7 +78,12 @@ int GardenEngine::Start(float fps){
 
 void GardenEngine::setupGlfwWindow(std::string win_name, int win_width, int win_height) {
     std::println("Creating GLFW Window...");
-    glfwInit();
+    
+    if (!glfwInit()) {
+        std::println("Failed to Initialize GLFW");
+        throw std::runtime_error("Failed to Initialize GLFW");
+    };
+
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -97,19 +109,15 @@ void GardenEngine::setupGlfwWindow(std::string win_name, int win_width, int win_
 
     // set windowed
     m_window = glfwCreateWindow(win_width, win_height, win_name.c_str(), NULL, NULL);
-    glfwSwapInterval(0);
+    //glfwSwapInterval(0);
 
-    if (!m_window)
-    {
+    if (!m_window) {
         std::println("Failed to create GLFW window");
         glfwTerminate();
         throw std::runtime_error("Failed to create GLFW window");
     }
 
     glfwMakeContextCurrent(m_window);
-
-
-
 
     glfwSetFramebufferSizeCallback(m_window, framebuffer_size_callback);
     std::println("Creating GLFW Window...");
@@ -120,14 +128,16 @@ void GardenEngine::setupOpenGl(){
         std::println("Failed to initialize OpenGL context");
         throw std::runtime_error("Failed to initialize OpenGL context through gladLoadGLLoader");
     }
+
+    m_renderer = new Renderer();
 }
 
 void GardenEngine::setupImGui(){
     std::println("Creating ImGui Context...");
     ImGui::CreateContext();
-    ImGuiIO& m_imgui_io = ImGui::GetIO();
-    m_imgui_io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    m_imgui_io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    ImGuiIO io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
     //m_imgui_io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
     ImGui_ImplGlfw_InitForOpenGL(m_window, true);          // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
     ImGui_ImplOpenGL3_Init();
@@ -137,7 +147,6 @@ void GardenEngine::setupImGui(){
 void GardenEngine::setupGameState()
 {
     m_clickCounter = new ClickCounter();
-    m_grubs = new GrubWrangler();
 
 }
 
@@ -163,7 +172,7 @@ void GardenEngine::processInput() {
 
         //std::println("left click detected at x: {}:{}, y: {}:{}", nxpos, xpos, nypos, ypos);
 
-        m_grubs->AddBug(1, (nxpos - 0.5f) * aspect_ratio, nypos - 0.5f);
+        //m_grubs->AddBug(1, (nxpos - 0.5f) * aspect_ratio, nypos - 0.5f);
     }
 
 
@@ -211,15 +220,31 @@ void GardenEngine::updateGameState(){
 
 void GardenEngine::renderScene(){
     
-    GLCall(glClear(GL_COLOR_BUFFER_BIT));
+    m_renderer->Clear(0.1f, 0.1f, 0.1f, 1.0f);
 
     int w, h;
     glfwGetWindowSize(m_window, &w, &h);
     glm::mat4 view = m_camera.GetViewMat();
     glm::mat4 projection = m_camera.GetProjectionMat(w, h);
 
-    m_grubs->Render(view, projection);
-    
+    //m_renderer->DrawSprite(*test_texture, glm::vec2(0.5f, 0.0f), glm::vec2(0.1f, 0.1f), 180.0f, glm::vec4(1.0f));
+    int count = 1000;
+    m_renderer->BeginBatchDraw(count);
+
+    for(int i = 0; i < count; i++) {
+        float x = (i % 10) * 0.1f;
+        float y = (i / 10) * 0.1f;
+        SpriteInstance sprite_instance;
+        sprite_instance.position = glm::vec2(x, y);
+        sprite_instance.size = glm::vec2(0.1f, 0.1f);
+        sprite_instance.rotation = 0.0f;
+        sprite_instance.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+        sprite_instance.texture = test_texture;
+        m_renderer->SubmitSprite(sprite_instance);
+	}
+
+    m_renderer->RendBatch(view, projection);
+
     renderImgui();
 
     GLCall(glfwSwapBuffers(m_window));
@@ -234,6 +259,7 @@ void GardenEngine::renderImgui() {
 
     if (boolle) 
     {
+        ImGuiIO io = ImGui::GetIO();
 
         ImGui::Begin("Clicker Info");                          // Create a window called "Hello, world!" and append into it.
 
@@ -249,7 +275,8 @@ void GardenEngine::renderImgui() {
         ImGui::SameLine();
         ImGui::Text("Clicks = %d", m_clickCounter->GetClicks());
 
-        //ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / m_imgui_io->Framerate, m_imgui_io->Framerate);
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+
         ImGui::End();
     }
 
