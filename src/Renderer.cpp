@@ -56,7 +56,7 @@ void Renderer::DrawSprite(Texture& texture, glm::vec2 position, glm::vec2 size, 
 
 void Renderer::BeginBatchDraw(int countEstimate) {
     batch.clear();
-	batch.reserve(countEstimate);
+	batch.reserve(countEstimate * 4);
 }
 
 void Renderer::SubmitSprite(const SpriteInstance& sprite)
@@ -75,8 +75,8 @@ void Renderer::RendBatch(glm::mat4 view, glm::mat4 projection)
     shader.SetUniformMat4f("aView", view);
     shader.SetUniformMat4f("aProjection", projection);
     
-    std::vector<glm::vec4> instances;
-    instances.reserve(batch.size());
+    std::vector<float> instances;
+    instances.reserve(batch.size() * 4);
 
     //for (auto& s : batch) {
     //    SpriteInstance inst;
@@ -87,8 +87,10 @@ void Renderer::RendBatch(glm::mat4 view, glm::mat4 projection)
     //}
 
     for (auto& s : batch) {
-        glm::vec4 pos = glm::vec4(s.position.x, s.position.y, s.size.x, s.size.y);
-        instances.push_back(pos);
+        instances.push_back(s.position.x);
+        instances.push_back(s.position.y);
+        instances.push_back(s.size.x);
+        instances.push_back(s.size.y);
 	}
 
     GLCall(glEnable(GL_BLEND));

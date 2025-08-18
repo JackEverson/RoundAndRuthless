@@ -8,9 +8,10 @@ class ClickCounter {
 public:
 
 private:
-	unsigned int clicks = 0;
+	unsigned long long clicks = 0;
+
 	unsigned int m_click_value = 1;
-	
+	unsigned int m_click_upgrade_cost = 100;
 
 
 
@@ -22,15 +23,14 @@ public:
 	void click() { clicks += m_click_value; }
 	void addClicks(unsigned int amount) { clicks += amount; }
 	void ResetClicks() { clicks = 0; }
+	
 	unsigned int GetClicks() const { return clicks; }
+	
+	unsigned int GetClickUpgradeValue() { return m_click_upgrade_cost; }
+	void UpgradeClickValue();
 
-	bool purchaseForClicks(unsigned int cost) {
-		if (clicks >= cost) {
-			clicks -= cost;
-			return true;
-		}
-		return false;
-	}
+private:
+	bool purchaseForClicks(unsigned int cost);
 
 private:
 

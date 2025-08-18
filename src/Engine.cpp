@@ -170,9 +170,17 @@ void GardenEngine::processInput() {
         double nxpos = (xpos / w + cam_loc.x);
         double nypos = (1 - (ypos / h)) + cam_loc.y;
 
+        if (m_first_click == true) {
+            m_first_click = false;
+            m_clickCounter->click();
+        }
+
         //std::println("left click detected at x: {}:{}, y: {}:{}", nxpos, xpos, nypos, ypos);
 
         //m_grubs->AddBug(1, (nxpos - 0.5f) * aspect_ratio, nypos - 0.5f);
+    }
+    else {
+        m_first_click = true;
     }
 
 
@@ -222,6 +230,9 @@ void GardenEngine::renderScene(){
     
     m_renderer->Clear(0.1f, 0.1f, 0.1f, 1.0f);
 
+    double xpos, ypos;
+    glfwGetCursorPos(m_window, &xpos, &ypos);
+
     int w, h;
     glfwGetWindowSize(m_window, &w, &h);
     glm::mat4 view = m_camera.GetViewMat();
@@ -229,28 +240,43 @@ void GardenEngine::renderScene(){
 
     //m_renderer->DrawSprite(*test_texture, glm::vec2(0.5f, 0.0f), glm::vec2(0.1f, 0.1f), 180.0f, glm::vec4(1.0f));
     int count = 1000;
-    m_renderer->BeginBatchDraw(count);
-
+    m_renderer->BeginBatchDraw(count + 1);
     for(int i = 0; i < count; i++) {
-        float x = (i % 10) * 0.1f;
-        float y = (i / 10) * 0.1f;
+        float x = (i % 10) * 0.1f + (xpos / w - 1);
+        float y = ((i - 50) / 10) * 0.1f + (0.5 - ypos / h);
         SpriteInstance sprite_instance;
         sprite_instance.position = glm::vec2(x, y);
-        sprite_instance.size = glm::vec2(0.1f, 0.1f);
+        sprite_instance.size = glm::vec2(0.15f, 0.1f);
         sprite_instance.rotation = 0.0f;
-        sprite_instance.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+        sprite_instance.color = glm::vec4(0.5f, 1.0f, 1.0f, 1.0f);
         sprite_instance.texture = test_texture;
         m_renderer->SubmitSprite(sprite_instance);
 	}
-
     m_renderer->RendBatch(view, projection);
 
-    renderImgui();
+    m_renderer->BeginBatchDraw(1);
+    SpriteInstance sprite_instance;
+    sprite_instance.position = glm::vec2(0.0f, 0.0f);
+    if (glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+        sprite_instance.size = glm::vec2(0.3f, 0.20f);
+    }
+    else {
+        sprite_instance.size = glm::vec2(0.6f, 0.4f);
+    }
+    sprite_instance.rotation = 0.0f;
+    sprite_instance.color = glm::vec4(1.0f, 0.5f, 0.5f, 1.0f);
+    sprite_instance.texture = test_texture;
+    
+    m_renderer->SubmitSprite(sprite_instance);
+    m_renderer->RendBatch(view, projection);
+
+
+    renderImgui(xpos, ypos);
 
     GLCall(glfwSwapBuffers(m_window));
 }
 
-void GardenEngine::renderImgui() {
+void GardenEngine::renderImgui(double x, double y) {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
@@ -270,10 +296,19 @@ void GardenEngine::renderImgui() {
         //ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
         //ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
-        if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-            m_clickCounter->click();
-        ImGui::SameLine();
+        //if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+            //m_clickCounter->click();
+        //ImGui::SameLine();
         ImGui::Text("Clicks = %d", m_clickCounter->GetClicks());
+       
+
+        if (ImGui::Button("Upgrade"))                           
+            m_clickCounter->UpgradeClickValue();
+        ImGui::SameLine();
+        ImGui::Text("Click upgrade cost = %d", m_clickCounter->GetClickUpgradeValue());
+
+        
+        ImGui::Text("Mouse location: %.1f x %.1f", x, y);
 
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
 

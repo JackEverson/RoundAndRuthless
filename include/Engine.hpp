@@ -23,9 +23,8 @@ private:
 
 	ClickCounter* m_clickCounter;
 
+	bool m_first_click = false;
 
-	//void processInput(GLFWwindow* window);
-	//void RunImGuiDemo();
 
 
 public:
@@ -44,7 +43,7 @@ private:
 	void processInput();
 	void updateGameState();
 	void renderScene();
-	void renderImgui();
+	void renderImgui(double x, double y);
 };
 
 // callbacks
