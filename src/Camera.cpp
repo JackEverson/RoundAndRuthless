@@ -3,7 +3,8 @@
 #include "Camera.hpp"
 
 Camera::Camera(){
-	m_z = -1.0f;
+	// m_z = -1.0f;
+	m_z = -0.5f;
 }
 
 Camera::~Camera() {
@@ -30,6 +31,6 @@ glm::mat4 Camera::GetViewMat(){
 glm::mat4 Camera::GetProjectionMat(float screen_width, float screen_height) {
 	// Converts Viewspace to Clipspace
 	glm::mat4 proj = glm::perspective(glm::radians(m_fov), screen_width / screen_height, m_clip_near, m_clip_far);
-	//glm::mat4 proj = glm::ortho(0.0f, screen_width, 0.0f, screen_height, m_clip_near, m_clip_far);
+	// glm::mat4 proj = glm::ortho(0.0f, screen_width, 0.0f, screen_height, m_clip_near, m_clip_far);
 	return proj;
 }
