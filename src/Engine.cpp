@@ -5,7 +5,7 @@
 
 #include <glad/glad.h>
 
-#include "Renderer.hpp"
+// #include "Renderer.hpp"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
@@ -243,29 +243,11 @@ void GardenEngine::renderScene() {
   glm::mat4 view = m_camera.GetViewMat();
   glm::mat4 projection = m_camera.GetProjectionMat(w, h);
 
-  // m_renderer->DrawSprite(*test_texture, glm::vec2(4.5f, 4.0f),
-  // glm::vec2(0.1f, 0.1f), 180.0f, glm::vec4(1.0f), projection
-// );
-  // int count = 1000;
-  // m_renderer->BeginBatchDraw(count + 1);
-  // for (int i = 0; i < count; i++) {
-  //   float x = (i % 10) * 0.1f + (xpos / w - 1);
-  //   float y = ((i - 50) / 10) * 0.1f + (0.5 - ypos / h);
-  //   SpriteInstance sprite_instance;
-  //   sprite_instance.position = glm::vec2(x, y);
-  //   sprite_instance.size = glm::vec2(0.15f, 0.1f);
-  //   sprite_instance.rotation = 0.0f;
-  //   sprite_instance.color = glm::vec4(0.5f, 1.0f, 1.0f, 1.0f);
-  //   sprite_instance.texture = test_texture;
-  //   m_renderer->SubmitSprite(sprite_instance);
-  // }
-  // m_renderer->RendBatch(view, projection);
-
   m_renderer->BeginBatchDraw(3);
   SpriteInstance static_sprite;
     static_sprite.size = glm::vec2(0.6f, 0.4f);
   static_sprite.rotation = 0.0f;
-  static_sprite.color = glm::vec4(1.0f, 0.5f, 0.5f, 1.0f);
+  static_sprite.color = glm::vec4(0.5f, 1.0f, 0.5f, 1.0f);
   static_sprite.texture = test_texture;
   m_renderer->SubmitSprite(static_sprite);
 
@@ -284,7 +266,7 @@ void GardenEngine::renderScene() {
   float follow_x = campos.x + ((xpos - w / 2) / w);
   float follow_y = campos.y + ((1 - (ypos - h / 2)) / h);
   SpriteInstance follow_sprite;
-  follow_sprite.color = glm::vec4(0.5f, 1.0f, 1.0f, 1.0f);
+  follow_sprite.color = glm::vec4(0.5f, 0.5f, 1.0f, 1.0f);
   follow_sprite.position = glm::vec2(follow_x, follow_y);
   // follow_sprite.position = glm::vec2(0.1, 0.1);
   follow_sprite.rotation = 0.0f;

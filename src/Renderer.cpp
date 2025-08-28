@@ -2,14 +2,11 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <iostream>
-
 #include "Renderer.hpp"
 #include "gl_debug.hpp"
 #include "glm/fwd.hpp"
 
 Renderer::Renderer() : shader("./res/shaders/basictexture.shader") {
-
   initRenderData();
 }
 
@@ -20,10 +17,10 @@ void Renderer::Clear(float r, float g, float b, float a) const {
   GLCall(glClear(GL_COLOR_BUFFER_BIT));
 }
 
-// void Renderer::DrawSprite(Texture &texture, glm::vec2 position, glm::vec2
-// size,
-//                           float rotate, glm::vec4 color, glm::mat4
-//                           projection) {
+void Renderer::DrawSprite(Texture &texture, glm::vec2 position, glm::vec2
+size,
+                          float rotate, glm::vec4 color, glm::mat4
+                          projection) {
 //
 //   // Activate shader
 //   this->shader.Bind();
@@ -53,11 +50,11 @@ void Renderer::Clear(float r, float g, float b, float a) const {
 //   GLCall(glBindVertexArray(this->quadVAO));
 //   GLCall(glDrawArrays(GL_TRIANGLES, 0, 6));
 //   GLCall(glBindVertexArray(0));
-// }
+}
 
 void Renderer::BeginBatchDraw(int countEstimate) {
   batch.clear();
-  batch.reserve(countEstimate * 4);
+  batch.reserve(countEstimate * 8);
 }
 
 void Renderer::SubmitSprite(const SpriteInstance &sprite) {
@@ -71,12 +68,12 @@ void Renderer::RendBatch(glm::mat4 view, glm::mat4 projection) {
   Texture *tex = batch[0].texture;
   tex->Bind(0);
 
-  shader.SetUniform4f("aColor", batch[0].color);
+  // shader.SetUniform4f("aColor", batch[0].color);
   shader.SetUniformMat4f("aView", view);
   shader.SetUniformMat4f("aProjection", projection);
 
   std::vector<float> instances;
-  instances.reserve(batch.size() * 4);
+  instances.reserve(batch.size() * 8);
 
   // for (auto& s : batch) {
   //     SpriteInstance inst;
@@ -91,6 +88,10 @@ void Renderer::RendBatch(glm::mat4 view, glm::mat4 projection) {
     instances.push_back(s.position.y);
     instances.push_back(s.size.x);
     instances.push_back(s.size.y);
+    instances.push_back(s.color.r);
+    instances.push_back(s.color.g);
+    instances.push_back(s.color.b);
+    instances.push_back(s.color.a);
   }
 
   GLCall(glEnable(GL_BLEND));
@@ -141,21 +142,28 @@ void Renderer::initRenderData() {
 
   glGenBuffers(1, &instanceVBO);
   glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-  glBufferData(GL_ARRAY_BUFFER, 1000 * (sizeof(glm::vec2) * 2 + sizeof(float)),
+  glBufferData(GL_ARRAY_BUFFER,
+               1000 *
+                   (sizeof(glm::vec2) * 2 + sizeof(float) + sizeof(glm::vec4)),
                nullptr, GL_DYNAMIC_DRAW);
 
-  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (void *)0);
+  int offset = 0;
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void *)0);
   glEnableVertexAttribArray(2);
   glVertexAttribDivisor(2, 1);
+  offset += 2;
 
   glEnableVertexAttribArray(3);
-  glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4,
-                        (void *)(sizeof(float) * 2));
+  glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 8,
+                        (void *)(sizeof(float) * offset));
   glVertexAttribDivisor(3, 1);
+  offset += 2;
 
-  // glEnableVertexAttribArray(4);
-  // glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(float) * 5,
-  // (void*)(sizeof(float) * 4)); glVertexAttribDivisor(4, 1);
+  glEnableVertexAttribArray(4);
+  glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 8,
+                        (void *)(sizeof(float) * offset));
+  glVertexAttribDivisor(4, 1);
+  offset += 4;
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   GLCall(glBindVertexArray(0));
