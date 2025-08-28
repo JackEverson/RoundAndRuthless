@@ -232,6 +232,7 @@ void GardenEngine::renderScene() {
 
   m_renderer->Clear(0.1f, 0.1f, 0.1f, 1.0f);
 
+	float clicks = (float)m_clickCounter->GetClicks();
   double xpos, ypos;
   glfwGetCursorPos(m_window, &xpos, &ypos);
 
@@ -243,8 +244,9 @@ void GardenEngine::renderScene() {
   glm::mat4 view = m_camera.GetViewMat();
   glm::mat4 projection = m_camera.GetProjectionMat(w, h);
 
-  m_renderer->BeginBatchDraw(3);
+  m_renderer->BeginBatchDraw(4);
   SpriteInstance static_sprite;
+  static_sprite.position = glm::vec3(0.0f, 0.0f, -clicks);
     static_sprite.size = glm::vec2(0.6f, 0.4f);
   static_sprite.rotation = 0.0f;
   static_sprite.color = glm::vec4(0.5f, 1.0f, 0.5f, 1.0f);
@@ -252,7 +254,7 @@ void GardenEngine::renderScene() {
   m_renderer->SubmitSprite(static_sprite);
 
   SpriteInstance clicker_sprite;
-  clicker_sprite.position = glm::vec2(0.0f, 0.0f);
+  clicker_sprite.position = glm::vec3(0.0f, 0.0f, -clicks);
   if (glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
     clicker_sprite.size = glm::vec2(0.3f, 0.20f);
   } else {
@@ -267,7 +269,7 @@ void GardenEngine::renderScene() {
   float follow_y = campos.y + ((1 - (ypos - h / 2)) / h);
   SpriteInstance follow_sprite;
   follow_sprite.color = glm::vec4(0.5f, 0.5f, 1.0f, 1.0f);
-  follow_sprite.position = glm::vec2(follow_x, follow_y);
+  follow_sprite.position = glm::vec3(follow_x, follow_y, 0.0f);
   // follow_sprite.position = glm::vec2(0.1, 0.1);
   follow_sprite.rotation = 0.0f;
   follow_sprite.size = glm::vec2(0.1f, 0.1f);

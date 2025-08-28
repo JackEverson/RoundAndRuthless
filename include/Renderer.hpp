@@ -4,7 +4,7 @@
 #include "Texture.hpp"
 
 struct SpriteInstance {
-  glm::vec2 position;
+  glm::vec3 position;
   glm::vec2 size;
   float rotation;
   glm::vec4 color;

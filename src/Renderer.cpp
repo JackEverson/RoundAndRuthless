@@ -17,10 +17,8 @@ void Renderer::Clear(float r, float g, float b, float a) const {
   GLCall(glClear(GL_COLOR_BUFFER_BIT));
 }
 
-void Renderer::DrawSprite(Texture &texture, glm::vec2 position, glm::vec2
-size,
-                          float rotate, glm::vec4 color, glm::mat4
-                          projection) {
+// void Renderer::DrawSprite(Texture &texture, glm::vec2 position, glm::vec2
+// size, float rotate, glm::vec4 color, glm::mat4 projection) {
 //
 //   // Activate shader
 //   this->shader.Bind();
@@ -32,7 +30,8 @@ size,
 //   // Rotate around center
 //   model = glm::translate(model, glm::vec3(0.5f * size.x, 0.5f * size.y,
 //   0.0f)); model = glm::rotate(model, glm::radians(rotate), glm::vec3(0.0f,
-//   0.0f, 1.0f)); model = glm::translate(model, glm::vec3(-0.5f * size.x, -0.5f
+//   0.0f, 1.0f)); model = glm::translate(model, glm::vec3(-0.5f * size.x,
+//   -0.5f
 //   * size.y, 0.0f));
 //
 //   // Scale
@@ -50,11 +49,11 @@ size,
 //   GLCall(glBindVertexArray(this->quadVAO));
 //   GLCall(glDrawArrays(GL_TRIANGLES, 0, 6));
 //   GLCall(glBindVertexArray(0));
-}
+// }
 
 void Renderer::BeginBatchDraw(int countEstimate) {
   batch.clear();
-  batch.reserve(countEstimate * 8);
+  batch.reserve(countEstimate * 9);
 }
 
 void Renderer::SubmitSprite(const SpriteInstance &sprite) {
@@ -86,6 +85,7 @@ void Renderer::RendBatch(glm::mat4 view, glm::mat4 projection) {
   for (auto &s : batch) {
     instances.push_back(s.position.x);
     instances.push_back(s.position.y);
+    instances.push_back(s.position.z);
     instances.push_back(s.size.x);
     instances.push_back(s.size.y);
     instances.push_back(s.color.r);
@@ -128,9 +128,11 @@ void Renderer::initRenderData() {
   GLCall(glBindBuffer(GL_ARRAY_BUFFER, quadVBO));
   GLCall(glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices,
                       GL_STATIC_DRAW));
+  // aPos
   GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
                                (void *)0));
   GLCall(glEnableVertexAttribArray(0));
+  // aTexCoord
   GLCall(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
                                (void *)(2 * sizeof(float))));
   GLCall(glEnableVertexAttribArray(1));
@@ -143,24 +145,27 @@ void Renderer::initRenderData() {
   glGenBuffers(1, &instanceVBO);
   glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
   glBufferData(GL_ARRAY_BUFFER,
-               1000 *
-                   (sizeof(glm::vec2) * 2 + sizeof(float) + sizeof(glm::vec4)),
+               1000 * (sizeof(glm::vec3) + sizeof(glm::vec3) + sizeof(float) +
+                       sizeof(glm::vec4)),
                nullptr, GL_DYNAMIC_DRAW);
 
   int offset = 0;
-  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void *)0);
+  // instancePos
+  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 9, (void *)0);
   glEnableVertexAttribArray(2);
   glVertexAttribDivisor(2, 1);
-  offset += 2;
+  offset += 3;
 
+  // instanceSize
   glEnableVertexAttribArray(3);
-  glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 8,
+  glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 9,
                         (void *)(sizeof(float) * offset));
   glVertexAttribDivisor(3, 1);
   offset += 2;
 
+  // instanceColor
   glEnableVertexAttribArray(4);
-  glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 8,
+  glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 9,
                         (void *)(sizeof(float) * offset));
   glVertexAttribDivisor(4, 1);
   offset += 4;

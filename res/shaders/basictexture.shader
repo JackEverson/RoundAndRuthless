@@ -1,8 +1,8 @@
 #shadervertex
 #version 460 core
     layout (location = 0) in vec2 aPos;
-    layout (location = 1) in vec2 atexCoord;
-    layout (location = 2) in vec2 instancePos;
+    layout (location = 1) in vec2 aTexCoord;
+    layout (location = 2) in vec3 instancePos;
     layout (location = 3) in vec2 instanceSize;
     layout (location = 4) in vec4 instanceColor;
 
@@ -16,13 +16,13 @@
     void main()
     {
 	vec2 scaled = aPos * instanceSize;
-	vec2 worldPos = instancePos + scaled;
+	vec3 worldPos = instancePos + vec3(scaled, 0.0);
 
-	gl_Position = aProjection * aView * vec4(worldPos, 0.0, 1.0);
+	gl_Position = aProjection * aView * vec4(worldPos, 1.0);
 	//gl_Position = vec4(worldPos, 0.0, 1.0);
 
         v_color = instanceColor;
-        v_texCoord = atexCoord;
+        v_texCoord = aTexCoord;
     };
 
 #shaderfragment
