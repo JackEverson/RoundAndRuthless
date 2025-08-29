@@ -22,6 +22,10 @@ public:
 
 	void click() { clicks += m_click_value; }
 	void addClicks(unsigned int amount) { clicks += amount; }
+	void removeClicks(unsigned int amount) { 
+		if (amount > clicks) clicks = 0;
+		else clicks -= amount;
+	}
 	void ResetClicks() { clicks = 0; }
 	
 	unsigned int GetClicks() const { return clicks; }

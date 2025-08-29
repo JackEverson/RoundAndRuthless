@@ -1,4 +1,5 @@
 #include <chrono>
+#include <cstdio>
 #include <print>
 #include <string>
 #include <thread>
@@ -6,6 +7,8 @@
 #include <glad/glad.h>
 
 // #include "Renderer.hpp"
+#include "GLFW/glfw3.h"
+#include "glm/trigonometric.hpp"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
@@ -181,13 +184,11 @@ void GardenEngine::processInput() {
       m_first_click = false;
       m_clickCounter->click();
     }
-
-    // std::println("left click detected at x: {}:{}, y: {}:{}", nxpos, xpos,
-    // nypos, ypos);
-
-    // m_grubs->AddBug(1, (nxpos - 0.5f) * aspect_ratio, nypos - 0.5f);
   } else {
     m_first_click = true;
+  }
+  if (glfwGetKey(m_window, GLFW_KEY_E)) {
+    m_clickCounter->click();
   }
 
   float sensitivity = 1.0f;
@@ -226,13 +227,21 @@ void GardenEngine::processInput() {
   // }
 }
 
-void GardenEngine::updateGameState() {}
+void GardenEngine::updateGameState() {
+
+  static int cycles = 0;
+  cycles++;
+
+  if (cycles % 100 == 0) {
+    m_clickCounter->removeClicks(1);
+  }
+}
 
 void GardenEngine::renderScene() {
 
   m_renderer->Clear(0.1f, 0.1f, 0.1f, 1.0f);
 
-	float clicks = (float)m_clickCounter->GetClicks();
+  float clicks = (float)m_clickCounter->GetClicks();
   double xpos, ypos;
   glfwGetCursorPos(m_window, &xpos, &ypos);
 
@@ -244,37 +253,40 @@ void GardenEngine::renderScene() {
   glm::mat4 view = m_camera.GetViewMat();
   glm::mat4 projection = m_camera.GetProjectionMat(w, h);
 
+  float jiggle_x = glm::cos(clicks) * 0.005;
+  float jiggle_y = glm::sin(clicks) * 0.005;
+
   m_renderer->BeginBatchDraw(4);
   SpriteInstance static_sprite;
-  static_sprite.position = glm::vec3(0.0f, 0.0f, -clicks);
-    static_sprite.size = glm::vec2(0.6f, 0.4f);
+  static_sprite.position = glm::vec3(jiggle_x, jiggle_y, -clicks * 0.01);
+  static_sprite.size = glm::vec2(0.6f, 0.4f);
   static_sprite.rotation = 0.0f;
   static_sprite.color = glm::vec4(0.5f, 1.0f, 0.5f, 1.0f);
   static_sprite.texture = test_texture;
   m_renderer->SubmitSprite(static_sprite);
 
   SpriteInstance clicker_sprite;
-  clicker_sprite.position = glm::vec3(0.0f, 0.0f, -clicks);
+  clicker_sprite.position = glm::vec3(0.0f, 0.0f, -clicks * 0.01);
   if (glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-    clicker_sprite.size = glm::vec2(0.3f, 0.20f);
+    clicker_sprite.color = glm::vec4(1.0f, 0.5f, 0.5f, 1.0f);
   } else {
-    clicker_sprite.size = glm::vec2(0.6f, 0.4f);
+    static_sprite.color = glm::vec4(0.5f, 1.0f, 0.5f, 1.0f);
   }
+  clicker_sprite.size = glm::vec2(0.6f, 0.4f);
   clicker_sprite.rotation = 0.0f;
-  clicker_sprite.color = glm::vec4(1.0f, 0.5f, 0.5f, 1.0f);
   clicker_sprite.texture = test_texture;
   m_renderer->SubmitSprite(clicker_sprite);
 
-  float follow_x = campos.x + ((xpos - w / 2) / w);
-  float follow_y = campos.y + ((1 - (ypos - h / 2)) / h);
-  SpriteInstance follow_sprite;
-  follow_sprite.color = glm::vec4(0.5f, 0.5f, 1.0f, 1.0f);
-  follow_sprite.position = glm::vec3(follow_x, follow_y, 0.0f);
-  // follow_sprite.position = glm::vec2(0.1, 0.1);
-  follow_sprite.rotation = 0.0f;
-  follow_sprite.size = glm::vec2(0.1f, 0.1f);
-  follow_sprite.texture = test_texture;
-  m_renderer->SubmitSprite(follow_sprite);
+  // float follow_x = campos.x + ((xpos - w / 2) / w);
+  // float follow_y = campos.y + ((1 - (ypos - h / 2)) / h);
+  // SpriteInstance follow_sprite;
+  // follow_sprite.color = glm::vec4(0.5f, 0.5f, 1.0f, 1.0f);
+  // follow_sprite.position = glm::vec3(follow_x, follow_y, 0.0f);
+  // // follow_sprite.position = glm::vec2(0.1, 0.1);
+  // follow_sprite.rotation = 0.0f;
+  // follow_sprite.size = glm::vec2(0.1f, 0.1f);
+  // follow_sprite.texture = test_texture;
+  // m_renderer->SubmitSprite(follow_sprite);
 
   m_renderer->RendBatch(view, projection);
 
