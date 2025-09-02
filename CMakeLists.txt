@@ -10,14 +10,16 @@ set(CMAKE_CXX_STANDARD 23)
 if(MSVC)
                     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -WX-")
 else()
-                    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++17")
+                    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++23")
 endif()
 
 #External libraries
+set(LIBTYPE STATIC CACHE STRING "" FORCE)
 add_subdirectory(external/glad)
 add_subdirectory(external/glfw)
-add_subdirectory(external/stb_image)
+add_subdirectory(external/single_headers)
 add_subdirectory(external/glm)
+add_subdirectory(external/openal-soft)
 
 #ImGui
 file(GLOB imgui_src 
@@ -68,9 +70,10 @@ target_compile_features(GardenEngine PUBLIC cxx_std_23)
 target_link_libraries(GardenEngine PUBLIC
 	glad 
 	glfw
-	stb_image 
+	single_headers 
 	glm
 	imgui
+	OpenAL
 )
 
 #Copy Resources
@@ -90,3 +93,5 @@ add_executable(${PROJECT_NAME} apps/app_look_at_the_garden.cpp)
 target_link_libraries(${PROJECT_NAME} PUBLIC GardenEngine )
 add_dependencies(${PROJECT_NAME} copy_resources)
 
+add_executable("test" apps/test.cpp)
+target_link_libraries("test" PUBLIC GardenEngine OpenAL)
