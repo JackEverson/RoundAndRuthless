@@ -16,15 +16,19 @@
 #include "gl_debug.hpp"
 #include "imgui_internal.h"
 
-GardenEngine::GardenEngine(std::string name, int win_width, int win_height) {
+GardenEngine::GardenEngine(std::string name, int win_width, int win_height) :
+	soundManager(SimpleSoundManager::Instance())
+{
   std::println("Creating GardenEngine...");
-
+  
   setupGlfwWindow(name, win_width, win_height);
   setupOpenGl();
   setupImGui();
+  setupAudio();
   setupGameState();
 
   test_texture = new Texture("./res/textures/sushi.png");
+  background_texture = new Texture("./res/textures/background.png");
 
   std::println("GardenEngine Created!");
 }
@@ -42,6 +46,10 @@ GardenEngine::~GardenEngine() {
 
   glfwDestroyWindow(m_window);
   glfwTerminate();
+  soundManager.Shutdown();
+
+  delete test_texture;
+  delete background_texture;
 }
 
 int GardenEngine::Start(float fps) {
@@ -53,6 +61,7 @@ int GardenEngine::Start(float fps) {
   int frame_time_limit_ms = (int)((1 / fps) * 1000);
 
   while (!glfwWindowShouldClose(m_window)) {
+
 
     auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -108,16 +117,17 @@ void GardenEngine::setupGlfwWindow(std::string win_name, int win_width,
                  mode->height);
   }
 
-  //// set fullscreen
-  // GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
-  // std::cout << "Using monitor: " << pMonitor << std::endl;
-  // m_window = glfwCreateWindow(win_width, win_height, name.c_str(), pMonitor,
-  // NULL);
+  // set fullscreen
+   //GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
+   //std::cout << "Using monitor: " << pMonitor << std::endl;
+   //m_window = glfwCreateWindow(win_width, win_height, win_name.c_str(), pMonitor,
+   //NULL);
 
   // set windowed
   m_window =
       glfwCreateWindow(win_width, win_height, win_name.c_str(), NULL, NULL);
-  // glfwSwapInterval(0);
+
+   //glfwSwapInterval(0);
 
   if (!m_window) {
     std::println("Failed to create GLFW window");
@@ -149,13 +159,26 @@ void GardenEngine::setupImGui() {
       ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
   io.ConfigFlags |=
       ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
-  // m_imgui_io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF
-  // using Docking Branch
+  // m_imgui_io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
+
   ImGui_ImplGlfw_InitForOpenGL(
       m_window, true); // Second param install_callback=true will install GLFW
                        // callbacks and chain to existing ones.
   ImGui_ImplOpenGL3_Init();
   std::println("ImGui Context Created!");
+}
+
+void GardenEngine::setupAudio()
+{
+    if (!soundManager.Initialize()) {
+        std::cerr << "Failed to initialize sound manager!" << std::endl;
+        throw std::runtime_error("Failed to initialize sound manager!");
+    }
+
+    soundManager.LoadSound("click", "./res/sounds/click.wav");
+	soundManager.LoadSound("cave", "./res/sounds/cave.ogg");
+
+	soundManager.PlayBackgroundMusic("cave", 0.5f); // Play background music at half volume
 }
 
 void GardenEngine::setupGameState() { m_clickCounter = new ClickCounter(); }
@@ -183,12 +206,14 @@ void GardenEngine::processInput() {
     if (m_first_click == true) {
       m_first_click = false;
       m_clickCounter->click();
+      soundManager.PlaySound("click");
     }
   } else {
     m_first_click = true;
   }
   if (glfwGetKey(m_window, GLFW_KEY_E)) {
     m_clickCounter->click();
+    soundManager.PlaySound("click");
   }
 
   float sensitivity = 1.0f;
@@ -240,6 +265,10 @@ void GardenEngine::updateGameState() {
 void GardenEngine::renderScene() {
 
   m_renderer->Clear(0.1f, 0.1f, 0.1f, 1.0f);
+    SpriteInstance background;
+    background.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    background.texture = background_texture;
+    m_renderer->DrawBackground(background);
 
   float clicks = (float)m_clickCounter->GetClicks();
   double xpos, ypos;

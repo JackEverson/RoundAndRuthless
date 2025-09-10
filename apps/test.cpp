@@ -31,6 +31,10 @@ ALuint LoadWavToBuffer(const char* filename) {
     drwav_read_pcm_frames_s16(&wav, wav.totalPCMFrameCount, pcmData.data());
     drwav_uninit(&wav);
 
+    std::cout << "WAV: frames=" << wav.totalPCMFrameCount
+        << " channels=" << wav.channels
+        << " rate=" << wav.sampleRate << std::endl;
+
     ALenum format = (wav.channels == 1) ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16;
 
     ALuint buffer;
@@ -50,6 +54,10 @@ ALuint LoadOggToBuffer(const char* filename) {
     if (samples < 0) {
         throw std::runtime_error("Failed to load OGG file");
     }
+
+    std::cout << "OGG: samples=" << samples
+        << " channels=" << channels
+        << " rate=" << sampleRate << std::endl;
 
     ALenum format = (channels == 1) ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16;
 
@@ -75,6 +83,7 @@ int main() {
     alcMakeContextCurrent(context);
 
     try {
+
         // ---- Load sounds ----
         ALuint bgBuffer = LoadOggToBuffer("./res/sounds/cave.ogg");
         ALuint clickBuffer = LoadWavToBuffer("./res/sounds/click.wav");
@@ -95,7 +104,7 @@ int main() {
 
         // ---- Clicks on a separate thread ----
         std::thread clickThread([&]() {
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 10; i++) {
                 std::this_thread::sleep_for(std::chrono::seconds(2));
                 std::cout << "Click!\n";
                 alSourcePlay(clickSource);
@@ -104,7 +113,7 @@ int main() {
         clickThread.detach();
 
         // ---- Keep main thread alive for music & clicks ----
-        std::this_thread::sleep_for(std::chrono::seconds(12));
+        std::this_thread::sleep_for(std::chrono::seconds(60));
 
         // ---- Cleanup ----
         alDeleteSources(1, &bgSource);

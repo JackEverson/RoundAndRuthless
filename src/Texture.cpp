@@ -7,11 +7,6 @@
 #include "Texture.hpp"
 #include "gl_debug.hpp"
 
-
-
-
-
-
 Texture::Texture(const std::string & path)
     : m_RendererID(0), m_FilePath(path), m_LocalBuffer(nullptr), m_Width(0), m_Height(0), m_BPP(0){
 
@@ -36,6 +31,7 @@ Texture::Texture(const std::string & path)
 
 Texture::~Texture(){
     GLCall(glDeleteTextures(1, &m_RendererID));
+	m_RendererID = 0;
 }
 
 void Texture::Bind(unsigned int slot /*= 0*/) const{

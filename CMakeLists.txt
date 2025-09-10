@@ -52,6 +52,7 @@ set(GardenEngine_src_files
 	${GardenEngine_src}/Texture.cpp
 	${GardenEngine_src}/Camera.cpp
 	${GardenEngine_src}/ClickCounter.cpp
+	${GardenEngine_src}/Audio.cpp
 
 	# include files included for IDE sake
 	${GardenEngine_include}/Engine.hpp
@@ -61,6 +62,7 @@ set(GardenEngine_src_files
 	${GardenEngine_include}/Camera.hpp
 	${GardenEngine_include}/ClickCounter.hpp
 	${GardenEngine_include}/gl_debug.hpp
+	${GardenEngine_include}/Audio.hpp
 
 )
 

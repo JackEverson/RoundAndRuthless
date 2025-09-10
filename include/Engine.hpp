@@ -4,6 +4,7 @@
 #include <GLFW/glfw3.h>
 #include "imgui.h"
 
+#include "Audio.hpp"
 #include "Renderer.hpp"
 #include "Camera.hpp"
 #include "ClickCounter.hpp"
@@ -17,6 +18,9 @@ private:
 	GLFWwindow* m_window;
 	Renderer* m_renderer;
 	Texture* test_texture;
+	Texture* background_texture;
+
+	SimpleSoundManager& soundManager;
 
 	Camera m_camera;
 
@@ -38,6 +42,7 @@ private:
 	void setupGlfwWindow(std::string name, int win_width, int win_height);
 	void setupOpenGl();
 	void setupImGui();
+	void setupAudio();
 	void setupGameState();
 
 	void processInput();

@@ -6,7 +6,12 @@
 #include "gl_debug.hpp"
 #include "glm/fwd.hpp"
 
-Renderer::Renderer() : shader("./res/shaders/basictexture.shader") {
+#include <print>
+
+Renderer::Renderer() :
+    shader("./res/shaders/basictexture.shader"),
+	backgroundShader("./res/shaders/background.shader")
+{
   initRenderData();
 }
 
@@ -17,39 +22,23 @@ void Renderer::Clear(float r, float g, float b, float a) const {
   GLCall(glClear(GL_COLOR_BUFFER_BIT));
 }
 
-// void Renderer::DrawSprite(Texture &texture, glm::vec2 position, glm::vec2
-// size, float rotate, glm::vec4 color, glm::mat4 projection) {
-//
-//   // Activate shader
-//   this->shader.Bind();
-//   glm::mat4 model = glm::mat4(1.0f);
-//
-//   // Translate
-//   model = glm::translate(model, glm::vec3(position, 0.0f));
-//
-//   // Rotate around center
-//   model = glm::translate(model, glm::vec3(0.5f * size.x, 0.5f * size.y,
-//   0.0f)); model = glm::rotate(model, glm::radians(rotate), glm::vec3(0.0f,
-//   0.0f, 1.0f)); model = glm::translate(model, glm::vec3(-0.5f * size.x,
-//   -0.5f
-//   * size.y, 0.0f));
-//
-//   // Scale
-//   model = glm::scale(model, glm::vec3(size, 1.0f));
-//
-//   this->shader.SetUniformMat4f("aModel", model);
-//   this->shader.SetUniformMat4f("aProjection", projection);
-//   this->shader.SetUniform4f("aColor", color);
-//
-//   texture.Bind(0);
-//
-//   GLCall(glEnable(GL_BLEND));
-//   GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-//
-//   GLCall(glBindVertexArray(this->quadVAO));
-//   GLCall(glDrawArrays(GL_TRIANGLES, 0, 6));
-//   GLCall(glBindVertexArray(0));
-// }
+void Renderer::DrawBackground(const SpriteInstance& sprite) {
+	//Clear(sprite.color.r, sprite.color.g, sprite.color.b, sprite.color.a);
+
+    backgroundShader.Bind();
+    sprite.texture->Bind(0);
+
+	GLCall(glBindVertexArray(this->quadVAO));
+
+    GLCall(glDisable(GL_BLEND));
+    GLCall(glDisable(GL_DEPTH_TEST));
+
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    
+    backgroundShader.Unbind();
+    glBindVertexArray(0);
+}
+
 
 void Renderer::BeginBatchDraw(int countEstimate) {
   batch.clear();
@@ -67,12 +56,12 @@ void Renderer::RendBatch(glm::mat4 view, glm::mat4 projection) {
   Texture *tex = batch[0].texture;
   tex->Bind(0);
 
-  // shader.SetUniform4f("aColor", batch[0].color);
+  shader.Bind();
   shader.SetUniformMat4f("aView", view);
   shader.SetUniformMat4f("aProjection", projection);
 
   std::vector<float> instances;
-  instances.reserve(batch.size() * 8);
+  instances.reserve(batch.size() * m_vertexSize);
 
   // for (auto& s : batch) {
   //     SpriteInstance inst;
@@ -96,16 +85,17 @@ void Renderer::RendBatch(glm::mat4 view, glm::mat4 projection) {
 
   GLCall(glEnable(GL_BLEND));
   GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+  //GLCall(glEnable(GL_DEPTH_TEST));
+  GLCall(glDisable(GL_DEPTH_TEST));
 
   glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
   glBufferSubData(GL_ARRAY_BUFFER, 0, instances.size() * sizeof(glm::vec2),
                   instances.data());
 
-  shader.Bind();
   glBindVertexArray(quadVAO);
   // glDrawArraysInstanced(GL_TRIANGLES, 0, 6, instances.size());
   glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0,
-                          instances.size());
+                          instances.size() / m_vertexSize);
   glBindVertexArray(0);
 }
 
@@ -169,7 +159,4 @@ void Renderer::initRenderData() {
                         (void *)(sizeof(float) * offset));
   glVertexAttribDivisor(4, 1);
   offset += 4;
-
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  GLCall(glBindVertexArray(0));
 }

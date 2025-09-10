@@ -13,24 +13,32 @@ struct SpriteInstance {
 
 class Renderer {
 private:
-  Shader shader;
-  unsigned int quadVAO = 0;
-  unsigned int quadVBO = 0;
-  unsigned int quadEBO = 0;
-  unsigned int instanceVBO = 0;
-  std::vector<SpriteInstance> batch;
+	Shader shader;
+	Shader backgroundShader;
+	unsigned int quadVAO = 0;
+	unsigned int quadVBO = 0;
+	unsigned int quadEBO = 0;
+	unsigned int instanceVBO = 0;
+
+	unsigned int backgroundVAO = 0;
+	unsigned int backgroundVBO = 0;
+
+	std::vector<SpriteInstance> batch;
+
+	int m_vertexSize = 9;
 
 public:
-  Renderer();
-  ~Renderer();
+	Renderer();
+	~Renderer();
 
-  void Clear(float r, float g, float b, float a) const;
+	void Clear(float r, float g, float b, float a) const;
+	void DrawBackground(const SpriteInstance& sprite);
 
-  void DrawSprite(Texture &texture, glm::vec2 position, glm::vec2 size,
-  float rotate, glm::vec4 color, glm::mat4 projection);
-  void BeginBatchDraw(int countEstimate);
-  void SubmitSprite(const SpriteInstance &sprite);
-  void RendBatch(glm::mat4 view, glm::mat4 projection);
+	//void DrawSprite(Texture &texture, glm::vec2 position, glm::vec2 size,
+	//float rotate, glm::vec4 color, glm::mat4 projection);
+	void BeginBatchDraw(int countEstimate);
+	void SubmitSprite(const SpriteInstance &sprite);
+	void RendBatch(glm::mat4 view, glm::mat4 projection);
 
 private:
   void initRenderData();
