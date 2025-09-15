@@ -1,4 +1,3 @@
-// SimpleSoundManager.h - Let's start with just the basics
 #pragma once
 
 #include <AL/al.h>

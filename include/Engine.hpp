@@ -8,6 +8,7 @@
 #include "Renderer.hpp"
 #include "Camera.hpp"
 #include "ClickCounter.hpp"
+#include "Approacher.hpp"
 
 
 class GardenEngine
@@ -17,8 +18,9 @@ private:
 	
 	GLFWwindow* m_window;
 	Renderer* m_renderer;
-	Texture* test_texture;
 	Texture* background_texture;
+	Texture* approacher_texture;
+	Approacher* m_approacher;
 
 	SimpleSoundManager& soundManager;
 

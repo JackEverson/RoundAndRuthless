@@ -27,7 +27,7 @@ private:
 	float m_z = 0;
 
 	float m_fov = 45.0f;
-	float m_clip_near = 0.00001f;
-	float m_clip_far = 100.0f;
+	float m_clip_near = 0.1f;
+	float m_clip_far = 1000.0f;
 
 };

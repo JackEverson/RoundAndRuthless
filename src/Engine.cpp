@@ -27,7 +27,7 @@ GardenEngine::GardenEngine(std::string name, int win_width, int win_height) :
   setupAudio();
   setupGameState();
 
-  test_texture = new Texture("./res/textures/sushi.png");
+  approacher_texture = new Texture("./res/textures/sushi.png");
   background_texture = new Texture("./res/textures/background.png");
 
   std::println("GardenEngine Created!");
@@ -48,8 +48,10 @@ GardenEngine::~GardenEngine() {
   glfwTerminate();
   soundManager.Shutdown();
 
-  delete test_texture;
+  delete approacher_texture;
+  approacher_texture = nullptr;
   delete background_texture;
+  background_texture = nullptr;
 }
 
 int GardenEngine::Start(float fps) {
@@ -75,7 +77,6 @@ int GardenEngine::Start(float fps) {
     int ms =
         (int)std::chrono::duration_cast<std::chrono::milliseconds>(duration)
             .count();
-    // std::println("Time elapsed to generate frame: {}", ms);
     int waittime = frame_time_limit_ms - ms;
     if (waittime < frame_time_limit_ms * -0.5)
       std::println("WARNING, cannot keep up with set FPS. FPS currently at {}",
@@ -181,7 +182,10 @@ void GardenEngine::setupAudio()
 	soundManager.PlayBackgroundMusic("cave", 0.5f); // Play background music at half volume
 }
 
-void GardenEngine::setupGameState() { m_clickCounter = new ClickCounter(); }
+void GardenEngine::setupGameState() { 
+    m_clickCounter = new ClickCounter(); 
+    m_approacher = new Approacher(30.0f, 1.0f);
+}
 
 void GardenEngine::processInput() {
 
@@ -245,21 +249,12 @@ void GardenEngine::processInput() {
     m_camera.ShiftCamera(0.0f, 0.0f, move);
   }
 
-  // if (approach) {
-  //     //locz -= 0.0001f;
-  //     if (red < 1.0f) red += 0.00001;
-  //     if (other > 0.0f) other -= 0.00001;
-  // }
 }
 
 void GardenEngine::updateGameState() {
+    
+    m_approacher->Step();
 
-  static int cycles = 0;
-  cycles++;
-
-  if (cycles % 100 == 0) {
-    m_clickCounter->removeClicks(1);
-  }
 }
 
 void GardenEngine::renderScene() {
@@ -282,20 +277,24 @@ void GardenEngine::renderScene() {
   glm::mat4 view = m_camera.GetViewMat();
   glm::mat4 projection = m_camera.GetProjectionMat(w, h);
 
-  float jiggle_x = glm::cos(clicks) * 0.005;
-  float jiggle_y = glm::sin(clicks) * 0.005;
+  float jiggle_size_x = 0.01f;
+  float jiggle_size_y = 0.001f;
+  float jiggle_speed = 20.0f;
+
+  float jiggle_x = glm::cos(m_approacher->m_distanceAway * jiggle_speed) * -jiggle_size_x;
+  float jiggle_y = glm::sin(m_approacher->m_distanceAway * jiggle_speed) * jiggle_size_y;
 
   m_renderer->BeginBatchDraw(4);
   SpriteInstance static_sprite;
-  static_sprite.position = glm::vec3(jiggle_x, jiggle_y, -clicks * 0.01);
+  static_sprite.position = glm::vec3(jiggle_x, jiggle_y, -m_approacher->m_distanceAway);
   static_sprite.size = glm::vec2(0.6f, 0.4f);
   static_sprite.rotation = 0.0f;
   static_sprite.color = glm::vec4(0.5f, 1.0f, 0.5f, 1.0f);
-  static_sprite.texture = test_texture;
+  static_sprite.texture = approacher_texture;
   m_renderer->SubmitSprite(static_sprite);
 
   SpriteInstance clicker_sprite;
-  clicker_sprite.position = glm::vec3(0.0f, 0.0f, -clicks * 0.01);
+  clicker_sprite.position = glm::vec3(0.0f, 0.0f, -m_approacher->m_distanceAway);
   if (glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
     clicker_sprite.color = glm::vec4(1.0f, 0.5f, 0.5f, 1.0f);
   } else {
@@ -303,7 +302,7 @@ void GardenEngine::renderScene() {
   }
   clicker_sprite.size = glm::vec2(0.6f, 0.4f);
   clicker_sprite.rotation = 0.0f;
-  clicker_sprite.texture = test_texture;
+  clicker_sprite.texture = approacher_texture;
   m_renderer->SubmitSprite(clicker_sprite);
 
   // float follow_x = campos.x + ((xpos - w / 2) / w);
@@ -362,6 +361,10 @@ void GardenEngine::renderImgui(double x, double y) {
 
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
                 1000.0f / io.Framerate, io.Framerate);
+
+    float dist = m_approacher->m_distanceAway;
+    ImGui::Text("Sushi Distance %.1f m",
+        dist);
 
     ImGui::End();
   }

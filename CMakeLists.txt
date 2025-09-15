@@ -4,9 +4,11 @@ project(LookAtTheGarden VERSION 1.0
                     DESCRIPTION "GardenEngine for look at the garden"
 		    LANGUAGES C CXX)
 
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(CMAKE_CXX_STANDARD 23)
 if(MSVC)
                     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -WX-")
 else()
@@ -14,11 +16,13 @@ else()
 endif()
 
 #External libraries
-set(LIBTYPE STATIC CACHE STRING "" FORCE)
 add_subdirectory(external/glad)
 add_subdirectory(external/glfw)
 add_subdirectory(external/single_headers)
 add_subdirectory(external/glm)
+
+set(LIBTYPE STATIC CACHE STRING "" FORCE)
+set(ALSOFT_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(external/openal-soft)
 
 #ImGui
@@ -53,6 +57,7 @@ set(GardenEngine_src_files
 	${GardenEngine_src}/Camera.cpp
 	${GardenEngine_src}/ClickCounter.cpp
 	${GardenEngine_src}/Audio.cpp
+	${GardenEngine_src}/Approacher.cpp
 
 	# include files included for IDE sake
 	${GardenEngine_include}/Engine.hpp
@@ -63,6 +68,7 @@ set(GardenEngine_src_files
 	${GardenEngine_include}/ClickCounter.hpp
 	${GardenEngine_include}/gl_debug.hpp
 	${GardenEngine_include}/Audio.hpp
+	${GardenEngine_include}/Approacher.hpp
 
 )
 

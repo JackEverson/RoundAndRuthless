@@ -1,9 +1,16 @@
 ﻿#include <print>
 
+
+
 #include "Engine.hpp"
 
 
+
 int main() {
+#ifdef _DEBUG
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+	
 	std::string name = "Look At The Garden!";
 	// GardenEngine engine(name, 1280, 720);
 	GardenEngine engine(name, 1920, 1080);
