@@ -29,6 +29,9 @@ GardenEngine::GardenEngine(std::string name, int win_width, int win_height) :
 
   approacher_texture = new Texture("./res/textures/sushi.png");
   background_texture = new Texture("./res/textures/background.png");
+  floor_texture = new Texture("./res/textures/gravel_floor.png");
+  wall_texture = new Texture("./res/textures/concrete_wall.png");
+  ceiling_texture = new Texture("./res/textures/plaster_ceiling.png");
 
   std::println("GardenEngine Created!");
 }
@@ -184,6 +187,7 @@ void GardenEngine::setupAudio()
 
 void GardenEngine::setupGameState() { 
     m_clickCounter = new ClickCounter(); 
+    //m_approacher = new Approacher(30.0f, 0.1f); // 5 min approach
     m_approacher = new Approacher(30.0f, 1.0f);
 }
 
@@ -252,18 +256,21 @@ void GardenEngine::processInput() {
 }
 
 void GardenEngine::updateGameState() {
-    
     m_approacher->Step();
-
 }
 
 void GardenEngine::renderScene() {
 
   m_renderer->Clear(0.1f, 0.1f, 0.1f, 1.0f);
-    SpriteInstance background;
-    background.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    background.texture = background_texture;
-    m_renderer->DrawBackground(background);
+    //SpriteInstance background;
+    //background.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    //background.texture = background_texture;
+    //m_renderer->DrawBackground(background);
+
+
+
+
+
 
   float clicks = (float)m_clickCounter->GetClicks();
   double xpos, ypos;
@@ -277,6 +284,8 @@ void GardenEngine::renderScene() {
   glm::mat4 view = m_camera.GetViewMat();
   glm::mat4 projection = m_camera.GetProjectionMat(w, h);
 
+  m_renderer->DrawHallway(view, projection, *floor_texture, *wall_texture, *ceiling_texture);
+
   float jiggle_size_x = 0.01f;
   float jiggle_size_y = 0.001f;
   float jiggle_speed = 20.0f;
@@ -284,12 +293,14 @@ void GardenEngine::renderScene() {
   float jiggle_x = glm::cos(m_approacher->m_distanceAway * jiggle_speed) * -jiggle_size_x;
   float jiggle_y = glm::sin(m_approacher->m_distanceAway * jiggle_speed) * jiggle_size_y;
 
+  float darkness = 1.0f - 0.8f * (m_approacher->m_distanceAway / 30.0f);
+
   m_renderer->BeginBatchDraw(4);
   SpriteInstance static_sprite;
   static_sprite.position = glm::vec3(jiggle_x, jiggle_y, -m_approacher->m_distanceAway);
   static_sprite.size = glm::vec2(0.6f, 0.4f);
-  static_sprite.rotation = 0.0f;
-  static_sprite.color = glm::vec4(0.5f, 1.0f, 0.5f, 1.0f);
+  static_sprite.rotation = 90.0f;
+  static_sprite.color = glm::vec4(darkness, darkness, darkness, 1.0f);
   static_sprite.texture = approacher_texture;
   m_renderer->SubmitSprite(static_sprite);
 

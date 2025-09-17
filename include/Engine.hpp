@@ -18,9 +18,13 @@ private:
 	
 	GLFWwindow* m_window;
 	Renderer* m_renderer;
+	Approacher* m_approacher;
+
 	Texture* background_texture;
 	Texture* approacher_texture;
-	Approacher* m_approacher;
+	Texture* floor_texture;
+	Texture* wall_texture;
+	Texture* ceiling_texture;
 
 	SimpleSoundManager& soundManager;
 
