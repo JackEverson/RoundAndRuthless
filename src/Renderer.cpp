@@ -22,11 +22,12 @@ void Renderer::Clear(float r, float g, float b, float a) const {
   GLCall(glClear(GL_COLOR_BUFFER_BIT));
 }
 
-void Renderer::DrawBackground(const SpriteInstance& sprite) {
-	//Clear(sprite.color.r, sprite.color.g, sprite.color.b, sprite.color.a);
+void Renderer::DrawBackground(const Texture& texture) {
+	
+    //Clear(sprite.color.r, sprite.color.g, sprite.color.b, sprite.color.a);
 
     backgroundShader.Bind();
-    sprite.texture->Bind(0);
+    texture.Bind(0);
 
 	GLCall(glBindVertexArray(this->quadVAO));
 

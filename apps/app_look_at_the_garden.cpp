@@ -1,6 +1,7 @@
 ﻿#include <print>
 #include "Engine.hpp"
-#include "GameLoopScene.hpp"
+
+#include "IntroScene.hpp"
 
 int main() {
 //#ifdef _DEBUG
@@ -15,7 +16,8 @@ int main() {
 	float fps = 60.0f;
 	// float fps = 144.0f;
 
-	auto scene = std::make_unique<GameLoopScene>();
+	//auto scene = std::make_unique<GameLoopScene>();
+	auto scene = std::make_unique<IntroScene>();
 	int engine_test_result = engine.Start(std::move(scene), fps);
 
 	std::println("Engine Exit code: {}", engine_test_result);

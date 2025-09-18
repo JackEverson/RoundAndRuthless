@@ -98,6 +98,7 @@ add_custom_command(TARGET copy_resources PRE_BUILD
 #LookAtTheGarden executable
 set(Scenes 
 	apps/GameLoopScene.hpp
+	apps/IntroScene.hpp
 )
 
 add_executable(${PROJECT_NAME} apps/app_look_at_the_garden.cpp)

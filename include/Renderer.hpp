@@ -32,7 +32,7 @@ public:
 	~Renderer();
 
 	void Clear(float r, float g, float b, float a) const;
-	void DrawBackground(const SpriteInstance& sprite);
+	void DrawBackground(const Texture& texture);
 
 	void DrawHallway(glm::mat4 view, glm::mat4 projection, Texture& floor, Texture& wall, Texture& ceiling);
 
