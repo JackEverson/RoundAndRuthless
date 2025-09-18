@@ -48,7 +48,6 @@ target_link_libraries(imgui PUBLIC
 #GardenEngine
 set(GardenEngine_src src)
 set(GardenEngine_include include )
-set(GardenEngine_include_bugs include/bugs )
 set(GardenEngine_src_files
 	${GardenEngine_src}/Engine.cpp
 	${GardenEngine_src}/Renderer.cpp
@@ -69,11 +68,11 @@ set(GardenEngine_src_files
 	${GardenEngine_include}/gl_debug.hpp
 	${GardenEngine_include}/Audio.hpp
 	${GardenEngine_include}/Approacher.hpp
-
+	${GardenEngine_include}/Scene.hpp
 )
 
 add_library(GardenEngine STATIC ${GardenEngine_src_files})
-target_include_directories(GardenEngine PUBLIC ${GardenEngine_include} ${GardenEngine_include_bugs} )
+target_include_directories(GardenEngine PUBLIC ${GardenEngine_include} )
 target_compile_features(GardenEngine PUBLIC cxx_std_23)
 target_link_libraries(GardenEngine PUBLIC
 	glad 
@@ -97,8 +96,13 @@ add_custom_command(TARGET copy_resources PRE_BUILD
 
 
 #LookAtTheGarden executable
+set(Scenes 
+	apps/GameLoopScene.hpp
+)
+
 add_executable(${PROJECT_NAME} apps/app_look_at_the_garden.cpp)
 target_link_libraries(${PROJECT_NAME} PUBLIC GardenEngine )
+target_include_directories(${PROJECT_NAME} PUBLIC Scenes)
 add_dependencies(${PROJECT_NAME} copy_resources)
 
 add_executable("test" apps/test.cpp)

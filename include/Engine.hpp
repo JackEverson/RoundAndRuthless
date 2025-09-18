@@ -9,6 +9,7 @@
 #include "Camera.hpp"
 #include "ClickCounter.hpp"
 #include "Approacher.hpp"
+#include "Scene.hpp"
 
 
 class GardenEngine
@@ -16,22 +17,14 @@ class GardenEngine
 
 private:
 	
+	std::unique_ptr<Scene> m_currentScene;
+
 	GLFWwindow* m_window;
 	Renderer* m_renderer;
-	Approacher* m_approacher;
-
-	Texture* background_texture;
-	Texture* approacher_texture;
-	Texture* floor_texture;
-	Texture* wall_texture;
-	Texture* ceiling_texture;
 
 	SimpleSoundManager& soundManager;
 
-	Camera m_camera;
-
-
-	ClickCounter* m_clickCounter;
+	//Camera m_camera;
 
 	bool m_first_click = false;
 
@@ -41,7 +34,7 @@ public:
 	GardenEngine(std::string, int win_width, int win_height);
 	~GardenEngine();
 
-	int Start(float fps);
+	int Start(std::unique_ptr<Scene> scene, float fps);
 
 private:
 
@@ -51,9 +44,7 @@ private:
 	void setupAudio();
 	void setupGameState();
 
-	void processInput();
-	void updateGameState();
-	void renderScene();
+	void processInut();
 	void renderImgui(double x, double y);
 };
 

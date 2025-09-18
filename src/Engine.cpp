@@ -6,7 +6,7 @@
 
 #include <glad/glad.h>
 
-// #include "Renderer.hpp"
+//#include "Renderer.hpp"
 #include "GLFW/glfw3.h"
 #include "glm/trigonometric.hpp"
 #include "imgui_impl_glfw.h"
@@ -25,13 +25,6 @@ GardenEngine::GardenEngine(std::string name, int win_width, int win_height) :
   setupOpenGl();
   setupImGui();
   setupAudio();
-  setupGameState();
-
-  approacher_texture = new Texture("./res/textures/sushi.png");
-  background_texture = new Texture("./res/textures/background.png");
-  floor_texture = new Texture("./res/textures/gravel_floor.png");
-  wall_texture = new Texture("./res/textures/concrete_wall.png");
-  ceiling_texture = new Texture("./res/textures/plaster_ceiling.png");
 
   std::println("GardenEngine Created!");
 }
@@ -44,35 +37,38 @@ GardenEngine::~GardenEngine() {
   delete m_renderer;
   m_renderer = nullptr;
 
-  delete m_clickCounter;
-  m_clickCounter = nullptr;
-
   glfwDestroyWindow(m_window);
   glfwTerminate();
   soundManager.Shutdown();
 
-  delete approacher_texture;
-  approacher_texture = nullptr;
-  delete background_texture;
-  background_texture = nullptr;
 }
 
-int GardenEngine::Start(float fps) {
+int GardenEngine::Start(std::unique_ptr<Scene> scene, float fps) {
   std::println("GardenEngine Starting...");
 
-  // Render loop!!!!!
   glClearColor(0.1, 0.6f, 0.2f, 1.0f);
-
   int frame_time_limit_ms = (int)((1 / fps) * 1000);
+
+  m_currentScene = std::move(scene);
+  m_currentScene->onEnter();
 
   while (!glfwWindowShouldClose(m_window)) {
 
+        auto start_time = std::chrono::high_resolution_clock::now();
 
-    auto start_time = std::chrono::high_resolution_clock::now();
+        Scene* next_scene = m_currentScene->update();
+        if (next_scene) {
+            m_currentScene->onExit();
+            m_currentScene.reset(next_scene);
+            m_currentScene->onEnter();
+        }
 
-    processInput();
-    updateGameState();
-    renderScene();
+        m_currentScene->render(*m_window, *m_renderer);
+        m_currentScene->handleInput(*m_window);
+        
+        double xpos, ypos;
+        glfwGetCursorPos(m_window, &xpos, &ypos);
+        renderImgui(xpos, ypos);
 
     // finish and fps limit
     auto end_time = std::chrono::high_resolution_clock::now();
@@ -88,6 +84,7 @@ int GardenEngine::Start(float fps) {
       std::this_thread::sleep_for(std::chrono::milliseconds(waittime));
   }
 
+  
   // glfwTerminate();
   std::println("GardenEngine Exited Successfully!");
   return 0;
@@ -178,161 +175,8 @@ void GardenEngine::setupAudio()
         std::cerr << "Failed to initialize sound manager!" << std::endl;
         throw std::runtime_error("Failed to initialize sound manager!");
     }
-
-    soundManager.LoadSound("click", "./res/sounds/click.wav");
-	soundManager.LoadSound("cave", "./res/sounds/cave.ogg");
-
-	soundManager.PlayBackgroundMusic("cave", 0.5f); // Play background music at half volume
 }
 
-void GardenEngine::setupGameState() { 
-    m_clickCounter = new ClickCounter(); 
-    //m_approacher = new Approacher(30.0f, 0.1f); // 5 min approach
-    m_approacher = new Approacher(30.0f, 1.0f);
-}
-
-void GardenEngine::processInput() {
-
-  GLCall(glfwPollEvents());
-
-  if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-    glfwSetWindowShouldClose(m_window, true);
-
-  if (glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-    double xpos, ypos;
-    glfwGetCursorPos(m_window, &xpos, &ypos);
-
-    int w, h;
-    glfwGetWindowSize(m_window, &w, &h);
-    float aspect_ratio = (float)w / (float)h;
-
-    glm::vec3 cam_loc = m_camera.GetLocation();
-
-    double nxpos = (xpos / w + cam_loc.x);
-    double nypos = (1 - (ypos / h)) + cam_loc.y;
-
-    if (m_first_click == true) {
-      m_first_click = false;
-      m_clickCounter->click();
-      soundManager.PlaySound("click");
-    }
-  } else {
-    m_first_click = true;
-  }
-  if (glfwGetKey(m_window, GLFW_KEY_E)) {
-    m_clickCounter->click();
-    soundManager.PlaySound("click");
-  }
-
-  float sensitivity = 1.0f;
-  if (glfwGetKey(m_window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-    sensitivity = 1.5f;
-  }
-  float move = 0.01f * sensitivity;
-
-  if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS) {
-    // locy += 0.001f;
-    m_camera.ShiftCamera(0.0f, move, 0.0f);
-  }
-  if (glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS) {
-    // locy -= 0.001f;
-    m_camera.ShiftCamera(0.0f, -move, 0.0f);
-  }
-  if (glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS) {
-    // locx -= 0.001f;
-    m_camera.ShiftCamera(-move, 0.0f, 0.0f);
-  }
-  if (glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS) {
-    // locx += 0.001f;
-    m_camera.ShiftCamera(move, 0.0f, 0.0f);
-  }
-  if (glfwGetKey(m_window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-    m_camera.ShiftCamera(0.0f, 0.0f, -move);
-  }
-  if (glfwGetKey(m_window, GLFW_KEY_C) == GLFW_PRESS) {
-    m_camera.ShiftCamera(0.0f, 0.0f, move);
-  }
-
-}
-
-void GardenEngine::updateGameState() {
-    m_approacher->Step();
-}
-
-void GardenEngine::renderScene() {
-
-  m_renderer->Clear(0.1f, 0.1f, 0.1f, 1.0f);
-    //SpriteInstance background;
-    //background.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    //background.texture = background_texture;
-    //m_renderer->DrawBackground(background);
-
-
-
-
-
-
-  float clicks = (float)m_clickCounter->GetClicks();
-  double xpos, ypos;
-  glfwGetCursorPos(m_window, &xpos, &ypos);
-
-  glm::vec3 campos = m_camera.GetLocation();
-
-  int w, h;
-  glfwGetWindowSize(m_window, &w, &h);
-  float aspect = w / h;
-  glm::mat4 view = m_camera.GetViewMat();
-  glm::mat4 projection = m_camera.GetProjectionMat(w, h);
-
-  m_renderer->DrawHallway(view, projection, *floor_texture, *wall_texture, *ceiling_texture);
-
-  float jiggle_size_x = 0.01f;
-  float jiggle_size_y = 0.001f;
-  float jiggle_speed = 20.0f;
-
-  float jiggle_x = glm::cos(m_approacher->m_distanceAway * jiggle_speed) * -jiggle_size_x;
-  float jiggle_y = glm::sin(m_approacher->m_distanceAway * jiggle_speed) * jiggle_size_y;
-
-  float darkness = 1.0f - 0.8f * (m_approacher->m_distanceAway / 30.0f);
-
-  m_renderer->BeginBatchDraw(4);
-  SpriteInstance static_sprite;
-  static_sprite.position = glm::vec3(jiggle_x, jiggle_y, -m_approacher->m_distanceAway);
-  static_sprite.size = glm::vec2(0.6f, 0.4f);
-  static_sprite.rotation = 90.0f;
-  static_sprite.color = glm::vec4(darkness, darkness, darkness, 1.0f);
-  static_sprite.texture = approacher_texture;
-  m_renderer->SubmitSprite(static_sprite);
-
-  SpriteInstance clicker_sprite;
-  clicker_sprite.position = glm::vec3(0.0f, 0.0f, -m_approacher->m_distanceAway);
-  if (glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-    clicker_sprite.color = glm::vec4(1.0f, 0.5f, 0.5f, 1.0f);
-  } else {
-    static_sprite.color = glm::vec4(0.5f, 1.0f, 0.5f, 1.0f);
-  }
-  clicker_sprite.size = glm::vec2(0.6f, 0.4f);
-  clicker_sprite.rotation = 0.0f;
-  clicker_sprite.texture = approacher_texture;
-  m_renderer->SubmitSprite(clicker_sprite);
-
-  // float follow_x = campos.x + ((xpos - w / 2) / w);
-  // float follow_y = campos.y + ((1 - (ypos - h / 2)) / h);
-  // SpriteInstance follow_sprite;
-  // follow_sprite.color = glm::vec4(0.5f, 0.5f, 1.0f, 1.0f);
-  // follow_sprite.position = glm::vec3(follow_x, follow_y, 0.0f);
-  // // follow_sprite.position = glm::vec2(0.1, 0.1);
-  // follow_sprite.rotation = 0.0f;
-  // follow_sprite.size = glm::vec2(0.1f, 0.1f);
-  // follow_sprite.texture = test_texture;
-  // m_renderer->SubmitSprite(follow_sprite);
-
-  m_renderer->RendBatch(view, projection);
-
-  renderImgui(xpos, ypos);
-
-  GLCall(glfwSwapBuffers(m_window));
-}
 
 void GardenEngine::renderImgui(double x, double y) {
   ImGui_ImplOpenGL3_NewFrame();
@@ -347,10 +191,10 @@ void GardenEngine::renderImgui(double x, double y) {
     ImGui::Begin("Settings"); // Create a window called "Hello, world!" and
                               // append into it.
 
-    // ImGui::Text("This is some useful text.");               // Display some
-    // text (you can use a format strings too) ImGui::Checkbox("Demo Window",
-    // &boolle);        // Edit bools storing our window open/close state
-    // ImGui::Checkbox("Another Window", &boolle);
+     ImGui::Text("This is some useful text.");               // Display some
+     //text (you can use a format strings too) 
+      ImGui::Checkbox("Demo Window", &boolle);        // Edit bools storing our window open/close state
+     ImGui::Checkbox("Another Window", &boolle);
 
     // ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float
     // using a slider from 0.0f to 1.0f ImGui::ColorEdit3("clear color",
@@ -360,27 +204,27 @@ void GardenEngine::renderImgui(double x, double y) {
     // true when clicked (most widgets return true when edited/activated)
     // m_clickCounter->click();
     // ImGui::SameLine();
-    ImGui::Text("Clicks = %d", m_clickCounter->GetClicks());
+    //ImGui::Text("Clicks = %d", m_clickCounter->GetClicks());
 
-    if (ImGui::Button("Upgrade"))
-      m_clickCounter->UpgradeClickValue();
-    ImGui::SameLine();
-    ImGui::Text("Click upgrade cost = %d",
-                m_clickCounter->GetClickUpgradeValue());
+    //if (ImGui::Button("Upgrade"))
+    //  m_clickCounter->UpgradeClickValue();
+    //ImGui::SameLine();
+    //ImGui::Text("Click upgrade cost = %d",
+    //            m_clickCounter->GetClickUpgradeValue());
 
     ImGui::Text("Mouse location: %.1f x %.1f", x, y);
 
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
                 1000.0f / io.Framerate, io.Framerate);
 
-    float dist = m_approacher->m_distanceAway;
-    ImGui::Text("Sushi Distance %.1f m",
-        dist);
+    //float dist = m_approacher->m_distanceAway;
+    //ImGui::Text("Sushi Distance %.1f m",
+    //    dist);
 
     ImGui::End();
   }
 
-  // ImGui::ShowDemoWindow(); // Show demo window! :)
+   ImGui::ShowDemoWindow(); // Show demo window! :)
 
   ImGui::Render();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

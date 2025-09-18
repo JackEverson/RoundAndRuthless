@@ -8,7 +8,7 @@ class ClickCounter {
 public:
 
 private:
-	unsigned long long clicks = 0;
+	unsigned int clicks = 0;
 
 	unsigned int m_click_value = 1;
 	unsigned int m_click_upgrade_cost = 100;
