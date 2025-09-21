@@ -118,15 +118,18 @@ void GardenEngine::setupGlfwWindow(std::string win_name, int win_width,
                  mode->height);
   }
 
+
   // set fullscreen
-   //GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
-   //std::cout << "Using monitor: " << pMonitor << std::endl;
-   //m_window = glfwCreateWindow(win_width, win_height, win_name.c_str(), pMonitor,
-   //NULL);
+   GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
+   const GLFWvidmode* mode = glfwGetVideoMode(pMonitor);
+   std::cout << "Using monitor: " << pMonitor << std::endl;
+   //m_window = glfwCreateWindow(win_width, win_height, win_name.c_str(), pMonitor, NULL);
+   m_window = glfwCreateWindow(mode->width, mode->height, win_name.c_str(), pMonitor, NULL);
+
 
   // set windowed
-  m_window =
-      glfwCreateWindow(win_width, win_height, win_name.c_str(), NULL, NULL);
+  //m_window =
+  //    glfwCreateWindow(win_width, win_height, win_name.c_str(), NULL, NULL);
 
    //glfwSwapInterval(0);
 
