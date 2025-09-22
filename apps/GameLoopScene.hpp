@@ -55,11 +55,6 @@ public:
 
 
         renderer.Clear(0.1f, 0.1f, 0.1f, 1.0f);
-        //SpriteInstance background;
-        //background.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-        //background.texture = background_texture;
-        //m_renderer->DrawBackground(background);
-
 
         float clicks = (float)m_clickCounter.GetClicks();
         

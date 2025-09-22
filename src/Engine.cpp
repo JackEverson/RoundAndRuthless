@@ -63,25 +63,27 @@ int GardenEngine::Start(std::unique_ptr<Scene> scene, float fps) {
             m_currentScene->onEnter();
         }
 
-        m_currentScene->render(*m_window, *m_renderer);
-        m_currentScene->handleInput(*m_window);
-        
         double xpos, ypos;
         glfwGetCursorPos(m_window, &xpos, &ypos);
         renderImgui(xpos, ypos);
 
-    // finish and fps limit
-    auto end_time = std::chrono::high_resolution_clock::now();
-    auto duration = end_time - start_time;
-    int ms =
-        (int)std::chrono::duration_cast<std::chrono::milliseconds>(duration)
-            .count();
-    int waittime = frame_time_limit_ms - ms;
-    if (waittime < frame_time_limit_ms * -0.5)
-      std::println("WARNING, cannot keep up with set FPS. FPS currently at {}",
-                   1000 / ms);
-    else
-      std::this_thread::sleep_for(std::chrono::milliseconds(waittime));
+        m_currentScene->handleInput(*m_window);
+        m_currentScene->render(*m_window, *m_renderer);
+        
+
+
+        // finish and fps limit
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto duration = end_time - start_time;
+        int ms =
+            (int)std::chrono::duration_cast<std::chrono::milliseconds>(duration)
+                .count();
+        int waittime = frame_time_limit_ms - ms;
+        if (waittime < frame_time_limit_ms * -0.5)
+          std::println("WARNING, cannot keep up with set FPS. FPS currently at {}",
+                       1000 / ms);
+        else
+          std::this_thread::sleep_for(std::chrono::milliseconds(waittime));
   }
 
   
@@ -120,16 +122,15 @@ void GardenEngine::setupGlfwWindow(std::string win_name, int win_width,
 
 
   // set fullscreen
-   GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
-   const GLFWvidmode* mode = glfwGetVideoMode(pMonitor);
-   std::cout << "Using monitor: " << pMonitor << std::endl;
-   //m_window = glfwCreateWindow(win_width, win_height, win_name.c_str(), pMonitor, NULL);
-   m_window = glfwCreateWindow(mode->width, mode->height, win_name.c_str(), pMonitor, NULL);
+   //GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
+   //const GLFWvidmode* mode = glfwGetVideoMode(pMonitor);
+   //std::cout << "Using monitor: " << pMonitor << std::endl;
+   //m_window = glfwCreateWindow(mode->width, mode->height, win_name.c_str(), pMonitor, NULL);
 
 
   // set windowed
-  //m_window =
-  //    glfwCreateWindow(win_width, win_height, win_name.c_str(), NULL, NULL);
+  m_window =
+      glfwCreateWindow(win_width, win_height, win_name.c_str(), NULL, NULL);
 
    //glfwSwapInterval(0);
 
@@ -191,12 +192,11 @@ void GardenEngine::renderImgui(double x, double y) {
   if (boolle) {
     ImGuiIO io = ImGui::GetIO();
 
-    ImGui::Begin("Settings"); // Create a window called "Hello, world!" and
-                              // append into it.
+    ImGui::Begin("Settings"); 
+                              
 
-     ImGui::Text("This is some useful text.");               // Display some
-     //text (you can use a format strings too) 
-      ImGui::Checkbox("Demo Window", &boolle);        // Edit bools storing our window open/close state
+     ImGui::Text("This is some useful text.");
+     ImGui::Checkbox("Demo Window", &boolle);        
      ImGui::Checkbox("Another Window", &boolle);
 
     // ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float

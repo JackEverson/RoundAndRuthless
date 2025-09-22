@@ -39,7 +39,7 @@
 
     void main()
     {
-	float fogFactor = exp(v_distance * 0.5);
+	float fogFactor = exp(v_distance * 0.8);
 	//float fogFactor = 0.5;
 	
 	vec4 textureColor = v_color * texture(u_Texture, v_texCoord);

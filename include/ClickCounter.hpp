@@ -14,8 +14,6 @@ private:
 	unsigned int m_click_upgrade_cost = 100;
 
 
-
-
 public:
 	ClickCounter();
 	~ClickCounter();

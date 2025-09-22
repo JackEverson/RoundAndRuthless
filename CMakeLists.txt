@@ -57,6 +57,7 @@ set(GardenEngine_src_files
 	${GardenEngine_src}/ClickCounter.cpp
 	${GardenEngine_src}/Audio.cpp
 	${GardenEngine_src}/Approacher.cpp
+	${GardenEngine_src}/Button.cpp
 
 	# include files included for IDE sake
 	${GardenEngine_include}/Engine.hpp
@@ -69,6 +70,7 @@ set(GardenEngine_src_files
 	${GardenEngine_include}/Audio.hpp
 	${GardenEngine_include}/Approacher.hpp
 	${GardenEngine_include}/Scene.hpp
+	${GardenEngine_include}/Button.hpp
 )
 
 add_library(GardenEngine STATIC ${GardenEngine_src_files})
@@ -96,14 +98,18 @@ add_custom_command(TARGET copy_resources PRE_BUILD
 
 
 #LookAtTheGarden executable
-set(Scenes 
+set(Scenes_files 
 	apps/GameLoopScene.hpp
 	apps/IntroScene.hpp
 )
+add_library(Scenes INTERFACE )
+target_include_directories(Scenes INTERFACE Scenes_files)
 
 add_executable(${PROJECT_NAME} apps/app_look_at_the_garden.cpp)
-target_link_libraries(${PROJECT_NAME} PUBLIC GardenEngine )
-target_include_directories(${PROJECT_NAME} PUBLIC Scenes)
+target_link_libraries(${PROJECT_NAME} PUBLIC 
+	GardenEngine 
+	Scenes
+)
 add_dependencies(${PROJECT_NAME} copy_resources)
 
 add_executable("test" apps/test.cpp)
