@@ -70,8 +70,6 @@ int GardenEngine::Start(std::unique_ptr<Scene> scene, float fps) {
 		m_currentScene->handleInput(*m_window);
 		m_currentScene->render(*m_window, *m_renderer);
 
-
-
 		// finish and fps limit
 		auto end_time = std::chrono::high_resolution_clock::now();
 		auto duration = end_time - start_time;
@@ -121,16 +119,31 @@ void GardenEngine::setupGlfwWindow(std::string win_name, int win_width,
 	}
 
 
-	// set fullscreen
 	GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
 	const GLFWvidmode* mode = glfwGetVideoMode(pMonitor);
-	std::cout << "Using monitor: " << pMonitor << std::endl;
-	m_window = glfwCreateWindow(mode->width, mode->height, win_name.c_str(), pMonitor, NULL);
+	std::println("Primary monitor detected to be:");
+
+	//std::cout << "Primary monitor detected to be:" << pMonitor << std::endl;
 
 
-	// set windowed
+	glfwWindowHint(GLFW_RED_BITS, mode->redBits);
+	glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
+	glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
+	glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+
+
+	//// set fullscreen
+	//m_window = glfwCreateWindow(mode->width, mode->height, win_name.c_str(), pMonitor, NULL);
+
+	////set fullscreenborderless window
+	glfwWindowHint(GLFW_DECORATED, GLFW_FALSE); // No borders or title bar
+	m_window = glfwCreateWindow(mode->width, mode->height, win_name.c_str(), NULL, NULL);
+	//glfwSetWindowPos(m_window, 0, 0);
+
+	//// set windowed
 	//m_window = glfwCreateWindow(win_width, win_height, win_name.c_str(), NULL, NULL);
 
+	glfwMakeContextCurrent(m_window);
 	 //glfwSwapInterval(0);
 
 	if (!m_window) {
@@ -186,7 +199,7 @@ void GardenEngine::renderImgui(double x, double y) {
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
-	bool boolle = true;
+	static bool boolle = false;
 
 	if (boolle) {
 		ImGuiIO io = ImGui::GetIO();

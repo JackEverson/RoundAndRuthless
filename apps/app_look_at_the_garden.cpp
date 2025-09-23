@@ -9,7 +9,7 @@ int main() {
 //#endif
 	
 	std::string name = "Look At The Garden!";
-	// GardenEngine engine(name, 1280, 720);
+	 //GardenEngine engine(name, 1280, 720);
 	GardenEngine engine(name, 1920, 1080);
 
 	//float fps = 30.0f;

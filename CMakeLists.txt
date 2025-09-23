@@ -105,7 +105,11 @@ set(Scenes_files
 add_library(Scenes INTERFACE )
 target_include_directories(Scenes INTERFACE Scenes_files)
 
-add_executable(${PROJECT_NAME} apps/app_look_at_the_garden.cpp)
+if(MSVC)
+    set(APP_ICON_RESOURCE "${CMAKE_CURRENT_SOURCE_DIR}/resources.rc")
+endif()
+
+add_executable(${PROJECT_NAME} apps/app_look_at_the_garden.cpp ${APP_ICON_RESOURCE})
 target_link_libraries(${PROJECT_NAME} PUBLIC 
 	GardenEngine 
 	Scenes

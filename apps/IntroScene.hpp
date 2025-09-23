@@ -28,6 +28,7 @@ public:
     Texture background_texture;
     Texture button_texture_red;
     Texture button_texture_green;
+    Texture sushi_texture;
     bool m_first_click = false;
 
     static void QuitFunc() {
@@ -44,17 +45,18 @@ public:
         soundManager(SimpleSoundManager::Instance()),
         m_approacher(Approacher(30.0f, 1.0f)),
         background_texture(Texture("./res/textures/background.png")),
-        button_texture_red(Texture("./res/textures/button_red.png")),
-        button_texture_green(Texture("./res/textures/button_green.png")),
-        button_quit(glm::vec3(0.2f, -0.2f, 0.0f), glm::vec2(0.1f, 0.1f), QuitFunc),
-        button_start(glm::vec3(-0.2f, -0.2f, 0.0f), glm::vec2(0.1f, 0.1f), StartFunc)
+        button_texture_red(Texture("./res/textures/exit.png")),
+        button_texture_green(Texture("./res/textures/start.png")),
+        sushi_texture(Texture("./res/textures/sushi.png")),
+        button_quit(glm::vec3(0.0f, -0.1f, 0.0f), glm::vec2(0.2f, 0.1f), QuitFunc),
+        button_start(glm::vec3(0.0f, 0.1f, 0.0f), glm::vec2(0.2f, 0.1f), StartFunc)
     {
         
     }
 
     void onEnter() override {
 
-        //soundManager.LoadSound("click", "./res/sounds/click.wav");
+        soundManager.LoadSound("click", "./res/sounds/click.wav");
         //soundManager.LoadSound("cave", "./res/sounds/cave.ogg");
 
         //soundManager.PlayBackgroundMusic("cave", 1.0f); 
@@ -77,8 +79,8 @@ public:
     void render(GLFWwindow& window, Renderer& renderer) override {
 
 
-        //renderer.Clear(0.1f, 0.1f, 0.1f, 1.0f);
-        renderer.DrawBackground(background_texture);
+        renderer.Clear(0.2f, 0.2f, 0.2f, 1.0f);
+        //renderer.DrawBackground(background_texture);
         
         glm::vec3 campos = m_camera.GetLocation();
 
@@ -92,6 +94,16 @@ public:
 
         //renderer.DrawBackground(background_texture);
 
+        renderer.BeginBatchDraw(1);
+        SpriteInstance sushi_sprite;
+        sushi_sprite.position = glm::vec3(-0.7f, 0.0f, -0.2f);
+        sushi_sprite.size = glm::vec2(1.0f, 0.8f);
+        sushi_sprite.rotation = 0.0f;
+        sushi_sprite.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+        sushi_sprite.texture = &sushi_texture;
+        renderer.SubmitSprite(sushi_sprite);
+        renderer.RendBatch(view, projection);
+
 
         renderer.BeginBatchDraw(1);
         SpriteInstance button_sprite_red;
@@ -103,17 +115,16 @@ public:
         renderer.SubmitSprite(button_sprite_red);
         renderer.RendBatch(view, projection);
 
+
         renderer.BeginBatchDraw(1);
         SpriteInstance button_sprite_green;
         button_sprite_green.position = button_start.m_worldPosition;
         button_sprite_green.size = button_start.m_size;
         button_sprite_green.rotation = 0.0f;
-        button_sprite_green.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+        button_sprite_green.color = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
         button_sprite_green.texture = &button_texture_green;
         renderer.SubmitSprite(button_sprite_green);
         renderer.RendBatch(view, projection);
-
-
 
 
         GLCall(glfwSwapBuffers(&window));
@@ -147,10 +158,12 @@ public:
         auto proj = m_camera.GetProjectionMat(w, h);
 
         if (button_quit.IsMouseOverButton(view, proj, glm::vec2(mouseX, mouseY), w, h)) {
+            soundManager.PlaySound("click");
             button_quit.click();
         }
 
         if (button_start.IsMouseOverButton(view, proj, glm::vec2(mouseX, mouseY), w, h)) {
+            soundManager.PlaySound("click");
             button_start.click();
         }
 

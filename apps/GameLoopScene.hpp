@@ -18,6 +18,8 @@ public:
 	Texture floor_texture;
 	Texture wall_texture;
 	Texture ceiling_texture;
+	Texture delivered_text;
+
 	bool m_first_click = false;
 
 	GameLoopScene() :
@@ -27,7 +29,8 @@ public:
 		background_texture(Texture("./res/textures/background.png")),
 		floor_texture(Texture("./res/textures/gravel_floor.png")),
 		wall_texture(Texture("./res/textures/concrete_wall.png")),
-		ceiling_texture(Texture("./res/textures/plaster_ceiling.png")) {
+		ceiling_texture(Texture("./res/textures/plaster_ceiling.png")),
+		delivered_text(Texture("./res/textures/delivered_text.png")) {
 
 	}
 
@@ -85,7 +88,7 @@ public:
 		static_sprite.color = glm::vec4(darkness, darkness, darkness, 1.0f);
 		static_sprite.texture = &approacher_texture;
 		renderer.SubmitSprite(static_sprite);
-
+		renderer.RendBatch(view, projection);
 		//SpriteInstance clicker_sprite;
 		//clicker_sprite.position = glm::vec3(0.0f, 0.0f, -m_approacher->m_distanceAway);
 		//if (glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
@@ -99,7 +102,21 @@ public:
 		//clicker_sprite.texture = approacher_texture;
 		//m_renderer->SubmitSprite(clicker_sprite);
 
-		renderer.RendBatch(view, projection);
+
+		if (m_approacher.m_distanceAway == 0) {
+			renderer.BeginBatchDraw(1);
+			SpriteInstance deliver_sprite;
+			deliver_sprite.position = glm::vec3(0.0f, 0.0f, 0.0f);
+			deliver_sprite.size = glm::vec2(1.0f, 1.0f);
+			//deliver_sprite.rotation = 0.0f;
+			deliver_sprite.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+			deliver_sprite.texture = &delivered_text;
+			renderer.SubmitSprite(deliver_sprite);
+			renderer.RendBatch(view, projection);
+		}
+
+
+
 
 		GLCall(glfwSwapBuffers(&window));
 	}
