@@ -10,13 +10,12 @@ private:
 	std::function<void()> onClick;
 
 public:
-	Texture texture;
 	glm::vec3 m_worldPosition;
 	glm::vec2 m_size;
 
 public:
 
-	Button(glm::vec3 worldPos, glm::vec2 size, Texture texture, std::function<void()> onClickFunc);
+	Button(glm::vec3 worldPos, glm::vec2 size, std::function<void()> onClickFunc);
 	~Button();
 
 	bool IsMouseOverButton(

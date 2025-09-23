@@ -117,7 +117,7 @@ void Renderer::RendBatch(glm::mat4 model, glm::mat4 view, glm::mat4 projection) 
     return;
 
   Texture *tex = batch[0].texture;
-  tex->Bind(0);
+  tex->Bind();
 
   shader.Bind();
   shader.SetUniformMat4f("aModel", model);

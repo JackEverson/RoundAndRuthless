@@ -9,34 +9,45 @@
 
 #include "Renderer.hpp"
 
+static bool start_game = false;
+static bool shutdown = false;
+
 class IntroScene : public Scene {
 
 public:
-    
-    bool start_game = false;
+
     bool left_click_before = false;
 
     Camera m_camera;
     Approacher m_approacher;
     SimpleSoundManager& soundManager;
 
-
-    Button button;
+    Button button_quit;
+    Button button_start;
 
     Texture background_texture;
+    Texture button_texture_red;
+    Texture button_texture_green;
     bool m_first_click = false;
 
-    static void sayHello() {
-        static int counter = 0;
-        std::println("Button says hello {}", counter++);
+    static void QuitFunc() {
+        std::println("QUIT: Intro Scene Quit Button Click");
+        shutdown = true;
     }
 
+    static void StartFunc() {
+        std::println("START: Intro Scene Start Button Click");
+        start_game = true;
+    }
 
     IntroScene() :
         soundManager(SimpleSoundManager::Instance()),
         m_approacher(Approacher(30.0f, 1.0f)),
         background_texture(Texture("./res/textures/background.png")),
-        button(glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(1.0f, 1.0f), Texture("./res/textures/background.png"), sayHello)
+        button_texture_red(Texture("./res/textures/button_red.png")),
+        button_texture_green(Texture("./res/textures/button_green.png")),
+        button_quit(glm::vec3(0.2f, -0.2f, 0.0f), glm::vec2(0.1f, 0.1f), QuitFunc),
+        button_start(glm::vec3(-0.2f, -0.2f, 0.0f), glm::vec2(0.1f, 0.1f), StartFunc)
     {
         
     }
@@ -54,6 +65,7 @@ public:
     }
 
     Scene* update() override {
+        
 
         if (start_game) {
             return new GameLoopScene;
@@ -65,34 +77,42 @@ public:
     void render(GLFWwindow& window, Renderer& renderer) override {
 
 
-        renderer.Clear(0.1f, 0.1f, 0.1f, 1.0f);
-        //SpriteInstance background;
-        //background.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-        //background.texture = background_texture;
-        //m_renderer->DrawBackground(background);
-
+        //renderer.Clear(0.1f, 0.1f, 0.1f, 1.0f);
+        renderer.DrawBackground(background_texture);
         
         glm::vec3 campos = m_camera.GetLocation();
 
-
         int w, h;
         glfwGetWindowSize(&window, &w, &h);
-        float aspect = w / h;
+        //float aspect;
+        //if (w <= 0 || h <= 0) aspect = 1.0f;
+        //else aspect = w / h;
         glm::mat4 view = m_camera.GetViewMat();
         glm::mat4 projection = m_camera.GetProjectionMat(w, h);
 
-        renderer.DrawBackground(background_texture);
+        //renderer.DrawBackground(background_texture);
 
 
-        renderer.BeginBatchDraw(4);
-        SpriteInstance button_sprite;
-        button_sprite.position = button.m_worldPosition;
-        button_sprite.size = button.m_size;
-        button_sprite.rotation = 0.0f;
-        button_sprite.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-        button_sprite.texture = &button.texture;
-        renderer.SubmitSprite(button_sprite);
+        renderer.BeginBatchDraw(1);
+        SpriteInstance button_sprite_red;
+        button_sprite_red.position = button_quit.m_worldPosition;
+        button_sprite_red.size = button_quit.m_size;
+        button_sprite_red.rotation = 0.0f;
+        button_sprite_red.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+        button_sprite_red.texture = &button_texture_red;
+        renderer.SubmitSprite(button_sprite_red);
         renderer.RendBatch(view, projection);
+
+        renderer.BeginBatchDraw(1);
+        SpriteInstance button_sprite_green;
+        button_sprite_green.position = button_start.m_worldPosition;
+        button_sprite_green.size = button_start.m_size;
+        button_sprite_green.rotation = 0.0f;
+        button_sprite_green.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+        button_sprite_green.texture = &button_texture_green;
+        renderer.SubmitSprite(button_sprite_green);
+        renderer.RendBatch(view, projection);
+
 
 
 
@@ -126,8 +146,12 @@ public:
         auto view = m_camera.GetViewMat();
         auto proj = m_camera.GetProjectionMat(w, h);
 
-        if (button.IsMouseOverButton(view, proj, glm::vec2(mouseX, mouseY), w, h)) {
-            button.click();
+        if (button_quit.IsMouseOverButton(view, proj, glm::vec2(mouseX, mouseY), w, h)) {
+            button_quit.click();
+        }
+
+        if (button_start.IsMouseOverButton(view, proj, glm::vec2(mouseX, mouseY), w, h)) {
+            button_start.click();
         }
 
         //if (glfwGetMouseButton(&window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
@@ -135,7 +159,7 @@ public:
         //    button.click();
         //}
 
-        if (glfwGetKey(&window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        if (glfwGetKey(&window, GLFW_KEY_ESCAPE) == GLFW_PRESS || shutdown)
             glfwSetWindowShouldClose(&window, true);
 
     }

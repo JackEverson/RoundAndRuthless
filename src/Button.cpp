@@ -8,10 +8,9 @@
 
 
 
-Button::Button(glm::vec3 worldPos, glm::vec2 size, Texture texture, std::function<void()> onClickFunc) :
+Button::Button(glm::vec3 worldPos, glm::vec2 size,  std::function<void()> onClickFunc) :
 	m_worldPosition(worldPos),
 	m_size(size),
-	texture(texture),
 	onClick(onClickFunc) {
 
 
@@ -45,12 +44,14 @@ bool Button::IsMouseOverButton(
 		glm::vec4(0, 0, screenWidth, screenHeight) // usually glm::vec4(0, 0, screenWidth, screenHeight)
 	);
 	
-	std::println("mouse: {}x{}, TL: {}x{}, BR: {}x{}", mousePos.x, mousePos.y, screenPosTL.x, screenPosTL.y, screenPosBR.x, screenPosBR.y);
+	//std::println("mouse: {}x{}, TL: {}x{}, BR: {}x{}", mousePos.x, mousePos.y, screenPosTL.x, screenPosTL.y, screenPosBR.x, screenPosBR.y);
+	float y = screenHeight - mousePos.y;
 
-	return mousePos.x >= screenPosTL.x &&
+	return 
+		mousePos.x >= screenPosTL.x &&
 		mousePos.x <= screenPosBR.x &&
-		mousePos.y >= screenPosTL.y &&
-		mousePos.y <= screenPosBR.y;
+		y >= screenPosTL.y &&
+		y <= screenPosBR.y;
 }
 
 
