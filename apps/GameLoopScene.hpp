@@ -24,6 +24,7 @@ public:
 
 	bool m_first_click = false;
 	bool m_death = false;
+	bool m_jump_scared = false;
 
 	GameLoopScene() :
 		soundManager(SimpleSoundManager::Instance()),
@@ -41,6 +42,7 @@ public:
 
 		soundManager.LoadSound("click", "./res/sounds/click.wav");
 		soundManager.LoadSound("cave", "./res/sounds/cave.ogg");
+		soundManager.LoadSound("jumpscare", "./res/sounds/ghost-scare-vintage.wav");
 
 		soundManager.PlayBackgroundMusic("cave", 1.0f);
 	}
@@ -53,8 +55,14 @@ public:
 
 		m_approacher.Step();
 
+		if (m_approacher.m_distanceAway < 0.1f && ! m_jump_scared) {
+			m_jump_scared = true;
+			soundManager.PlaySound("jumpscare");
+		}
+
 		if (m_approacher.m_distanceAway == 0) {
 			m_death = true;
+
 		}
 
 		return nullptr;
