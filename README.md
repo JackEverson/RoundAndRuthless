@@ -1,2 +1,8 @@
-# look_at_the_garden
-A small OpenGL game with bugs
+# Round And Ruthless
+
+A small, click and point, escape room game.
+
+
+
+
+
