@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.4...4.0)
 
-project(LookAtTheGarden VERSION 1.0
-                    DESCRIPTION "GardenEngine for look at the garden"
+project(RoundAndRuthless VERSION 1.0
+		    DESCRIPTION "Round And Ruthless game"
 		    LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 23)
@@ -110,13 +110,13 @@ target_compile_features(GamePlay PUBLIC cxx_std_23)
 target_link_libraries(GamePlay PUBLIC GardenEngine)
 
 
-#LookAtTheGarden executable
+#RoundAndRuthless executable
 
 if(MSVC)
     set(APP_ICON_RESOURCE "${CMAKE_CURRENT_SOURCE_DIR}/resources.rc")
 endif()
 
-add_executable(${PROJECT_NAME} apps/app_look_at_the_garden.cpp ${APP_ICON_RESOURCE})
+add_executable(${PROJECT_NAME} apps/round_and_ruthless.cpp ${APP_ICON_RESOURCE})
 target_link_libraries(${PROJECT_NAME} PUBLIC 
 	GardenEngine 
 	GamePlay

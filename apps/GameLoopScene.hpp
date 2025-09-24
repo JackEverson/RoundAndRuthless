@@ -40,11 +40,11 @@ public:
 
 	void onEnter() override {
 
-		soundManager.LoadSound("click", "./res/sounds/click.wav");
-		soundManager.LoadSound("cave", "./res/sounds/cave.ogg");
+		soundManager.LoadSound("beep", "./res/sounds/beep.wav");
+		soundManager.LoadSound("ambient", "./res/sounds/ambient-noise.ogg");
 		soundManager.LoadSound("jumpscare", "./res/sounds/ghost-scare-vintage.wav");
 
-		soundManager.PlayBackgroundMusic("cave", 1.0f);
+		soundManager.PlayBackgroundMusic("ambient", 1.0f);
 	}
 
 	void onExit() override {
@@ -171,7 +171,7 @@ public:
 			if (m_first_click == true) {
 				m_first_click = false;
 				m_clickCounter.click();
-				soundManager.PlaySound("click");
+				soundManager.PlaySound("beep");
 			}
 		}
 		else {
@@ -179,7 +179,7 @@ public:
 		}
 		if (glfwGetKey(&window, GLFW_KEY_E)) {
 			m_clickCounter.click();
-			soundManager.PlaySound("click");
+			soundManager.PlaySound("beep");
 		}
 
 		float sensitivity = 1.0f;

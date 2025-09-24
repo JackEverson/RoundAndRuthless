@@ -54,7 +54,7 @@ public:
 
     void onEnter() override {
 
-        soundManager.LoadSound("click", "./res/sounds/click.wav");
+        soundManager.LoadSound("beep", "./res/sounds/beep.wav");
         //soundManager.LoadSound("cave", "./res/sounds/cave.ogg");
 
         //soundManager.PlayBackgroundMusic("cave", 1.0f); 
@@ -156,12 +156,12 @@ public:
         auto proj = m_camera.GetProjectionMat(w, h);
 
         if (button_quit.IsMouseOverButton(view, proj, glm::vec2(mouseX, mouseY), w, h)) {
-            soundManager.PlaySound("click");
+            soundManager.PlaySound("beep");
             button_quit.click();
         }
 
         if (button_start.IsMouseOverButton(view, proj, glm::vec2(mouseX, mouseY), w, h)) {
-            soundManager.PlaySound("click");
+            soundManager.PlaySound("beep");
             button_start.click();
         }
 
