@@ -1,5 +1,7 @@
 #pragma once
 
+#include <random>
+
 #include "Scene.hpp"
 #include "gl_debug.hpp"
 #include "Audio.hpp"
@@ -21,10 +23,11 @@ public:
 	Texture delivered_text;
 
 	bool m_first_click = false;
+	bool m_death = false;
 
 	GameLoopScene() :
 		soundManager(SimpleSoundManager::Instance()),
-		m_approacher(Approacher(30.0f, 1.0f)),
+		m_approacher(Approacher(30.0f, 3.0f)),
 		approacher_texture(Texture("./res/textures/sushi.png")),
 		background_texture(Texture("./res/textures/background.png")),
 		floor_texture(Texture("./res/textures/gravel_floor.png")),
@@ -49,6 +52,10 @@ public:
 	Scene* update() override {
 
 		m_approacher.Step();
+
+		if (m_approacher.m_distanceAway == 0) {
+			m_death = true;
+		}
 
 		return nullptr;
 	}
@@ -78,29 +85,38 @@ public:
 		float jiggle_x = glm::cos(m_approacher.m_distanceAway * jiggle_speed) * -jiggle_size_x;
 		float jiggle_y = glm::sin(m_approacher.m_distanceAway * jiggle_speed) * jiggle_size_y;
 
-		float darkness = 1.0f - 0.8f * (m_approacher.m_distanceAway / 30.0f);
+		float darkness = 1.0f - 0.6f * (m_approacher.m_distanceAway / 30.0f);
 
 		renderer.BeginBatchDraw(4);
-		SpriteInstance static_sprite;
-		static_sprite.position = glm::vec3(jiggle_x, jiggle_y, -m_approacher.m_distanceAway);
-		static_sprite.size = glm::vec2(0.6f, 0.4f);
-		static_sprite.rotation = 90.0f;
-		static_sprite.color = glm::vec4(darkness, darkness, darkness, 1.0f);
-		static_sprite.texture = &approacher_texture;
-		renderer.SubmitSprite(static_sprite);
+		
+		if (m_death) {
+			SpriteInstance death_sprite;
+			
+			std::mt19937 rng(std::random_device{}()); // Mersenne Twister seeded with hardware entropy
+			std::uniform_int_distribution<int> dist(1, 10);
+			int randomValueX = dist(rng);
+			int randomValueY = dist(rng);
+			float size_adjustX = randomValueX * 0.01f;
+			float size_adjustY = randomValueY * 0.01f;
+
+			death_sprite.position = glm::vec3(0.0f, 0.0f, -m_approacher.m_distanceAway - 0.001f);
+			death_sprite.size = glm::vec2(0.6f + size_adjustX, 0.4f + size_adjustY);
+			death_sprite.color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+			death_sprite.texture = &approacher_texture;
+			renderer.SubmitSprite(death_sprite);
+		}
+		else {
+			SpriteInstance approacher_sprite;
+			approacher_sprite.position = glm::vec3(jiggle_x, jiggle_y, -m_approacher.m_distanceAway);
+			approacher_sprite.size = glm::vec2(0.6f, 0.4f);
+			approacher_sprite.rotation = 90.0f;
+			approacher_sprite.color = glm::vec4(darkness, darkness, darkness, 1.0f);
+			approacher_sprite.texture = &approacher_texture;
+			renderer.SubmitSprite(approacher_sprite);
+		}
+
 		renderer.RendBatch(view, projection);
-		//SpriteInstance clicker_sprite;
-		//clicker_sprite.position = glm::vec3(0.0f, 0.0f, -m_approacher->m_distanceAway);
-		//if (glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-		//    clicker_sprite.color = glm::vec4(1.0f, 0.5f, 0.5f, 1.0f);
-		//}
-		//else {
-		//    static_sprite.color = glm::vec4(0.5f, 1.0f, 0.5f, 1.0f);
-		//}
-		//clicker_sprite.size = glm::vec2(0.6f, 0.4f);
-		//clicker_sprite.rotation = 0.0f;
-		//clicker_sprite.texture = approacher_texture;
-		//m_renderer->SubmitSprite(clicker_sprite);
+
 
 
 		if (m_approacher.m_distanceAway == 0) {

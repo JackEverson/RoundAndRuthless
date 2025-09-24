@@ -19,7 +19,6 @@ public:
     bool left_click_before = false;
 
     Camera m_camera;
-    Approacher m_approacher;
     SimpleSoundManager& soundManager;
 
     Button button_quit;
@@ -43,7 +42,6 @@ public:
 
     IntroScene() :
         soundManager(SimpleSoundManager::Instance()),
-        m_approacher(Approacher(30.0f, 1.0f)),
         background_texture(Texture("./res/textures/background.png")),
         button_texture_red(Texture("./res/textures/exit.png")),
         button_texture_green(Texture("./res/textures/start.png")),
@@ -97,7 +95,7 @@ public:
         renderer.BeginBatchDraw(1);
         SpriteInstance sushi_sprite;
         sushi_sprite.position = glm::vec3(-0.7f, 0.0f, -0.2f);
-        sushi_sprite.size = glm::vec2(1.0f, 0.8f);
+        sushi_sprite.size = glm::vec2(1.2f, 0.8f);
         sushi_sprite.rotation = 0.0f;
         sushi_sprite.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
         sushi_sprite.texture = &sushi_texture;

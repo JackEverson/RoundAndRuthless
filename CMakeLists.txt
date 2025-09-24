@@ -96,14 +96,21 @@ add_custom_command(TARGET copy_resources PRE_BUILD
 	"res/"
 )
 
+#GamePlay code
+set(GamePlay_files
+	apps/LiverGameState.cpp
 
-#LookAtTheGarden executable
-set(Scenes_files 
+	apps/LiverGameState.hpp
 	apps/GameLoopScene.hpp
 	apps/IntroScene.hpp
 )
-add_library(Scenes INTERFACE )
-target_include_directories(Scenes INTERFACE Scenes_files)
+add_library(GamePlay STATIC ${GamePlay_files})
+target_include_directories(GamePlay PUBLIC ${apps})
+target_compile_features(GamePlay PUBLIC cxx_std_23)
+target_link_libraries(GamePlay PUBLIC GardenEngine)
+
+
+#LookAtTheGarden executable
 
 if(MSVC)
     set(APP_ICON_RESOURCE "${CMAKE_CURRENT_SOURCE_DIR}/resources.rc")
@@ -112,7 +119,7 @@ endif()
 add_executable(${PROJECT_NAME} apps/app_look_at_the_garden.cpp ${APP_ICON_RESOURCE})
 target_link_libraries(${PROJECT_NAME} PUBLIC 
 	GardenEngine 
-	Scenes
+	GamePlay
 )
 add_dependencies(${PROJECT_NAME} copy_resources)
 

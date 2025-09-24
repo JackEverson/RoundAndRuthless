@@ -143,8 +143,15 @@ void GardenEngine::setupGlfwWindow(std::string win_name, int win_width,
 	//// set windowed
 	//m_window = glfwCreateWindow(win_width, win_height, win_name.c_str(), NULL, NULL);
 
-	glfwMakeContextCurrent(m_window);
 	 //glfwSwapInterval(0);
+
+	// load icon
+	//GLFWimage icon;
+	//icon.pixels = Loadimgpngdotjpg();
+	//icon.width = 64;
+	//icon.height = 64;
+	//glfwSetWindowIcon(window, 1, &icon);
+
 
 	if (!m_window) {
 		std::println("Failed to create GLFW window");
