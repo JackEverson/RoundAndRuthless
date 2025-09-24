@@ -32,10 +32,10 @@ cmake --build ./build --config Release
 
 # Attributions 
 
-gravel_floor.png, modified from [Monstera Production - pexels](https://www.pexels.com/photo/rough-gray-surface-with-stones-7794426/)
-plaster_ceiling.png, modified from [Sasha Martynov - pexels](https://www.pexels.com/photo/white-wall-paint-1260727/)
-concrete_wall.png, modified from [pexels](https://www.pexels.com)
+- gravel_floor.png, modified from [Monstera Production - pexels](https://www.pexels.com/photo/rough-gray-surface-with-stones-7794426/)
+- plaster_ceiling.png, modified from [Sasha Martynov - pexels](https://www.pexels.com/photo/white-wall-paint-1260727/)
+- concrete_wall.png, modified from [pexels](https://www.pexels.com)
 
-ghost-scare-vintage.wav, modified from [onderwish - freesound](https://freesound.org/people/onderwish/sounds/457514/)
-ambient-noise.ogg, modified from [patchytherat - freesound](https://freesound.org/people/patchytherat/sounds/535048/)
-beep.wav, modified from [Breviceps - freesound](https://freesound.org/people/Breviceps/sounds/444492/)
+- ghost-scare-vintage.wav, modified from [onderwish - freesound](https://freesound.org/people/onderwish/sounds/457514/)
+- ambient-noise.ogg, modified from [patchytherat - freesound](https://freesound.org/people/patchytherat/sounds/535048/)
+- beep.wav, modified from [Breviceps - freesound](https://freesound.org/people/Breviceps/sounds/444492/)
