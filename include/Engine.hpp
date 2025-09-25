@@ -10,6 +10,7 @@
 #include "ClickCounter.hpp"
 #include "Approacher.hpp"
 #include "Scene.hpp"
+#include "gl_debug.hpp"
 
 
 class GardenEngine
@@ -21,7 +22,6 @@ private:
 
 	GLFWwindow* m_window;
 	Renderer* m_renderer;
-
 	SimpleSoundManager& soundManager;
 
 	//Camera m_camera;

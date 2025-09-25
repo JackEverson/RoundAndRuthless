@@ -23,16 +23,16 @@ GardenEngine::GardenEngine(std::string name, int win_width, int win_height) :
 
 	setupGlfwWindow(name, win_width, win_height);
 	setupOpenGl();
-	setupImGui();
+	//setupImGui();
 	setupAudio();
 
 	std::println("GardenEngine Created!");
 }
 
 GardenEngine::~GardenEngine() {
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
-	ImGui::DestroyContext();
+	//ImGui_ImplOpenGL3_Shutdown();
+	//ImGui_ImplGlfw_Shutdown();
+	//ImGui::DestroyContext();
 
 	delete m_renderer;
 	m_renderer = nullptr;
@@ -63,9 +63,9 @@ int GardenEngine::Start(std::unique_ptr<Scene> scene, float fps) {
 			m_currentScene->onEnter();
 		}
 
-		double xpos, ypos;
-		glfwGetCursorPos(m_window, &xpos, &ypos);
-		renderImgui(xpos, ypos);
+		//double xpos, ypos;
+		//glfwGetCursorPos(m_window, &xpos, &ypos);
+		//renderImgui(xpos, ypos);
 
 		m_currentScene->handleInput(*m_window);
 		m_currentScene->render(*m_window, *m_renderer);
@@ -176,6 +176,8 @@ void GardenEngine::setupOpenGl() {
 }
 
 void GardenEngine::setupImGui() {
+	// TODO: FIX Imgui
+
 	std::println("Creating ImGui Context...");
 	ImGui::CreateContext();
 	ImGuiIO io = ImGui::GetIO();
@@ -202,6 +204,8 @@ void GardenEngine::setupAudio()
 
 
 void GardenEngine::renderImgui(double x, double y) {
+	// TODO: FIX Imgui
+	
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();

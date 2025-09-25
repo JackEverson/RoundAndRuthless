@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.4...4.0)
 
 project(RoundAndRuthless VERSION 1.0
-		    DESCRIPTION "Round And Ruthless game"
+		    DESCRIPTION "Round And Ruthless, a short horror game about liver and roundies"
 		    LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 23)
@@ -98,6 +98,7 @@ add_custom_command(TARGET copy_resources PRE_BUILD
 
 #GamePlay code
 set(GamePlay_files
+	apps/GameLoopScene.cpp
 	apps/LiverGameState.cpp
 
 	apps/LiverGameState.hpp
@@ -105,7 +106,7 @@ set(GamePlay_files
 	apps/IntroScene.hpp
 )
 add_library(GamePlay STATIC ${GamePlay_files})
-target_include_directories(GamePlay PUBLIC ${apps})
+target_include_directories(GamePlay PUBLIC apps)
 target_compile_features(GamePlay PUBLIC cxx_std_23)
 target_link_libraries(GamePlay PUBLIC GardenEngine)
 

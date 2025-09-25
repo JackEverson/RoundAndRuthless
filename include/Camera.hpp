@@ -20,6 +20,12 @@ public:
 		m_z += z;
 	}
 
+	void SetCamera(float x, float y, float z) {
+		m_x = x;
+		m_y = y;
+		m_z = z;
+	}
+
 private:
 	//glm::mat3 m_location;
 	float m_x = 0;

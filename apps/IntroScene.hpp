@@ -104,24 +104,24 @@ public:
 
 
         renderer.BeginBatchDraw(1);
-        SpriteInstance button_sprite_red;
-        button_sprite_red.position = button_quit.m_worldPosition;
-        button_sprite_red.size = button_quit.m_size;
-        button_sprite_red.rotation = 0.0f;
-        button_sprite_red.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-        button_sprite_red.texture = &button_texture_red;
-        renderer.SubmitSprite(button_sprite_red);
+        SpriteInstance quit_sprite;
+        quit_sprite.position = button_quit.m_worldPosition;
+        quit_sprite.size = button_quit.m_size;
+        quit_sprite.rotation = 0.0f;
+        quit_sprite.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+        quit_sprite.texture = &button_texture_red;
+        renderer.SubmitSprite(quit_sprite);
         renderer.RendBatch(view, projection);
 
 
         renderer.BeginBatchDraw(1);
-        SpriteInstance button_sprite_green;
-        button_sprite_green.position = button_start.m_worldPosition;
-        button_sprite_green.size = button_start.m_size;
-        button_sprite_green.rotation = 0.0f;
-        button_sprite_green.color = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
-        button_sprite_green.texture = &button_texture_green;
-        renderer.SubmitSprite(button_sprite_green);
+        SpriteInstance start_button;
+        start_button.position = button_start.m_worldPosition;
+        start_button.size = button_start.m_size;
+        start_button.rotation = 0.0f;
+        start_button.color = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
+        start_button.texture = &button_texture_green;
+        renderer.SubmitSprite(start_button);
         renderer.RendBatch(view, projection);
 
 
@@ -164,11 +164,6 @@ public:
             soundManager.PlaySound("beep");
             button_start.click();
         }
-
-        //if (glfwGetMouseButton(&window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-        //    //start_game = true;
-        //    button.click();
-        //}
 
         if (glfwGetKey(&window, GLFW_KEY_ESCAPE) == GLFW_PRESS || shutdown)
             glfwSetWindowShouldClose(&window, true);
