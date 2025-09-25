@@ -35,9 +35,6 @@ public:
 	void Clear(float r, float g, float b, float a) const;
 	void DrawBackground(const Texture& texture);
 
-	void DrawHallway(glm::mat4 view, glm::mat4 projection, Texture& floor, Texture& wall, Texture& ceiling);
-
-
 	//void DrawSprite(Texture &texture, glm::vec2 position, glm::vec2 size,
 	//float rotate, glm::vec4 color, glm::mat4 projection);
 	void BeginBatchDraw(int countEstimate);

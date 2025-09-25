@@ -2,6 +2,8 @@
 #include "Engine.hpp"
 #include "GameLoopScene.hpp"
 
+#include <glm/gtc/matrix_transform.hpp>
+
 
 GameLoopScene::GameLoopScene() :
 	soundManager(SimpleSoundManager::Instance()),
@@ -11,7 +13,13 @@ GameLoopScene::GameLoopScene() :
 	floor_texture(Texture("./res/textures/gravel_floor.png")),
 	wall_texture(Texture("./res/textures/concrete_wall.png")),
 	ceiling_texture(Texture("./res/textures/plaster_ceiling.png")),
-	delivered_text(Texture("./res/textures/delivered_text.png")) 
+	door_texture(Texture("./res/textures/metal_door.png")),
+	rock_texture(Texture("./res/textures/rock.png")),
+	key_texture(Texture("./res/textures/key.png")),
+	delivered_text(Texture("./res/textures/delivered_text.png")),
+	button_rock(glm::vec3(-0.4f, -0.5f, -1.0f), glm::vec2(0.1f, 0.1f), OnRockClick),
+	button_key(glm::vec3(-0.4f, -0.5f, -1.0f), glm::vec2(0.1f, 0.1f), OnKeyClick),
+	button_lock(glm::vec3(0.5f, -0.05, -0.9f), glm::vec2(0.1f, 0.1f), OnLockClick)
 {
 
 }
@@ -48,7 +56,6 @@ Scene* GameLoopScene::update()
 
 	if (m_approacher.m_distanceAway == 0) {
 		m_death = true;
-
 	}
 
 	return nullptr;
@@ -56,8 +63,6 @@ Scene* GameLoopScene::update()
 
 
 void GameLoopScene::render(GLFWwindow& window, Renderer& renderer) {
-
-
 	renderer.Clear(0.1f, 0.1f, 0.1f, 1.0f);
 
 	float clicks = (float)m_clickCounter.GetClicks();
@@ -71,7 +76,7 @@ void GameLoopScene::render(GLFWwindow& window, Renderer& renderer) {
 	glm::mat4 view = m_camera.GetViewMat();
 	glm::mat4 projection = m_camera.GetProjectionMat(w, h);
 
-	renderer.DrawHallway(view, projection, floor_texture, wall_texture, ceiling_texture);
+	DrawHallway(view, projection, renderer);
 
 	float jiggle_size_x = 0.01f;
 	float jiggle_size_y = 0.001f;
@@ -112,8 +117,6 @@ void GameLoopScene::render(GLFWwindow& window, Renderer& renderer) {
 
 	renderer.RendBatch(view, projection);
 
-
-
 	if (m_approacher.m_distanceAway == 0) {
 		renderer.BeginBatchDraw(1);
 		SpriteInstance deliver_sprite;
@@ -126,76 +129,170 @@ void GameLoopScene::render(GLFWwindow& window, Renderer& renderer) {
 		renderer.RendBatch(view, projection);
 	}
 
-
-
-
 	GLCall(glfwSwapBuffers(&window));
 }
 
 void GameLoopScene::handleInput(GLFWwindow& window)
 {
-
 	GLCall(glfwPollEvents());
 
 	if (glfwGetKey(&window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(&window, true);
 
+	double mouseX, mouseY;
+	glfwGetCursorPos(&window, &mouseX, &mouseY);
+
+	int w, h;
+	glfwGetWindowSize(&window, &w, &h);
+	float aspect_ratio = (float)w / (float)h;
+
 	if (glfwGetMouseButton(&window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-		double xpos, ypos;
-		glfwGetCursorPos(&window, &xpos, &ypos);
+		//glm::vec3 cam_loc = m_camera.GetLocation();
 
-		int w, h;
-		glfwGetWindowSize(&window, &w, &h);
-		float aspect_ratio = (float)w / (float)h;
-
-		glm::vec3 cam_loc = m_camera.GetLocation();
-
-		double nxpos = (xpos / w + cam_loc.x);
-		double nypos = (1 - (ypos / h)) + cam_loc.y;
+		//double nxpos = (mouseX / w + cam_loc.x);
+		//double nypos = (1 - (mouseY / h)) + cam_loc.y;
 
 		if (m_first_click == true) {
 			m_first_click = false;
 			m_clickCounter.click();
 			soundManager.PlaySound("beep");
+
+			auto view = m_camera.GetViewMat();
+			auto proj = m_camera.GetProjectionMat(w, h);
+
+			if (button_lock.IsMouseOverButton(view, proj, glm::vec2(mouseX, mouseY), w, h)) {
+				button_lock.click();
+			}
+			if (button_key.IsMouseOverButton(view, proj, glm::vec2(mouseX, mouseY), w, h)) {
+				button_key.click();
+			}
+			if (button_rock.IsMouseOverButton(view, proj, glm::vec2(mouseX, mouseY), w, h)) {
+				button_rock.click();
+			}
 		}
 	}
 	else {
 		m_first_click = true;
 	}
+
 	if (glfwGetKey(&window, GLFW_KEY_E)) {
 		m_clickCounter.click();
 		soundManager.PlaySound("beep");
 	}
 
 
-	/// wasd debug controls
-	float sensitivity = 1.0f;
-	if (glfwGetKey(&window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-		sensitivity = 1.5f;
-	}
-	float move = 0.01f * sensitivity;
 
-	if (glfwGetKey(&window, GLFW_KEY_W) == GLFW_PRESS) {
-		// locy += 0.001f;
-		m_camera.ShiftCamera(0.0f, move, 0.0f);
+	///// wasd debug controls
+	//float sensitivity = 1.0f;
+	//if (glfwGetKey(&window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+	//	sensitivity = 1.5f;
+	//}
+	//float move = 0.01f * sensitivity;
+
+	//if (glfwGetKey(&window, GLFW_KEY_W) == GLFW_PRESS) {
+	//	// locy += 0.001f;
+	//	m_camera.ShiftCamera(0.0f, move, 0.0f);
+	//}
+	//if (glfwGetKey(&window, GLFW_KEY_S) == GLFW_PRESS) {
+	//	// locy -= 0.001f;
+	//	m_camera.ShiftCamera(0.0f, -move, 0.0f);
+	//}
+	//if (glfwGetKey(&window, GLFW_KEY_A) == GLFW_PRESS) {
+	//	// locx -= 0.001f;
+	//	m_camera.ShiftCamera(-move, 0.0f, 0.0f);
+	//}
+	//if (glfwGetKey(&window, GLFW_KEY_D) == GLFW_PRESS) {
+	//	// locx += 0.001f;
+	//	m_camera.ShiftCamera(move, 0.0f, 0.0f);
+	//}
+	//if (glfwGetKey(&window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+	//	m_camera.ShiftCamera(0.0f, 0.0f, -move);
+	//}
+	//if (glfwGetKey(&window, GLFW_KEY_C) == GLFW_PRESS) {
+	//	m_camera.ShiftCamera(0.0f, 0.0f, move);
+	//}
+}
+
+
+
+void GameLoopScene::DrawHallway(glm::mat4 view, glm::mat4 projection, Renderer& renderer) {
+	int segs = 10;
+	float wall_seg_sizes = 1.0f;
+	float wall_height = 1.0f;
+	float hallway_width = 1.0f;
+
+	renderer.BeginBatchDraw(segs);
+	for (int i = 0; i < segs; i++) {
+
+		SpriteInstance wall_left;
+		wall_left.position = glm::vec3(-hallway_width / 2, 0, -(float)i + 0.5f);
+		wall_left.size = glm::vec2(1.0f, 1.0f);
+		wall_left.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+		wall_left.texture = &wall_texture;
+		renderer.SubmitSprite(wall_left);
 	}
-	if (glfwGetKey(&window, GLFW_KEY_S) == GLFW_PRESS) {
-		// locy -= 0.001f;
-		m_camera.ShiftCamera(0.0f, -move, 0.0f);
+	glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	renderer.RendBatch(rotation, view, projection);
+
+	renderer.BeginBatchDraw(segs);
+	for (int i = 0; i < segs; i++) {
+
+		SpriteInstance wall_right;
+		wall_right.position = glm::vec3(hallway_width / 2, 0, -(float)i + 0.5f);
+		wall_right.size = glm::vec2(1.0f, 1.0f);
+		wall_right.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+		wall_right.texture = &wall_texture;
+		renderer.SubmitSprite(wall_right);
 	}
-	if (glfwGetKey(&window, GLFW_KEY_A) == GLFW_PRESS) {
-		// locx -= 0.001f;
-		m_camera.ShiftCamera(-move, 0.0f, 0.0f);
+	glm::mat4 rotation2 = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	renderer.RendBatch(rotation2, view, projection);
+
+	renderer.BeginBatchDraw(segs);
+	for (int i = 0; i < segs; i++) {
+
+		SpriteInstance sceiling;
+		sceiling.position = glm::vec3(0, wall_height * 0.5f, -(float)i + 0.5f);
+		sceiling.size = glm::vec2(1.0f, 1.0f);
+		sceiling.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+		sceiling.texture = &ceiling_texture;
+		renderer.SubmitSprite(sceiling);
 	}
-	if (glfwGetKey(&window, GLFW_KEY_D) == GLFW_PRESS) {
-		// locx += 0.001f;
-		m_camera.ShiftCamera(move, 0.0f, 0.0f);
+	glm::mat4 rotation3 = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	renderer.RendBatch(rotation3, view, projection);
+
+	renderer.BeginBatchDraw(segs);
+	for (int i = 0; i < segs; i++) {
+
+		SpriteInstance sfloor;
+		sfloor.position = glm::vec3(0, -wall_height * 0.5f, -(float)i + 0.5f);
+		sfloor.size = glm::vec2(1.0f, 1.0f);
+		sfloor.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+		sfloor.texture = &floor_texture;
+		renderer.SubmitSprite(sfloor);
 	}
-	if (glfwGetKey(&window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-		m_camera.ShiftCamera(0.0f, 0.0f, -move);
+	renderer.RendBatch(rotation3, view, projection);
+
+
+	renderer.BeginBatchDraw(1);
+	SpriteInstance door;
+	door.position = glm::vec3(hallway_width / 2, -0.05, -1.0f);
+	door.size = glm::vec2(0.5f, 0.9f);
+	door.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+	door.texture = &door_texture;
+	renderer.SubmitSprite(door);
+	renderer.RendBatch(rotation2, view, projection);
+	
+	if (!rock_clicked) {
+		renderer.BeginBatchDraw(1);
+		SpriteInstance rock;
+		rock.position = button_rock.m_worldPosition;
+		rock.size = button_rock.m_size;
+		rock.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+		rock.texture = &rock_texture;
+		renderer.SubmitSprite(rock);
+		renderer.RendBatch(view, projection);
 	}
-	if (glfwGetKey(&window, GLFW_KEY_C) == GLFW_PRESS) {
-		m_camera.ShiftCamera(0.0f, 0.0f, move);
-	}
+
+
 
 }

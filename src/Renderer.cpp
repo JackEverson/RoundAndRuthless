@@ -40,63 +40,7 @@ void Renderer::DrawBackground(const Texture& texture) {
     glBindVertexArray(0);
 }
 
-void Renderer::DrawHallway(glm::mat4 view, glm::mat4 projection, Texture& floor, Texture& wall, Texture& ceiling) {
-    int segs = 10;
-    float wall_seg_sizes = 1.0f;
-    float wall_height = 1.0f;
-    float hallway_width = 1.0f;
 
-    BeginBatchDraw(segs);
-    for (int i = 0; i < segs; i++) {
-
-        SpriteInstance wall_left;
-        wall_left.position = glm::vec3(-hallway_width / 2, 0, -(float)i + 0.5f);
-        wall_left.size = glm::vec2(1.0f, 1.0f);
-        wall_left.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-        wall_left.texture = &wall;
-        SubmitSprite(wall_left);
-    }
-    glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    RendBatch(rotation, view, projection);
-
-    BeginBatchDraw(segs);
-    for (int i = 0; i < segs; i++) {
-
-        SpriteInstance wall_right;
-        wall_right.position = glm::vec3(hallway_width / 2, 0, -(float)i + 0.5f);
-        wall_right.size = glm::vec2(1.0f, 1.0f);
-        wall_right.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-        wall_right.texture = &wall;
-        SubmitSprite(wall_right);
-    }
-    glm::mat4 rotation2 = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    RendBatch(rotation2, view, projection);
-
-    BeginBatchDraw(segs);
-    for (int i = 0; i < segs; i++) {
-
-        SpriteInstance sceiling;
-        sceiling.position = glm::vec3(0, wall_height * 0.5f, -(float)i + 0.5f);
-        sceiling.size = glm::vec2(1.0f, 1.0f);
-        sceiling.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-        sceiling.texture = &ceiling;
-        SubmitSprite(sceiling);
-    }
-    glm::mat4 rotation3 = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    RendBatch(rotation3, view, projection);
-
-    BeginBatchDraw(segs);
-    for (int i = 0; i < segs; i++) {
-
-        SpriteInstance sfloor;
-        sfloor.position = glm::vec3(0, -wall_height * 0.5f, -(float)i + 0.5f);
-        sfloor.size = glm::vec2(1.0f, 1.0f);
-        sfloor.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-        sfloor.texture = &floor;
-        SubmitSprite(sfloor);
-    }
-    RendBatch(rotation3, view, projection);
-}
 
 
 void Renderer::BeginBatchDraw(int countEstimate) {

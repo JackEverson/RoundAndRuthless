@@ -10,6 +10,7 @@
 #include "ClickCounter.hpp"
 #include "Approacher.hpp"
 #include "Scene.hpp"
+#include "Button.hpp"
 #include "gl_debug.hpp"
 
 
