@@ -20,6 +20,7 @@ Renderer::~Renderer() {}
 void Renderer::Clear(float r, float g, float b, float a) const {
   glClearColor(r, g, b, a);
   GLCall(glClear(GL_COLOR_BUFFER_BIT));
+  GLCall(glClear(GL_DEPTH_BUFFER_BIT));
 }
 
 void Renderer::DrawBackground(const Texture& texture) {
@@ -36,6 +37,8 @@ void Renderer::DrawBackground(const Texture& texture) {
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     backgroundShader.Unbind();
     glBindVertexArray(0);
 }
@@ -71,14 +74,6 @@ void Renderer::RendBatch(glm::mat4 model, glm::mat4 view, glm::mat4 projection) 
   std::vector<float> instances;
   instances.reserve(batch.size() * m_vertexSize);
 
-  // for (auto& s : batch) {
-  //     SpriteInstance inst;
-  //     inst.position = s.position;
-  //     inst.size = s.size;
-  //     inst.rotation = s.rotation;
-  //     instances.push_back(inst);
-  // }
-
   for (auto &s : batch) {
     instances.push_back(s.position.x);
     instances.push_back(s.position.y);
@@ -93,8 +88,8 @@ void Renderer::RendBatch(glm::mat4 model, glm::mat4 view, glm::mat4 projection) 
 
   GLCall(glEnable(GL_BLEND));
   GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-  //GLCall(glEnable(GL_DEPTH_TEST));
-  GLCall(glDisable(GL_DEPTH_TEST));
+  GLCall(glEnable(GL_DEPTH_TEST));
+  //GLCall(glDisable(GL_DEPTH_TEST));
 
   glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
   glBufferSubData(GL_ARRAY_BUFFER, 0, instances.size() * sizeof(glm::vec2),

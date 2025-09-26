@@ -1,5 +1,7 @@
 #pragma once
  
+#include "Engine.hpp"
+
 class Scene {
 public:
     virtual ~Scene() = default;

@@ -9,6 +9,7 @@ class Approacher {
 public:
 	float m_distanceAway;
 	float m_approachSpeed;
+	bool stopped = false;
 
 private:
 	std::chrono::steady_clock::time_point last_cycle_time;

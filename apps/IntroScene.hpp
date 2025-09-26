@@ -76,8 +76,8 @@ public:
 
     void render(GLFWwindow& window, Renderer& renderer) override {
 
-
         renderer.Clear(0.2f, 0.2f, 0.2f, 1.0f);
+
         //renderer.DrawBackground(background_texture);
         
         glm::vec3 campos = m_camera.GetLocation();

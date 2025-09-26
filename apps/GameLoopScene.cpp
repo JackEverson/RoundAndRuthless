@@ -1,6 +1,7 @@
 
 #include "Engine.hpp"
 #include "GameLoopScene.hpp"
+#include "ExitScene.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -17,8 +18,8 @@ GameLoopScene::GameLoopScene() :
 	rock_texture(Texture("./res/textures/rock.png")),
 	key_texture(Texture("./res/textures/key.png")),
 	delivered_text(Texture("./res/textures/delivered_text.png")),
-	button_rock(glm::vec3(-0.4f, -0.5f, -1.0f), glm::vec2(0.1f, 0.1f), OnRockClick),
-	button_key(glm::vec3(-0.4f, -0.5f, -1.0f), glm::vec2(0.1f, 0.1f), OnKeyClick),
+	button_rock(glm::vec3(-0.4f, -0.45f, -1.0f), glm::vec2(0.1f, 0.1f), OnRockClick),
+	button_key(glm::vec3(-0.4f, -0.45f, -1.0f), glm::vec2(0.1f, 0.1f), OnKeyClick),
 	button_lock(glm::vec3(0.5f, -0.05, -0.9f), glm::vec2(0.1f, 0.1f), OnLockClick)
 {
 
@@ -58,6 +59,15 @@ Scene* GameLoopScene::update()
 		m_death = true;
 	}
 
+
+	if (escaped) {
+		m_approacher.stopped = true;
+		static int counter = 0;
+		counter++;
+		if (counter > 50)
+			return new ExitScene;
+	}
+
 	return nullptr;
 }
 
@@ -89,7 +99,7 @@ void GameLoopScene::render(GLFWwindow& window, Renderer& renderer) {
 
 	renderer.BeginBatchDraw(4);
 
-	if (m_death) {
+	if (m_death || escaped) {
 		SpriteInstance death_sprite;
 
 		std::mt19937 rng(std::random_device{}()); // Mersenne Twister seeded with hardware entropy
@@ -99,7 +109,7 @@ void GameLoopScene::render(GLFWwindow& window, Renderer& renderer) {
 		float size_adjustX = randomValueX * 0.01f;
 		float size_adjustY = randomValueY * 0.01f;
 
-		death_sprite.position = glm::vec3(0.0f, 0.0f, -m_approacher.m_distanceAway - 0.001f);
+		death_sprite.position = glm::vec3(0.0f, 0.0f, -m_approacher.m_distanceAway);
 		death_sprite.size = glm::vec2(0.6f + size_adjustX, 0.4f + size_adjustY);
 		death_sprite.color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 		death_sprite.texture = &approacher_texture;
@@ -272,16 +282,30 @@ void GameLoopScene::DrawHallway(glm::mat4 view, glm::mat4 projection, Renderer& 
 	}
 	renderer.RendBatch(rotation3, view, projection);
 
+		SpriteInstance door;
+		door.position = glm::vec3(hallway_width / 2, -0.05, -1.0f);
+		door.size = glm::vec2(0.5f, 0.9f);
+		door.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+		door.texture = &door_texture;
 
-	renderer.BeginBatchDraw(1);
-	SpriteInstance door;
-	door.position = glm::vec3(hallway_width / 2, -0.05, -1.0f);
-	door.size = glm::vec2(0.5f, 0.9f);
-	door.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-	door.texture = &door_texture;
-	renderer.SubmitSprite(door);
-	renderer.RendBatch(rotation2, view, projection);
-	
+	if (escaped){
+		glm::mat4 doorrot = glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		renderer.BeginBatchDraw(1);
+		SpriteInstance door2;
+		door2.position = glm::vec3((hallway_width / 2) - 0.25f, -0.05, -1.25f);
+		door2.size = glm::vec2(0.5f, 0.9f);
+		door2.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+		door2.texture = &door_texture;
+		renderer.SubmitSprite(door2);
+		renderer.RendBatch(doorrot, view, projection);
+
+		door.color = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	}
+
+		renderer.BeginBatchDraw(1);
+		renderer.SubmitSprite(door);
+		renderer.RendBatch(rotation2, view, projection);
+
 	if (!rock_clicked) {
 		renderer.BeginBatchDraw(1);
 		SpriteInstance rock;
@@ -293,6 +317,15 @@ void GameLoopScene::DrawHallway(glm::mat4 view, glm::mat4 projection, Renderer& 
 		renderer.RendBatch(view, projection);
 	}
 
-
+	if (rock_clicked && !key) {
+		renderer.BeginBatchDraw(1);
+		SpriteInstance key;
+		key.position = button_key.m_worldPosition;
+		key.size = button_key.m_size;
+		key.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+		key.texture = &key_texture;
+		renderer.SubmitSprite(key);
+		renderer.RendBatch(view, projection);
+	}
 
 }

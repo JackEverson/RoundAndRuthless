@@ -15,7 +15,7 @@ Approacher::~Approacher(){
 }
 
 void Approacher::Step(){
-	if (m_distanceAway == 0) {
+	if (m_distanceAway == 0 || stopped) {
 		return;
 	}
 

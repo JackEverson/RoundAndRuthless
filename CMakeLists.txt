@@ -101,9 +101,10 @@ set(GamePlay_files
 	apps/GameLoopScene.cpp
 	apps/LiverGameState.cpp
 
-	apps/LiverGameState.hpp
-	apps/GameLoopScene.hpp
 	apps/IntroScene.hpp
+	apps/GameLoopScene.hpp
+	apps/LiverGameState.hpp
+	apps/ExitScene.hpp
 )
 add_library(GamePlay STATIC ${GamePlay_files})
 target_include_directories(GamePlay PUBLIC apps)
@@ -112,7 +113,6 @@ target_link_libraries(GamePlay PUBLIC GardenEngine)
 
 
 #RoundAndRuthless executable
-
 if(MSVC)
     set(APP_ICON_RESOURCE "${CMAKE_CURRENT_SOURCE_DIR}/resources.rc")
 endif()
