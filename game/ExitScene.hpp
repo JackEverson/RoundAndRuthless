@@ -60,7 +60,6 @@ public:
 
         renderer.Clear(0.2f, 0.2f, 0.2f, 1.0f);
 
-
         glm::vec3 campos = m_camera.GetLocation();
 
         int w, h;

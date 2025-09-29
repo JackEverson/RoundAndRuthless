@@ -46,35 +46,33 @@ target_link_libraries(imgui PUBLIC
 
 #my libraries and resources
 #GardenEngine
-set(GardenEngine_src src)
-set(GardenEngine_include include )
 set(GardenEngine_src_files
-	${GardenEngine_src}/Engine.cpp
-	${GardenEngine_src}/Renderer.cpp
-	${GardenEngine_src}/Shader.cpp
-	${GardenEngine_src}/Texture.cpp
-	${GardenEngine_src}/Camera.cpp
-	${GardenEngine_src}/ClickCounter.cpp
-	${GardenEngine_src}/Audio.cpp
-	${GardenEngine_src}/Approacher.cpp
-	${GardenEngine_src}/Button.cpp
+	garden_engine/Engine.cpp
+	garden_engine/Renderer.cpp
+	garden_engine/Shader.cpp
+	garden_engine/Texture.cpp
+	garden_engine/Camera.cpp
+	garden_engine/ClickCounter.cpp
+	garden_engine/Audio.cpp
+	garden_engine/Approacher.cpp
+	garden_engine/Button.cpp
 
 	# include files included for IDE sake
-	${GardenEngine_include}/Engine.hpp
-	${GardenEngine_include}/Renderer.hpp
-	${GardenEngine_include}/Shader.hpp
-	${GardenEngine_include}/Texture.hpp
-	${GardenEngine_include}/Camera.hpp
-	${GardenEngine_include}/ClickCounter.hpp
-	${GardenEngine_include}/gl_debug.hpp
-	${GardenEngine_include}/Audio.hpp
-	${GardenEngine_include}/Approacher.hpp
-	${GardenEngine_include}/Scene.hpp
-	${GardenEngine_include}/Button.hpp
+	garden_engine/Engine.hpp
+	garden_engine/Renderer.hpp
+	garden_engine/Shader.hpp
+	garden_engine/Texture.hpp
+	garden_engine/Camera.hpp
+	garden_engine/ClickCounter.hpp
+	garden_engine/gl_debug.hpp
+	garden_engine/Audio.hpp
+	garden_engine/Approacher.hpp
+	garden_engine/Scene.hpp
+	garden_engine/Button.hpp
 )
 
 add_library(GardenEngine STATIC ${GardenEngine_src_files})
-target_include_directories(GardenEngine PUBLIC ${GardenEngine_include} )
+target_include_directories(GardenEngine PUBLIC garden_engine )
 target_compile_features(GardenEngine PUBLIC cxx_std_23)
 target_link_libraries(GardenEngine PUBLIC
 	glad 
@@ -84,6 +82,9 @@ target_link_libraries(GardenEngine PUBLIC
 	imgui
 	OpenAL
 )
+
+
+
 
 #Copy Resources
 add_custom_target(copy_resources
@@ -98,16 +99,16 @@ add_custom_command(TARGET copy_resources PRE_BUILD
 
 #GamePlay code
 set(GamePlay_files
-	apps/GameLoopScene.cpp
-	apps/LiverGameState.cpp
+	game/GameLoopScene.cpp
+	game/LiverGameState.cpp
 
-	apps/IntroScene.hpp
-	apps/GameLoopScene.hpp
-	apps/LiverGameState.hpp
-	apps/ExitScene.hpp
+	game/IntroScene.hpp
+	game/GameLoopScene.hpp
+	game/LiverGameState.hpp
+	game/ExitScene.hpp
 )
 add_library(GamePlay STATIC ${GamePlay_files})
-target_include_directories(GamePlay PUBLIC apps)
+target_include_directories(GamePlay PUBLIC game)
 target_compile_features(GamePlay PUBLIC cxx_std_23)
 target_link_libraries(GamePlay PUBLIC GardenEngine)
 
@@ -117,12 +118,12 @@ if(MSVC)
     set(APP_ICON_RESOURCE "${CMAKE_CURRENT_SOURCE_DIR}/resources.rc")
 endif()
 
-add_executable(${PROJECT_NAME} apps/round_and_ruthless.cpp ${APP_ICON_RESOURCE})
+add_executable(${PROJECT_NAME} game/RoundAndRuthless.cpp ${APP_ICON_RESOURCE})
 target_link_libraries(${PROJECT_NAME} PUBLIC 
 	GardenEngine 
 	GamePlay
 )
 add_dependencies(${PROJECT_NAME} copy_resources)
 
-add_executable("test" apps/test.cpp)
-target_link_libraries("test" PUBLIC GardenEngine OpenAL)
+# add_executable("test" apps/test.cpp)
+# target_link_libraries("test" PUBLIC GardenEngine OpenAL)
