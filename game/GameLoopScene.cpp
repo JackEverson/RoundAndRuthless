@@ -18,9 +18,9 @@ GameLoopScene::GameLoopScene() :
 	rock_texture(Texture("./res/textures/rock.png")),
 	key_texture(Texture("./res/textures/key.png")),
 	delivered_text(Texture("./res/textures/delivered_text.png")),
-	button_rock(glm::vec3(-0.4f, -0.45f, -1.0f), glm::vec2(0.1f, 0.1f), OnRockClick),
-	button_key(glm::vec3(-0.4f, -0.45f, -1.0f), glm::vec2(0.1f, 0.1f), OnKeyClick),
-	button_lock(glm::vec3(0.5f, -0.05, -0.9f), glm::vec2(0.1f, 0.1f), OnLockClick)
+	button_rock(glm::vec3(-0.4f, -0.45f, -1.0f), glm::vec2(0.1f, 0.1f)),
+	button_key(glm::vec3(-0.4f, -0.45f, -1.0f), glm::vec2(0.1f, 0.1f)),
+	button_lock(glm::vec3(0.5f, -0.05, -0.9f), glm::vec2(0.1f, 0.1f))
 {
 
 }
@@ -47,7 +47,6 @@ void GameLoopScene::onExit()
 
 Scene* GameLoopScene::update() 
 {
-
 	m_approacher.Step();
 
 	if (m_approacher.m_distanceAway < 0.1f && !m_jump_scared) {
@@ -58,7 +57,6 @@ Scene* GameLoopScene::update()
 	if (m_approacher.m_distanceAway == 0) {
 		m_death = true;
 	}
-
 
 	if (escaped) {
 		m_approacher.stopped = true;
@@ -124,15 +122,13 @@ void GameLoopScene::render(GLFWwindow& window, Renderer& renderer) {
 		approacher_sprite.texture = &approacher_texture;
 		renderer.SubmitSprite(approacher_sprite);
 	}
-
 	renderer.RendBatch(view, projection);
 
-	if (m_approacher.m_distanceAway == 0) {
+	if (m_approacher.m_distanceAway <= 0.0f) {
 		renderer.BeginBatchDraw(1);
 		SpriteInstance deliver_sprite;
-		deliver_sprite.position = glm::vec3(0.0f, 0.0f, 0.0f);
+		deliver_sprite.position = glm::vec3(0.0f, 0.0f, 0.01f);
 		deliver_sprite.size = glm::vec2(1.0f, 1.0f);
-		//deliver_sprite.rotation = 0.0f;
 		deliver_sprite.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 		deliver_sprite.texture = &delivered_text;
 		renderer.SubmitSprite(deliver_sprite);
@@ -171,13 +167,13 @@ void GameLoopScene::handleInput(GLFWwindow& window)
 			auto proj = m_camera.GetProjectionMat(w, h);
 
 			if (button_lock.IsMouseOverButton(view, proj, glm::vec2(mouseX, mouseY), w, h)) {
-				button_lock.click();
+				OnLockClick();
 			}
 			if (button_key.IsMouseOverButton(view, proj, glm::vec2(mouseX, mouseY), w, h)) {
-				button_key.click();
+				OnKeyClick();
 			}
 			if (button_rock.IsMouseOverButton(view, proj, glm::vec2(mouseX, mouseY), w, h)) {
-				button_rock.click();
+				OnRockClick();
 			}
 		}
 	}

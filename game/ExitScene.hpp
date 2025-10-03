@@ -3,8 +3,6 @@
 
 #include "Scene.hpp"
 
-static bool QuitGame = false;
-
 
 class ExitScene : public Scene {
 
@@ -20,11 +18,7 @@ public:
 	Texture sushi_texture;
 
     bool left_click_before = false;
-
-
-	static void ExitFunc() {
-		QuitGame = true;
-	}
+    bool quit_game = false;
 
 
 	ExitScene() :
@@ -32,7 +26,7 @@ public:
         thankyou_texture(Texture("./res/textures/thankyou.png")),
         exit_texture(Texture("./res/textures/exit.png")),
         sushi_texture(Texture("./res/textures/sushi.png")),
-		button_exit(glm::vec3(0.4f, -0.3f, -0.2f), glm::vec2(0.4f, 0.2f), ExitFunc)
+		button_exit(glm::vec3(0.4f, -0.3f, -0.2f), glm::vec2(0.4f, 0.2f))
 	{
 
 	}
@@ -103,7 +97,7 @@ public:
     void handleInput(GLFWwindow& window) {
         GLCall(glfwPollEvents());
 
-        if (glfwGetKey(&window, GLFW_KEY_ESCAPE) == GLFW_PRESS || QuitGame)
+        if (glfwGetKey(&window, GLFW_KEY_ESCAPE) == GLFW_PRESS || quit_game)
             glfwSetWindowShouldClose(&window, true);
 
 
@@ -131,10 +125,8 @@ public:
 
         if (button_exit.IsMouseOverButton(view, proj, glm::vec2(mouseX, mouseY), w, h)) {
             soundManager.PlaySound("beep");
-            button_exit.click();
+            quit_game = true;
         }
-
-
     }
 
 };

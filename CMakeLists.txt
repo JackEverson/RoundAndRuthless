@@ -125,5 +125,21 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 )
 add_dependencies(${PROJECT_NAME} copy_resources)
 
-# add_executable("test" apps/test.cpp)
-# target_link_libraries("test" PUBLIC GardenEngine OpenAL)
+
+# Test application
+set(test_files
+	test/TestScene.cpp
+	test/TestScene.hpp
+)
+
+add_library(tests STATIC ${test_files})
+target_include_directories(tests PUBLIC game)
+target_compile_features(tests PUBLIC cxx_std_23)
+target_link_libraries(tests PUBLIC GardenEngine)
+
+add_executable(test test/test.cpp)
+target_link_libraries(test PUBLIC 
+	GardenEngine 
+	tests
+)
+add_dependencies(test copy_resources)

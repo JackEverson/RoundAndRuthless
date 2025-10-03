@@ -7,8 +7,6 @@
 
 class Button{
 private:
-	std::function<void()> onClick;
-	
 
 public:
 	glm::vec3 m_worldPosition;
@@ -16,7 +14,7 @@ public:
 
 public:
 
-	Button(glm::vec3 worldPos, glm::vec2 size, std::function<void()> onClickFunc);
+	Button(glm::vec3 worldPos, glm::vec2 size);
 	~Button();
 
 	bool IsMouseOverButton(
@@ -26,6 +24,4 @@ public:
 		int screenWidth,
 		int screenHeight);
 	
-	void click();
-
 };

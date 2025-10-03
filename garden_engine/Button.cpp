@@ -8,19 +8,15 @@
 
 
 
-Button::Button(glm::vec3 worldPos, glm::vec2 size,  std::function<void()> onClickFunc) :
+Button::Button(glm::vec3 worldPos, glm::vec2 size) :
 	m_worldPosition(worldPos),
-	m_size(size),
-	onClick(onClickFunc) {
+	m_size(size){
 
 
 }
 
 Button::~Button() {
-}
 
-void Button::click() {
-	if (onClick) onClick();
 }
 
 bool Button::IsMouseOverButton(
