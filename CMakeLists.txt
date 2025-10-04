@@ -129,6 +129,7 @@ add_dependencies(${PROJECT_NAME} copy_resources)
 # Test application
 set(test_files
 	test/TestScene.cpp
+	test/TestGame.cpp
 	test/TestScene.hpp
 )
 

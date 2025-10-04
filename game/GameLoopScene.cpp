@@ -45,7 +45,7 @@ void GameLoopScene::onExit()
 }
 
 
-Scene* GameLoopScene::update() 
+Scene* GameLoopScene::update(float delta) 
 {
 	m_approacher.Step();
 
@@ -138,7 +138,7 @@ void GameLoopScene::render(GLFWwindow& window, Renderer& renderer) {
 	GLCall(glfwSwapBuffers(&window));
 }
 
-void GameLoopScene::handleInput(GLFWwindow& window)
+void GameLoopScene::handleInput(GLFWwindow& window, float delta)
 {
 	GLCall(glfwPollEvents());
 

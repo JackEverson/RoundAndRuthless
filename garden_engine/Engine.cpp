@@ -52,11 +52,13 @@ int GardenEngine::Start(std::unique_ptr<Scene> scene, float fps) {
 	m_currentScene = std::move(scene);
 	m_currentScene->onEnter();
 
+	float delta = 1.0f / fps;
+
 	while (!glfwWindowShouldClose(m_window)) {
 
 		auto start_time = std::chrono::high_resolution_clock::now();
 
-		Scene* next_scene = m_currentScene->update();
+		Scene* next_scene = m_currentScene->update(delta);
 		if (next_scene) {
 			m_currentScene->onExit();
 			m_currentScene.reset(next_scene);
@@ -67,7 +69,7 @@ int GardenEngine::Start(std::unique_ptr<Scene> scene, float fps) {
 		//glfwGetCursorPos(m_window, &xpos, &ypos);
 		//renderImgui(xpos, ypos);
 
-		m_currentScene->handleInput(*m_window);
+		m_currentScene->handleInput(*m_window, delta);
 		m_currentScene->render(*m_window, *m_renderer);
 
 		// finish and fps limit
@@ -77,9 +79,9 @@ int GardenEngine::Start(std::unique_ptr<Scene> scene, float fps) {
 			(int)std::chrono::duration_cast<std::chrono::milliseconds>(duration)
 			.count();
 		int waittime = frame_time_limit_ms - ms;
-		if (waittime < frame_time_limit_ms * -0.5)
-			std::println("WARNING, cannot keep up with set FPS. FPS currently at {}",
-				1000 / ms);
+		if (waittime < frame_time_limit_ms * -0.5) {
+			//std::println("WARNING, cannot keep up with set FPS. FPS currently at {}", 1000 / ms);
+		}
 		else
 			std::this_thread::sleep_for(std::chrono::milliseconds(waittime));
 	}
@@ -90,8 +92,7 @@ int GardenEngine::Start(std::unique_ptr<Scene> scene, float fps) {
 	return 0;
 }
 
-void GardenEngine::setupGlfwWindow(std::string win_name, int win_width,
-	int win_height) {
+void GardenEngine::setupGlfwWindow(std::string win_name, int win_width, int win_height) {
 	std::println("Creating GLFW Window...");
 
 	if (!glfwInit()) {
@@ -117,7 +118,6 @@ void GardenEngine::setupGlfwWindow(std::string win_name, int win_width,
 		std::println("Monitor {} has resolution {} x {}", i, mode->width,
 			mode->height);
 	}
-
 
 	GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
 	const GLFWvidmode* mode = glfwGetVideoMode(pMonitor);

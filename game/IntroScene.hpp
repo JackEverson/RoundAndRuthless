@@ -75,7 +75,7 @@ public:
 
     }
 
-    Scene* update() override {
+    Scene* update(float delta) override {
         
 
         if (start_game) {
@@ -112,7 +112,7 @@ public:
     }
 
     
-    void handleInput(GLFWwindow& window) {
+    void handleInput(GLFWwindow& window, float delta) {
         GLCall(glfwPollEvents());
 
         bool left_click = false;

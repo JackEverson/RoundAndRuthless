@@ -40,9 +40,9 @@ public:
 	void onEnter() override;
 	void onExit() override;
 
-	Scene* update() override;
+	Scene* update(float delta) override;
 	void render(GLFWwindow& window, Renderer& renderer) override;
-	void handleInput(GLFWwindow& window) override;
+	void handleInput(GLFWwindow& window, float delta) override;
 	
 private:
 	void DrawHallway(glm::mat4 view, glm::mat4 projection, Renderer& renderer);

@@ -44,7 +44,7 @@ public:
 
 	}
 
-	Scene* update() override {
+	Scene* update(float delta) override {
 		
 
 		return nullptr;
@@ -94,7 +94,7 @@ public:
     }
 
 
-    void handleInput(GLFWwindow& window) {
+    void handleInput(GLFWwindow& window, float delta) {
         GLCall(glfwPollEvents());
 
         if (glfwGetKey(&window, GLFW_KEY_ESCAPE) == GLFW_PRESS || quit_game)
