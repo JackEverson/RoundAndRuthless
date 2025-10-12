@@ -7,7 +7,6 @@
 struct SpriteInstance {
   glm::vec3 position;
   glm::vec2 size;
-  glm::vec3 rotation;
   glm::vec4 color;
   Texture *texture;
 };

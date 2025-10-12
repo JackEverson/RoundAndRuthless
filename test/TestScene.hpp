@@ -5,6 +5,11 @@
 
 #include <print>
 
+struct Platform {
+	glm::vec2 position;
+	glm::vec2 size;
+};
+
 struct Player {
 	glm::vec2 position;
 	glm::vec2 velocity;
@@ -12,13 +17,8 @@ struct Player {
 	float jump_power;
 	float run_speed;
 	bool isGrounded;
+	Platform* currentPlatform;
 };
-
-struct Platform {
-	glm::vec2 position;
-	glm::vec2 size;
-};
-
 
 
 class TestScene : public Scene
@@ -33,10 +33,22 @@ private:
 
 	Texture m_sushi_texture;
 	SpriteInstance m_player_sprite;
+	Texture m_shark_texture;
+	SpriteInstance m_shark_sprite;
 
 	Player m_player;
-	float m_gravity = -9.81f;
+	const float m_gravity = -9.81f;
 
+	const float m_level_left = -192.0f / 108.0f;
+	const float m_level_right = 192.0f / 108.0f;
+	const float m_platform_width = 0.3f;
+	const float m_minSpacingY = 0.1f;
+	const float m_maxSpacingY = 0.3f;
+
+	float m_fail_y = -2.0f;
+	float m_fail_speed = 0.1f;
+
+	float m_lastplatform_y = 0.0f;
 	std::vector<Platform> m_platforms;
 
 
@@ -54,10 +66,10 @@ private:
 	// game methods
 	void updateLocations();
 	void updatePlayerPhysics(Player& player, float deltaTime);
-	void checkGroundCollision(Player& player, float groundY);
 	void checkWallCollision(Player& player, float tubeX);
 
-	void resolvePlatformCollisions(Player& player, const Platform& platform);
+	void generatePlatforms(float& playerY);
+	void resolvePlatformCollisions(Player& player);
 	bool checkPlatformCollisions(const float& playerTop, const float& playerBottom, const float& playerLeft, const float& playerRight, const Platform& platform);
 	
 	void handlePlayerInput(Player& player, GLFWwindow& window, float delta);

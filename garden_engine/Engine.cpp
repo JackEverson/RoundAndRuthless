@@ -6,7 +6,6 @@
 
 #include <glad/glad.h>
 
-//#include "Renderer.hpp"
 #include "GLFW/glfw3.h"
 #include "glm/trigonometric.hpp"
 #include "imgui_impl_glfw.h"
@@ -72,18 +71,18 @@ int GardenEngine::Start(std::unique_ptr<Scene> scene, float fps) {
 		m_currentScene->handleInput(*m_window, delta);
 		m_currentScene->render(*m_window, *m_renderer);
 
-		// finish and fps limit
-		//auto end_time = std::chrono::high_resolution_clock::now();
-		//auto duration = end_time - frame_start;
-		//int ms =
-		//	(int)std::chrono::duration_cast<std::chrono::milliseconds>(duration)
-		//	.count();
-		//int waittime = frame_time_limit_ms - ms;
-		//if (waittime < frame_time_limit_ms * -0.5) {
-		//	//std::println("WARNING, cannot keep up with set FPS. FPS currently at {}", 1000 / ms);
-		//}
-		//else
-		//	std::this_thread::sleep_for(std::chrono::milliseconds(waittime));
+		 //finish and fps limit
+		auto end_time = std::chrono::high_resolution_clock::now();
+		auto duration = end_time - frame_start;
+		int ms =
+			(int)std::chrono::duration_cast<std::chrono::milliseconds>(duration)
+			.count();
+		int waittime = frame_time_limit_ms - ms;
+		if (waittime < frame_time_limit_ms * -0.5) {
+			//std::println("WARNING, cannot keep up with set FPS. FPS currently at {}", 1000 / ms);
+		}
+		else
+			std::this_thread::sleep_for(std::chrono::milliseconds(waittime));
 	}
 
 

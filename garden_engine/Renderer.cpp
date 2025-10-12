@@ -91,15 +91,16 @@ void Renderer::RendBatch(glm::mat4 model, glm::mat4 view, glm::mat4 projection) 
   GLCall(glEnable(GL_DEPTH_TEST));
   //GLCall(glDisable(GL_DEPTH_TEST));
 
-  glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-  glBufferSubData(GL_ARRAY_BUFFER, 0, instances.size() * sizeof(glm::vec2),
-                  instances.data());
 
-  glBindVertexArray(quadVAO);
+  GLCall(glBindBuffer(GL_ARRAY_BUFFER, instanceVBO));
+  GLCall(glBufferSubData(GL_ARRAY_BUFFER, 0, instances.size() * sizeof(float),
+                  instances.data()));
+
+  GLCall(glBindVertexArray(quadVAO));
   // glDrawArraysInstanced(GL_TRIANGLES, 0, 6, instances.size());
-  glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0,
-                          instances.size() / m_vertexSize);
-  glBindVertexArray(0);
+  GLCall(glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0,
+                          instances.size() / m_vertexSize));
+  GLCall(glBindVertexArray(0));
 }
 
 void Renderer::initRenderData() {
@@ -135,12 +136,11 @@ void Renderer::initRenderData() {
   GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
                       GL_STATIC_DRAW));
 
-  glGenBuffers(1, &instanceVBO);
-  glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-  glBufferData(GL_ARRAY_BUFFER,
-               1000 * (sizeof(glm::vec3) + sizeof(glm::vec3) + sizeof(float) +
-                       sizeof(glm::vec4)),
-               nullptr, GL_DYNAMIC_DRAW);
+  GLCall(glGenBuffers(1, &instanceVBO));
+  GLCall(glBindBuffer(GL_ARRAY_BUFFER, instanceVBO));
+  GLCall(glBufferData(GL_ARRAY_BUFFER,
+               10000 * (sizeof(glm::vec3) + sizeof(glm::vec3) + sizeof(float) + sizeof(glm::vec4)),
+               nullptr, GL_DYNAMIC_DRAW));
 
   int offset = 0;
   // instancePos
