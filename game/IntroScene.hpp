@@ -45,19 +45,16 @@ public:
     {
         button_sprite_start.position = button_start.m_worldPosition;
         button_sprite_start.size = button_start.m_size;
-        button_sprite_start.rotation = 0.0f;
         button_sprite_start.color = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
         button_sprite_start.texture = &button_texture_start;
 
         button_sprite_exit.position = button_quit.m_worldPosition;
         button_sprite_exit.size = button_quit.m_size;
-        button_sprite_exit.rotation = 0.0f;
         button_sprite_exit.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
         button_sprite_exit.texture = &button_texture_exit;
 
         sushi_sprite.position = glm::vec3(-0.7f, 0.0f, -0.2f);
         sushi_sprite.size = glm::vec2(1.2f, 0.8f);
-        sushi_sprite.rotation = 0.0f;
         sushi_sprite.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
         sushi_sprite.texture = &sushi_texture;
 

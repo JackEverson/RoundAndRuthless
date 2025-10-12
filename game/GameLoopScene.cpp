@@ -117,7 +117,6 @@ void GameLoopScene::render(GLFWwindow& window, Renderer& renderer) {
 		SpriteInstance approacher_sprite;
 		approacher_sprite.position = glm::vec3(jiggle_x, jiggle_y, -m_approacher.m_distanceAway);
 		approacher_sprite.size = glm::vec2(0.6f, 0.4f);
-		approacher_sprite.rotation = 90.0f;
 		approacher_sprite.color = glm::vec4(darkness, darkness, darkness, 1.0f);
 		approacher_sprite.texture = &approacher_texture;
 		renderer.SubmitSprite(approacher_sprite);

@@ -16,12 +16,12 @@
 #include "gl_debug.hpp"
 #include "imgui_internal.h"
 
-GardenEngine::GardenEngine(std::string name, int win_width, int win_height) :
+GardenEngine::GardenEngine(std::string name, bool windowed, int win_width, int win_height) :
 	soundManager(SimpleSoundManager::Instance())
 {
 	std::println("Creating GardenEngine...");
 
-	setupGlfwWindow(name, win_width, win_height);
+	setupGlfwWindow(name, windowed, win_width, win_height);
 	setupOpenGl();
 	//setupImGui();
 	setupAudio();
@@ -53,10 +53,14 @@ int GardenEngine::Start(std::unique_ptr<Scene> scene, float fps) {
 	m_currentScene->onEnter();
 
 	float delta = 1.0f / fps;
+	auto frame_start = std::chrono::high_resolution_clock::now();
+	auto program_start_time = std::chrono::high_resolution_clock::now();
 
 	while (!glfwWindowShouldClose(m_window)) {
 
-		auto start_time = std::chrono::high_resolution_clock::now();
+		delta = calculateDeltaTime(frame_start);
+		frame_start = std::chrono::high_resolution_clock::now();
+
 
 		Scene* next_scene = m_currentScene->update(delta);
 		if (next_scene) {
@@ -65,25 +69,21 @@ int GardenEngine::Start(std::unique_ptr<Scene> scene, float fps) {
 			m_currentScene->onEnter();
 		}
 
-		//double xpos, ypos;
-		//glfwGetCursorPos(m_window, &xpos, &ypos);
-		//renderImgui(xpos, ypos);
-
 		m_currentScene->handleInput(*m_window, delta);
 		m_currentScene->render(*m_window, *m_renderer);
 
 		// finish and fps limit
-		auto end_time = std::chrono::high_resolution_clock::now();
-		auto duration = end_time - start_time;
-		int ms =
-			(int)std::chrono::duration_cast<std::chrono::milliseconds>(duration)
-			.count();
-		int waittime = frame_time_limit_ms - ms;
-		if (waittime < frame_time_limit_ms * -0.5) {
-			//std::println("WARNING, cannot keep up with set FPS. FPS currently at {}", 1000 / ms);
-		}
-		else
-			std::this_thread::sleep_for(std::chrono::milliseconds(waittime));
+		//auto end_time = std::chrono::high_resolution_clock::now();
+		//auto duration = end_time - frame_start;
+		//int ms =
+		//	(int)std::chrono::duration_cast<std::chrono::milliseconds>(duration)
+		//	.count();
+		//int waittime = frame_time_limit_ms - ms;
+		//if (waittime < frame_time_limit_ms * -0.5) {
+		//	//std::println("WARNING, cannot keep up with set FPS. FPS currently at {}", 1000 / ms);
+		//}
+		//else
+		//	std::this_thread::sleep_for(std::chrono::milliseconds(waittime));
 	}
 
 
@@ -92,7 +92,7 @@ int GardenEngine::Start(std::unique_ptr<Scene> scene, float fps) {
 	return 0;
 }
 
-void GardenEngine::setupGlfwWindow(std::string win_name, int win_width, int win_height) {
+void GardenEngine::setupGlfwWindow(std::string win_name, bool windowed, int win_width, int win_height) {
 	std::println("Creating GLFW Window...");
 
 	if (!glfwInit()) {
@@ -135,15 +135,19 @@ void GardenEngine::setupGlfwWindow(std::string win_name, int win_width, int win_
 	//// set fullscreen
 	//m_window = glfwCreateWindow(mode->width, mode->height, win_name.c_str(), pMonitor, NULL);
 
-	////set fullscreenborderless window
-	glfwWindowHint(GLFW_DECORATED, GLFW_FALSE); // No borders or title bar
-	m_window = glfwCreateWindow(mode->width, mode->height, win_name.c_str(), NULL, NULL);
-	//glfwSetWindowPos(m_window, 0, 0);
+	if (!windowed) {
+		//// fullscreenborderless window
+		glfwWindowHint(GLFW_DECORATED, GLFW_FALSE); // No borders or title bar
+		m_window = glfwCreateWindow(mode->width, mode->height, win_name.c_str(), NULL, NULL);
+		//glfwSetWindowPos(m_window, 0, 0);
+	}
+	else {
+		// set windowed
+		m_window = glfwCreateWindow(win_width, win_height, win_name.c_str(), NULL, NULL);
+	}
 
-	//// set windowed
-	//m_window = glfwCreateWindow(win_width, win_height, win_name.c_str(), NULL, NULL);
-
-	 //glfwSwapInterval(0);
+	// vsync on
+	glfwSwapInterval(1);
 
 	// load icon
 	//GLFWimage icon;
@@ -258,4 +262,30 @@ void GardenEngine::renderImgui(double x, double y) {
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	glViewport(0, 0, width, height);
+}
+
+
+float GardenEngine::calculateDeltaTime(std::chrono::steady_clock::time_point& lastFrameStart){
+
+	auto end_time = std::chrono::high_resolution_clock::now();
+	auto duration = end_time - lastFrameStart;
+
+	float in_seconds = static_cast<float>(duration.count()) / 1'000'000'000.0f;
+	 
+	
+	return in_seconds;
+
+//int ms =
+//	(int)std::chrono::duration_cast<std::chrono::milliseconds>(duration)
+//	.count();
+//int waittime = frame_time_limit_ms - ms;
+//if (waittime < frame_time_limit_ms * -0.5) {
+//	//std::println("WARNING, cannot keep up with set FPS. FPS currently at {}", 1000 / ms);
+//}
+//else
+//	std::this_thread::sleep_for(std::chrono::milliseconds(waittime));
+
+
+
+
 }

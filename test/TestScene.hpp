@@ -3,6 +3,24 @@
 #include "Engine.hpp"
 #include "Scene.hpp"
 
+#include <print>
+
+struct Player {
+	glm::vec2 position;
+	glm::vec2 velocity;
+	glm::vec2 size;
+	float jump_power;
+	float run_speed;
+	bool isGrounded;
+};
+
+struct Platform {
+	glm::vec2 position;
+	glm::vec2 size;
+};
+
+
+
 class TestScene : public Scene
 {
 private:
@@ -16,6 +34,12 @@ private:
 	Texture m_sushi_texture;
 	SpriteInstance m_player_sprite;
 
+	Player m_player;
+	float m_gravity = -9.81f;
+
+	std::vector<Platform> m_platforms;
+
+
 public:
 	// scene methods
 	TestScene();
@@ -27,25 +51,15 @@ public:
 	void handleInput(GLFWwindow& window, float delta) override;
 
 private:
-	void updateLocations();
-
-private:
 	// game methods
-	
-	struct Player {
-		glm::vec2 position;
-		glm::vec2 velocity;
-		float jump_power, run_speed;
-		float width, height;
-		bool isGrounded;
-	};
-	
-	Player m_player;
-	float m_gravity = -9.81f;
-
+	void updateLocations();
 	void updatePlayerPhysics(Player& player, float deltaTime);
-	void checkCollision(Player& player, float groundY, float tubeX);
+	void checkGroundCollision(Player& player, float groundY);
+	void checkWallCollision(Player& player, float tubeX);
+
+	void resolvePlatformCollisions(Player& player, const Platform& platform);
+	bool checkPlatformCollisions(const float& playerTop, const float& playerBottom, const float& playerLeft, const float& playerRight, const Platform& platform);
+	
 	void handlePlayerInput(Player& player, GLFWwindow& window, float delta);
 
 };
-

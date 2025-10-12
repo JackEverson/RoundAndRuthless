@@ -25,28 +25,26 @@ private:
 	Renderer* m_renderer;
 	SimpleSoundManager& soundManager;
 
-	//Camera m_camera;
-
 	bool m_first_click = false;
 
 
 
 public:
-	GardenEngine(std::string, int win_width, int win_height);
+	GardenEngine(std::string, bool windowed, int win_width, int win_height);
 	~GardenEngine();
 
 	int Start(std::unique_ptr<Scene> scene, float fps);
 
 private:
 
-	void setupGlfwWindow(std::string name, int win_width, int win_height);
+	void setupGlfwWindow(std::string name, bool windowed, int win_width, int win_height);
 	void setupOpenGl();
 	void setupImGui();
 	void setupAudio();
-	void setupGameState();
 
-	void processInut();
 	void renderImgui(double x, double y);
+
+	float calculateDeltaTime(std::chrono::steady_clock::time_point& lastFrameStart);
 };
 
 // callbacks

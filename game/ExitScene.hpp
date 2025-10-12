@@ -66,7 +66,6 @@ public:
         SpriteInstance sushi_sprite;
         sushi_sprite.position = glm::vec3(-0.7f, 0.0f, -0.2f);
         sushi_sprite.size = glm::vec2(1.2f, 0.8f);
-        sushi_sprite.rotation = 0.0f;
         sushi_sprite.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
         sushi_sprite.texture = &sushi_texture;
         renderer.SubmitSprite(sushi_sprite);
