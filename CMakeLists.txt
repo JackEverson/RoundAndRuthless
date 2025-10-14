@@ -11,8 +11,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if(MSVC)
                     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -WX-")
+                    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -WX-")
 else()
-                    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++23")
+                    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++23")
+                    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++23")
 endif()
 
 #External libraries
@@ -126,21 +128,21 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 add_dependencies(${PROJECT_NAME} copy_resources)
 
 
-# Test application
-set(test_files
-	test/TestScene.cpp
-	test/TestGame.cpp
-	test/TestScene.hpp
+# Sushi application
+set(SushiJumper_files
+	SushiJumper/MainScene.cpp
+	SushiJumper/MainGame.cpp
+	SushiJumper/MainScene.hpp
 )
 
-add_library(tests STATIC ${test_files})
-target_include_directories(tests PUBLIC game)
-target_compile_features(tests PUBLIC cxx_std_23)
-target_link_libraries(tests PUBLIC GardenEngine)
+add_library(SushiJumper_lib STATIC ${SushiJumper_files})
+target_include_directories(SushiJumper_lib  PUBLIC game)
+target_compile_features(SushiJumper_lib PUBLIC cxx_std_23)
+target_link_libraries(SushiJumper_lib PUBLIC GardenEngine)
 
-add_executable(test test/test.cpp)
-target_link_libraries(test PUBLIC 
+add_executable(SushiJumper SushiJumper/SushiJumper.cpp ${APP_ICON_RESOURCE})
+target_link_libraries(SushiJumper PUBLIC 
 	GardenEngine 
-	tests
+	SushiJumper_lib
 )
-add_dependencies(test copy_resources)
+add_dependencies(SushiJumper copy_resources)

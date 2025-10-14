@@ -1,4 +1,4 @@
-#include "TestScene.hpp"
+#include "MainScene.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 

@@ -1,7 +1,7 @@
 #include <print>
 #include "Engine.hpp"
 
-#include "TestScene.hpp"
+#include "MainScene.hpp"
 
 int main() {
 
