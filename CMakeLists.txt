@@ -130,6 +130,7 @@ add_dependencies(${PROJECT_NAME} copy_resources)
 
 # Sushi application
 set(SushiJumper_files
+	SushiJumper/IntroScene.hpp
 	SushiJumper/MainScene.cpp
 	SushiJumper/MainGame.cpp
 	SushiJumper/MainScene.hpp

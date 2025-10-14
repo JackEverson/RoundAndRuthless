@@ -21,7 +21,7 @@ struct Player {
 };
 
 
-class TestScene : public Scene
+class MainScene : public Scene
 {
 private:
 	SimpleSoundManager& soundManager;
@@ -54,8 +54,8 @@ private:
 
 public:
 	// scene methods
-	TestScene();
-	~TestScene();
+	MainScene();
+	~MainScene();
 	void onEnter() override;
 	void onExit() override;
 	Scene* update(float delta) override;

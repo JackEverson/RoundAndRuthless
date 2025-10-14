@@ -4,7 +4,7 @@
 
 
 
-TestScene::TestScene() :
+MainScene::MainScene() :
 	soundManager(SimpleSoundManager::Instance()),
 	m_sushi_texture(Texture("./res/textures/sushi.png")),
 	m_shark_texture(Texture("./res/textures/shark.png")),
@@ -35,22 +35,22 @@ TestScene::TestScene() :
 
 
 
-TestScene::~TestScene()
+MainScene::~MainScene()
 {
 
 }
 
-void TestScene::onEnter()
+void MainScene::onEnter()
 {
 
 }
 
-void TestScene::onExit()
+void MainScene::onExit()
 {
 
 }
 
-Scene* TestScene::update(float delta)
+Scene* MainScene::update(float delta)
 {
 	updatePlayerPhysics(m_player, delta);
 	
@@ -63,7 +63,7 @@ Scene* TestScene::update(float delta)
 	return nullptr;
 }
 
-void TestScene::render(GLFWwindow& window, Renderer& renderer)
+void MainScene::render(GLFWwindow& window, Renderer& renderer)
 {
 	renderer.Clear(0.2f, 0.2f, 0.2f, 1.0f);
 
@@ -138,7 +138,7 @@ void TestScene::render(GLFWwindow& window, Renderer& renderer)
 	GLCall(glfwSwapBuffers(&window));
 }
 
-void TestScene::handleInput(GLFWwindow& window, float delta)
+void MainScene::handleInput(GLFWwindow& window, float delta)
 {
 	GLCall(glfwPollEvents());
 
@@ -149,7 +149,7 @@ void TestScene::handleInput(GLFWwindow& window, float delta)
 }
 
 
-void TestScene::updateLocations() {
+void MainScene::updateLocations() {
 
 	m_player_sprite.position = glm::vec3(m_player.position, -0.001f);
 	m_player_sprite.size = m_player.size;

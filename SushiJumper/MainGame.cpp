@@ -2,7 +2,7 @@
 #include <glm/gtc/random.hpp>
 
 
-void TestScene::updatePlayerPhysics(Player& player, float deltaTime) {
+void MainScene::updatePlayerPhysics(Player& player, float deltaTime) {
 
 	checkWallCollision(m_player, 1920 / 1080);
 
@@ -19,7 +19,7 @@ void TestScene::updatePlayerPhysics(Player& player, float deltaTime) {
 }
 
 
-void TestScene::checkWallCollision(Player& player, float tubeX) {
+void MainScene::checkWallCollision(Player& player, float tubeX) {
 
 	if (player.position.x >= tubeX) {
 		player.position.x = tubeX;
@@ -31,7 +31,7 @@ void TestScene::checkWallCollision(Player& player, float tubeX) {
 	}
 }
 
-void TestScene::generatePlatforms(float& playerY) {
+void MainScene::generatePlatforms(float& playerY) {
 
 	const float m_platformsAbovePlayer = 20.0f;
 
@@ -50,7 +50,7 @@ void TestScene::generatePlatforms(float& playerY) {
 }
 
 
-void TestScene::resolvePlatformCollisions(Player& player) {
+void MainScene::resolvePlatformCollisions(Player& player) {
 	
 	float player_top = player.position.y + player.size.y * 0.5f;
 	float player_bottom = player.position.y - player.size.y * 0.5f;
@@ -79,7 +79,7 @@ void TestScene::resolvePlatformCollisions(Player& player) {
 	player.isGrounded = false;
 }
 
-bool TestScene::checkPlatformCollisions(const float& playerTop, const float& playerBottom, const float& playerLeft, const float& playerRight, const Platform& platform) {
+bool MainScene::checkPlatformCollisions(const float& playerTop, const float& playerBottom, const float& playerLeft, const float& playerRight, const Platform& platform) {
 	
 	float platform_top = platform.position.y + platform.size.y * 0.5f;
 	//float platform_bottom = platform.position.y + platform.size.y * -0.5f;
@@ -95,7 +95,7 @@ bool TestScene::checkPlatformCollisions(const float& playerTop, const float& pla
 
 
 
-void TestScene::handlePlayerInput(Player& player, GLFWwindow& window, float delta) {
+void MainScene::handlePlayerInput(Player& player, GLFWwindow& window, float delta) {
 
 	bool squish = false;
 
