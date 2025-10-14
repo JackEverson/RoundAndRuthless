@@ -17,6 +17,7 @@ struct Player {
 	float jump_power;
 	float run_speed;
 	bool isGrounded;
+	bool isAlive;
 	Platform* currentPlatform;
 };
 
@@ -36,9 +37,16 @@ private:
 	Texture m_shark_texture;
 	SpriteInstance m_shark_sprite;
 
-	Player m_player;
-	const float m_gravity = -9.81f;
+	Texture m_death_texture;
+	SpriteInstance m_death_sprite;
 
+
+	Player m_player;
+
+	bool m_clicked = false;
+	bool m_restart = false;
+
+	const float m_gravity = -9.81f;
 	const float m_level_left = -192.0f / 108.0f;
 	const float m_level_right = 192.0f / 108.0f;
 	const float m_platform_width = 0.3f;
@@ -46,7 +54,7 @@ private:
 	const float m_maxSpacingY = 0.3f;
 
 	float m_fail_y = -2.0f;
-	float m_fail_speed = 0.1f;
+	float m_fail_speed = 0.2f;
 
 	float m_lastplatform_y = 0.0f;
 	std::vector<Platform> m_platforms;
@@ -56,6 +64,8 @@ public:
 	// scene methods
 	MainScene();
 	~MainScene();
+
+
 	void onEnter() override;
 	void onExit() override;
 	Scene* update(float delta) override;

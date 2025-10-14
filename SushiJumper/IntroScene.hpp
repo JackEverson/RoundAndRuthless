@@ -33,7 +33,6 @@ public:
     Button button_quit;
     Button button_start;
 
-    bool m_first_click = false;
 
     IntroScene() :
         soundManager(SimpleSoundManager::Instance()),
@@ -57,8 +56,6 @@ public:
         sushi_sprite.size = glm::vec2(1.2f, 0.8f);
         sushi_sprite.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
         sushi_sprite.texture = &sushi_texture;
-
-
     }
 
     void onEnter() override {
@@ -73,7 +70,6 @@ public:
     }
 
     Scene* update(float delta) override {
-
 
         if (start_game) {
             return new MainScene;
@@ -146,6 +142,5 @@ public:
 
         if (glfwGetKey(&window, GLFW_KEY_ESCAPE) == GLFW_PRESS || quit_game)
             glfwSetWindowShouldClose(&window, true);
-
     }
 };

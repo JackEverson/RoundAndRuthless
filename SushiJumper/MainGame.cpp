@@ -4,6 +4,11 @@
 
 void MainScene::updatePlayerPhysics(Player& player, float deltaTime) {
 
+	if (!player.isAlive) {
+		player.size *= 0.99f;
+		return;
+	}
+
 	checkWallCollision(m_player, 1920 / 1080);
 
 	resolvePlatformCollisions(m_player);
@@ -16,6 +21,10 @@ void MainScene::updatePlayerPhysics(Player& player, float deltaTime) {
 	}
 
 	player.position += player.velocity * deltaTime;
+
+	if (player.position.y < m_fail_y) {
+		player.isAlive = false;
+	}
 }
 
 
@@ -47,6 +56,8 @@ void MainScene::generatePlatforms(float& playerY) {
 		m_platforms.begin(), m_platforms.end(),
 		[playerY](const Platform& platform) { return platform.position.y < playerY - 20.0f; }), m_platforms.end());
 
+
+	// need to include walls and background here too
 }
 
 
@@ -130,6 +141,12 @@ void MainScene::handlePlayerInput(Player& player, GLFWwindow& window, float delt
 	}
 	else {
 		m_player.size.y = 0.06f;
+	}
+
+
+	bool left_click = false;
+	if (!m_clicked && glfwGetMouseButton(&window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+		left_click = true;
 	}
 
 }
