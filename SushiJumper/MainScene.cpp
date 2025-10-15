@@ -169,5 +169,7 @@ void MainScene::updateLocations() {
 	m_shark_sprite.size = glm::vec2(1920.0f / 1080.0f, 1.0f);
 	m_shark_sprite.position = glm::vec3(0.0f, m_fail_y - m_shark_sprite.size.x * 0.5, 0.002f);
 
+	m_death_sprite.position = glm::vec3(0.0f, m_player_sprite.position.y, m_death_sprite.position.z);
+
 }
 

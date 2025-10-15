@@ -49,9 +49,12 @@ private:
 	const float m_gravity = -9.81f;
 	const float m_level_left = -192.0f / 108.0f;
 	const float m_level_right = 192.0f / 108.0f;
+
 	const float m_platform_width = 0.3f;
-	const float m_minSpacingY = 0.1f;
-	const float m_maxSpacingY = 0.3f;
+	const float m_minPlatSpacingY = 0.1f;
+	const float m_maxPlatSpacingY = 0.3f;
+	const float m_minPlatSpacingX = m_level_left + 0.3;
+	const float m_maxPlatSpacingX = m_level_right - 0.3;;
 
 	float m_fail_y = -2.0f;
 	float m_fail_speed = 0.2f;

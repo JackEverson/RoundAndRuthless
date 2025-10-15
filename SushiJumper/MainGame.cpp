@@ -6,6 +6,7 @@ void MainScene::updatePlayerPhysics(Player& player, float deltaTime) {
 
 	if (!player.isAlive) {
 		player.size *= 0.99f;
+		m_player_sprite.color -= glm::vec4(0.01f, 0.01f, 0.0f, 0.01f);
 		return;
 	}
 
@@ -46,9 +47,9 @@ void MainScene::generatePlatforms(float& playerY) {
 
 	while (m_lastplatform_y < playerY + m_platformsAbovePlayer) {
 
-		float spacing = glm::linearRand(m_minSpacingY, m_maxSpacingY);
+		float spacing = glm::linearRand(m_minPlatSpacingY, m_maxPlatSpacingY);
 		m_lastplatform_y += spacing;
-		float x = glm::linearRand(m_level_left, m_level_right);
+		float x = glm::linearRand(m_minPlatSpacingX, m_maxPlatSpacingX);
 		m_platforms.push_back({ glm::vec2(x, m_lastplatform_y), glm::vec2(m_platform_width, 0.05f) });
 	}
 
@@ -141,6 +142,10 @@ void MainScene::handlePlayerInput(Player& player, GLFWwindow& window, float delt
 	}
 	else {
 		m_player.size.y = 0.06f;
+	}
+
+	if (glfwGetKey(&window, GLFW_KEY_R) == GLFW_PRESS) {
+		m_restart = true;
 	}
 
 
