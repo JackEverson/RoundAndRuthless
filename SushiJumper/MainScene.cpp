@@ -15,7 +15,7 @@ MainScene::MainScene() :
 	m_player.velocity = glm::vec2(0.0f, 0.0f);
 	m_player.jump_power = 4.5f;
 	m_player.run_speed = 2.0f;
-	m_player.size = glm::vec2(0.06f, 0.06f);
+	m_player.size = glm::vec2(0.08f, 0.06f);
 	m_player.isAlive = true;
 	
 	updateLocations();
