@@ -8,12 +8,13 @@
 
 #include "GLFW/glfw3.h"
 #include "glm/trigonometric.hpp"
+
+#include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
 #include "Engine.hpp"
 #include "gl_debug.hpp"
-#include "imgui_internal.h"
 
 GardenEngine::GardenEngine(std::string name, bool windowed, int win_width, int win_height) :
 	soundManager(SimpleSoundManager::Instance())
@@ -22,16 +23,16 @@ GardenEngine::GardenEngine(std::string name, bool windowed, int win_width, int w
 
 	setupGlfwWindow(name, windowed, win_width, win_height);
 	setupOpenGl();
-	//setupImGui();
+	setupImGui();
 	setupAudio();
 
 	std::println("GardenEngine Created!");
 }
 
 GardenEngine::~GardenEngine() {
-	//ImGui_ImplOpenGL3_Shutdown();
-	//ImGui_ImplGlfw_Shutdown();
-	//ImGui::DestroyContext();
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
 
 	delete m_renderer;
 	m_renderer = nullptr;
@@ -68,9 +69,13 @@ int GardenEngine::Start(std::unique_ptr<Scene> scene, float fps) {
 			m_currentScene->onEnter();
 		}
 
+		prepImgui();
 		m_currentScene->handleInput(*m_window, delta);
 		m_currentScene->render(*m_window, *m_renderer);
+		renderImgui(1, 1);
 
+		GLCall(glfwSwapBuffers(m_window));
+		
 		 //finish and fps limit
 		auto end_time = std::chrono::high_resolution_clock::now();
 		auto duration = end_time - frame_start;
@@ -102,7 +107,7 @@ void GardenEngine::setupGlfwWindow(std::string win_name, bool windowed, int win_
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	// glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
 	int monitor_count;
 	GLFWmonitor** _monitors = glfwGetMonitors(&monitor_count);
@@ -179,21 +184,19 @@ void GardenEngine::setupOpenGl() {
 }
 
 void GardenEngine::setupImGui() {
-	// TODO: FIX Imgui
-
 	std::println("Creating ImGui Context...");
+	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO io = ImGui::GetIO();
 	io.ConfigFlags |=
 		ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
 	io.ConfigFlags |=
 		ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
-	// m_imgui_io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
+	//io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
-	ImGui_ImplGlfw_InitForOpenGL(
-		m_window, true); // Second param install_callback=true will install GLFW
-	// callbacks and chain to existing ones.
+	ImGui_ImplGlfw_InitForOpenGL(m_window, false);
 	ImGui_ImplOpenGL3_Init();
+
 	std::println("ImGui Context Created!");
 }
 
@@ -205,55 +208,46 @@ void GardenEngine::setupAudio()
 	}
 }
 
-
-void GardenEngine::renderImgui(double x, double y) {
-	// TODO: FIX Imgui
-	
+void GardenEngine::prepImgui() {
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
+	//ImGui::ShowDemoWindow(); // Show demo window! :)
+}
 
-	static bool boolle = false;
+void GardenEngine::renderImgui(double x, double y) {
+
+	static bool boolle = true;
 
 	if (boolle) {
 		ImGuiIO io = ImGui::GetIO();
 
 		ImGui::Begin("Settings");
 
-
 		ImGui::Text("This is some useful text.");
 		ImGui::Checkbox("Demo Window", &boolle);
 		ImGui::Checkbox("Another Window", &boolle);
-
 		// ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float
 		// using a slider from 0.0f to 1.0f ImGui::ColorEdit3("clear color",
 		// (float*)&clear_color); // Edit 3 floats representing a color
-
 		// if (ImGui::Button("Button"))                            // Buttons return
 		// true when clicked (most widgets return true when edited/activated)
 		// m_clickCounter->click();
 		// ImGui::SameLine();
 		//ImGui::Text("Clicks = %d", m_clickCounter->GetClicks());
-
 		//if (ImGui::Button("Upgrade"))
 		//  m_clickCounter->UpgradeClickValue();
 		//ImGui::SameLine();
 		//ImGui::Text("Click upgrade cost = %d",
 		//            m_clickCounter->GetClickUpgradeValue());
-
 		ImGui::Text("Mouse location: %.1f x %.1f", x, y);
-
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
 			1000.0f / io.Framerate, io.Framerate);
-
 		//float dist = m_approacher->m_distanceAway;
 		//ImGui::Text("Sushi Distance %.1f m",
 		//    dist);
-
 		ImGui::End();
 	}
-
-	ImGui::ShowDemoWindow(); // Show demo window! :)
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

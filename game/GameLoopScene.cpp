@@ -77,7 +77,6 @@ void GameLoopScene::render(GLFWwindow& window, Renderer& renderer) {
 
 	glm::vec3 campos = m_camera.GetLocation();
 
-
 	int w, h;
 	glfwGetWindowSize(&window, &w, &h);
 	//float aspect = w / h;
@@ -133,8 +132,6 @@ void GameLoopScene::render(GLFWwindow& window, Renderer& renderer) {
 		renderer.SubmitSprite(deliver_sprite);
 		renderer.RendBatch(view, projection);
 	}
-
-	GLCall(glfwSwapBuffers(&window));
 }
 
 void GameLoopScene::handleInput(GLFWwindow& window, float delta)

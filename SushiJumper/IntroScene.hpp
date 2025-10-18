@@ -100,8 +100,6 @@ public:
         renderer.BeginBatchDraw(1);
         renderer.SubmitSprite(button_sprite_exit);
         renderer.RendBatch(view, projection);
-
-        GLCall(glfwSwapBuffers(&window));
     }
 
 

@@ -143,9 +143,6 @@ void MainScene::render(GLFWwindow& window, Renderer& renderer)
 		renderer.SubmitSprite(m_death_sprite);
 		renderer.RendBatch(view, projection);
 	}
-
-
-	GLCall(glfwSwapBuffers(&window));
 }
 
 void MainScene::handleInput(GLFWwindow& window, float delta)
