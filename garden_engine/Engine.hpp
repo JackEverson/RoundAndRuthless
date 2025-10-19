@@ -43,8 +43,8 @@ private:
 	void setupAudio();
 
 	void prepImgui();
-	void checkImgui();
 	void renderImgui();
+	void checkImgui();
 
 	float calculateDeltaTime(std::chrono::steady_clock::time_point& lastFrameStart);
 };

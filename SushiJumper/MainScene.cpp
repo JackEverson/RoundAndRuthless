@@ -144,7 +144,7 @@ void MainScene::render(GLFWwindow& window, Renderer& renderer)
 		renderer.RendBatch(view, projection);
 	}
 
-	ImGui::ShowDemoWindow();
+	renderImgui(w, h);
 }
 
 void MainScene::handleInput(GLFWwindow& window, float delta)
@@ -172,5 +172,43 @@ void MainScene::updateLocations() {
 
 	m_death_sprite.position = glm::vec3(0.0f, m_player_sprite.position.y, m_death_sprite.position.z);
 
+}
+
+
+void MainScene::renderImgui(int w, int h) {
+
+	ImGuiWindowFlags window_flags = 0;
+	window_flags |= ImGuiWindowFlags_NoTitleBar;
+	window_flags |= ImGuiWindowFlags_NoScrollbar;
+	window_flags |= ImGuiWindowFlags_MenuBar;
+	window_flags |= ImGuiWindowFlags_NoMove;
+	window_flags |= ImGuiWindowFlags_NoResize;
+	window_flags |= ImGuiWindowFlags_NoCollapse;
+	window_flags |= ImGuiWindowFlags_NoNav;
+	window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
+	window_flags |= ImGuiWindowFlags_UnsavedDocument;
+	window_flags |= ImGuiWindowFlags_NoBackground;
+
+
+	float highscore_w = 800;
+	float highscore_h = 400;
+
+	ImGui::SetNextWindowPos(ImVec2(w / 2 - highscore_w / 2, 0), ImGuiCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(highscore_w, highscore_h), ImGuiCond_Always);
+
+	ImGui::Begin("high score", NULL, window_flags);
+	ImGui::SetWindowFontScale(5.0);
+
+	std::string text = "Height";
+	float windowWidth = ImGui::GetWindowSize().x;
+	float textWidth = ImGui::CalcTextSize(text.c_str()).x;
+	ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
+	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+	ImGui::Text("%s: %f", text.c_str(), m_player.position.y);
+
+	ImGui::PopStyleColor();
+	ImGui::SetWindowFontScale(1.0);
+
+	ImGui::End();
 }
 

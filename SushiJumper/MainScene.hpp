@@ -68,7 +68,6 @@ public:
 	MainScene();
 	~MainScene();
 
-
 	void onEnter() override;
 	void onExit() override;
 	Scene* update(float delta) override;
@@ -86,5 +85,6 @@ private:
 	bool checkPlatformCollisions(const float& playerTop, const float& playerBottom, const float& playerLeft, const float& playerRight, const Platform& platform);
 	
 	void handlePlayerInput(Player& player, GLFWwindow& window, float delta);
+	void renderImgui(int w, int h);
 
 };
