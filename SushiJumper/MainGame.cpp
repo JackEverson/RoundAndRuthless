@@ -1,7 +1,6 @@
 #include "MainScene.hpp"
 #include <glm/gtc/random.hpp>
 
-
 void MainScene::updatePlayerPhysics(Player& player, float deltaTime) {
 
 	if (!player.isAlive) {

@@ -143,11 +143,15 @@ void MainScene::render(GLFWwindow& window, Renderer& renderer)
 		renderer.SubmitSprite(m_death_sprite);
 		renderer.RendBatch(view, projection);
 	}
+
+	ImGui::ShowDemoWindow();
 }
 
 void MainScene::handleInput(GLFWwindow& window, float delta)
 {
 	GLCall(glfwPollEvents());
+
+	
 
 	handlePlayerInput(m_player, window, delta);
 

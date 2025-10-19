@@ -195,7 +195,7 @@ void GardenEngine::setupImGui() {
 		ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
 	//io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
-	ImGui_ImplGlfw_InitForOpenGL(m_window, false);
+	ImGui_ImplGlfw_InitForOpenGL(m_window, true);
 	ImGui_ImplOpenGL3_Init();
 
 	std::println("ImGui Context Created!");
