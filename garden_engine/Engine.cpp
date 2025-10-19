@@ -61,7 +61,6 @@ int GardenEngine::Start(std::unique_ptr<Scene> scene, float fps) {
 		delta = calculateDeltaTime(frame_start);
 		frame_start = std::chrono::high_resolution_clock::now();
 
-
 		Scene* next_scene = m_currentScene->update(delta);
 		if (next_scene) {
 			m_currentScene->onExit();
@@ -72,7 +71,9 @@ int GardenEngine::Start(std::unique_ptr<Scene> scene, float fps) {
 		prepImgui();
 		m_currentScene->handleInput(*m_window, delta);
 		m_currentScene->render(*m_window, *m_renderer);
-		renderImgui(1, 1);
+
+		//checkImgui(); debug test
+		renderImgui();
 
 		GLCall(glfwSwapBuffers(m_window));
 		
@@ -212,42 +213,13 @@ void GardenEngine::prepImgui() {
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
-	//ImGui::ShowDemoWindow(); // Show demo window! :)
 }
 
-void GardenEngine::renderImgui(double x, double y) {
+void GardenEngine::checkImgui() {
+	ImGui::ShowDemoWindow(); // Show demo window! :)
+}
 
-	static bool boolle = true;
-
-	if (boolle) {
-		ImGuiIO io = ImGui::GetIO();
-
-		ImGui::Begin("Settings");
-
-		ImGui::Text("This is some useful text.");
-		ImGui::Checkbox("Demo Window", &boolle);
-		ImGui::Checkbox("Another Window", &boolle);
-		// ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float
-		// using a slider from 0.0f to 1.0f ImGui::ColorEdit3("clear color",
-		// (float*)&clear_color); // Edit 3 floats representing a color
-		// if (ImGui::Button("Button"))                            // Buttons return
-		// true when clicked (most widgets return true when edited/activated)
-		// m_clickCounter->click();
-		// ImGui::SameLine();
-		//ImGui::Text("Clicks = %d", m_clickCounter->GetClicks());
-		//if (ImGui::Button("Upgrade"))
-		//  m_clickCounter->UpgradeClickValue();
-		//ImGui::SameLine();
-		//ImGui::Text("Click upgrade cost = %d",
-		//            m_clickCounter->GetClickUpgradeValue());
-		ImGui::Text("Mouse location: %.1f x %.1f", x, y);
-		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
-			1000.0f / io.Framerate, io.Framerate);
-		//float dist = m_approacher->m_distanceAway;
-		//ImGui::Text("Sushi Distance %.1f m",
-		//    dist);
-		ImGui::End();
-	}
+void GardenEngine::renderImgui() {
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

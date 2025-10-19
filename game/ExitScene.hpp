@@ -88,8 +88,6 @@ public:
         exit.texture = &exit_texture;
         renderer.SubmitSprite(exit);
         renderer.RendBatch(view, projection);
-
-        GLCall(glfwSwapBuffers(&window));
     }
 
 
