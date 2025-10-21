@@ -8,6 +8,7 @@ MainScene::MainScene() :
 	soundManager(SimpleSoundManager::Instance()),
 	m_sushi_texture(Texture("./res/textures/sushi.png")),
 	m_shark_texture(Texture("./res/textures/shark.png")),
+	m_platform_texture(Texture("./res/textures/platform.png")),
 	m_rock_texture(Texture("./res/textures/rock.png")),
 	m_death_texture(Texture("./res/textures/death_text.png"))
 {
@@ -27,8 +28,8 @@ MainScene::MainScene() :
 	m_shark_sprite.texture = &m_shark_texture;
 
 	Platform ground;
-	ground.position = glm::vec2(0.0f, -0.1f);
-	ground.size = glm::vec2(10.0f, 0.2f);
+	ground.position = glm::vec2(0.0f, -0.5f);
+	ground.size = glm::vec2(10.0f, 1.0f);
 	m_platforms.push_back(ground);
 	m_player.currentPlatform = &ground;
 
@@ -105,7 +106,7 @@ void MainScene::render(GLFWwindow& window, Renderer& renderer)
 		plat_sprite.position = glm::vec3(p.position, 0.0f);
 		plat_sprite.size = p.size;
 		plat_sprite.color = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
-		plat_sprite.texture = &m_rock_texture;
+		plat_sprite.texture = &m_platform_texture;
 		renderer.SubmitSprite(plat_sprite);
 	}
 	renderer.RendBatch(view, projection);
@@ -126,7 +127,6 @@ void MainScene::render(GLFWwindow& window, Renderer& renderer)
 	model = glm::mat4(1.0f);
 	rotation = glm::rotate(model, glm::half_pi<float>(), axis);
 	renderer.RendBatch(rotation, view, projection);
-
 
 	////debug fail line
 	//renderer.BeginBatchDraw(1);
@@ -190,7 +190,7 @@ void MainScene::renderImgui(int w, int h) {
 	window_flags |= ImGuiWindowFlags_NoBackground;
 
 
-	float highscore_w = 800;
+	float highscore_w = 1000;
 	float highscore_h = 400;
 
 	ImGui::SetNextWindowPos(ImVec2(w / 2 - highscore_w / 2, 0), ImGuiCond_Always);

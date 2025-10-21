@@ -49,7 +49,7 @@ void MainScene::generatePlatforms(float& playerY) {
 		float spacing = glm::linearRand(m_minPlatSpacingY, m_maxPlatSpacingY);
 		m_lastplatform_y += spacing;
 		float x = glm::linearRand(m_minPlatSpacingX, m_maxPlatSpacingX);
-		m_platforms.push_back({ glm::vec2(x, m_lastplatform_y), glm::vec2(m_platform_width, 0.05f) });
+		m_platforms.push_back({ glm::vec2(x, m_lastplatform_y), glm::vec2(m_platform_width, m_platform_height) });
 	}
 
 	m_platforms.erase(std::remove_if(
@@ -79,7 +79,7 @@ void MainScene::resolvePlatformCollisions(Player& player) {
 
 	for (auto& platform : m_platforms) {
 		if (checkPlatformCollisions(player_top, player_bottom, player_left, player_right, platform) && player.velocity.y < 0.0f) {
-			player.position.y = platform.position.y + platform.size.y * 0.6f + player.size.y * 0.5f;
+			player.position.y = platform.position.y + platform.size.y * 0.50f + player.size.y * 0.5f;
 			player.isGrounded = true;
 			player.currentPlatform = &platform;
 			//std::println("Landed on platform at y: {}", platform.position.y);
@@ -97,11 +97,11 @@ bool MainScene::checkPlatformCollisions(const float& playerTop, const float& pla
 	float platform_left = platform.position.x - platform.size.x * 0.5f;
 	float platform_right = platform.position.x + platform.size.x * 0.5f;
 
-	return 
+	return
 		playerLeft < platform_right &&
 		playerRight > platform_left &&
-		playerBottom <= platform_top + (playerTop - playerBottom) &&
-		playerBottom >= platform_top - (playerTop - playerBottom);
+		playerBottom <= platform_top + platform.size.y * 0.1f &&
+		playerBottom >= platform_top - platform.size.y * 1.0f;
 }
 
 

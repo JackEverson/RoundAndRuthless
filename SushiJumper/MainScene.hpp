@@ -29,6 +29,7 @@ private:
 
 	Camera m_camera;
 
+	Texture m_platform_texture;
 	Texture m_rock_texture;
 	std::vector<SpriteInstance> m_rocks;
 
@@ -51,8 +52,9 @@ private:
 	const float m_level_right = 192.0f / 108.0f;
 
 	const float m_platform_width = 0.3f;
+	const float m_platform_height = 0.14f;
 	const float m_minPlatSpacingY = 0.1f;
-	const float m_maxPlatSpacingY = 0.3f;
+	const float m_maxPlatSpacingY = 0.25f;
 	const float m_minPlatSpacingX = m_level_left + 0.3;
 	const float m_maxPlatSpacingX = m_level_right - 0.3;;
 
