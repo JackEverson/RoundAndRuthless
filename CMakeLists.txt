@@ -134,6 +134,7 @@ set(SushiJumper_files
 	SushiJumper/MainScene.cpp
 	SushiJumper/MainGame.cpp
 	SushiJumper/MainScene.hpp
+	SushiJumper/HighScore.hpp
 )
 
 add_library(SushiJumper_lib STATIC ${SushiJumper_files})

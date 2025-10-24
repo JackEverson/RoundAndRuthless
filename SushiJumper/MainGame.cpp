@@ -1,4 +1,5 @@
 #include "MainScene.hpp"
+#include "HighScore.hpp"
 #include <glm/gtc/random.hpp>
 
 void MainScene::updatePlayerPhysics(Player& player, float deltaTime) {
@@ -22,8 +23,15 @@ void MainScene::updatePlayerPhysics(Player& player, float deltaTime) {
 
 	player.position += player.velocity * deltaTime;
 
-	if (player.position.y < m_fail_y) {
+	if (player.position.y < m_fail_y && player.isAlive) {
 		player.isAlive = false;
+		std::string scorepath = "scores.txt";
+
+		Score score = { "TestPlayer", player.position.y };
+		
+		std::vector<Score> scores = LoadHighscores(scorepath);
+		scores.push_back(score);
+		SaveHighScores(scores, scorepath);
 	}
 }
 
