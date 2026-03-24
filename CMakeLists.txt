@@ -54,7 +54,6 @@ set(garden_engine_src_files
   garden_engine/Renderer.cpp
   garden_engine/Shader.cpp
   garden_engine/Texture.cpp
-  garden_engine/Camera.cpp
   garden_engine/ClickCounter.cpp
   garden_engine/Audio.cpp
   garden_engine/Approacher.cpp
