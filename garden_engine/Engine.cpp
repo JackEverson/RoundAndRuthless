@@ -48,7 +48,7 @@ int GardenEngine::Start(std::unique_ptr<Scene> scene, float fps) {
   int frame_time_limit_ms = (int)((1 / fps) * 1000);
 
   m_currentScene = std::move(scene);
-  m_currentScene->onEnter();
+  m_currentScene->onEnter(*m_window);
 
   float delta = 1.0f / fps;
   auto frame_start = std::chrono::steady_clock::now();
@@ -59,11 +59,11 @@ int GardenEngine::Start(std::unique_ptr<Scene> scene, float fps) {
     delta = calculateDeltaTime(frame_start);
     frame_start = std::chrono::steady_clock::now();
 
-    Scene *next_scene = m_currentScene->update(delta);
+    Scene *next_scene = m_currentScene->update(*m_window, delta);
     if (next_scene) {
-      m_currentScene->onExit();
+      m_currentScene->onExit(*m_window);
       m_currentScene.reset(next_scene);
-      m_currentScene->onEnter();
+      m_currentScene->onEnter(*m_window);
     }
 
     prepImgui();

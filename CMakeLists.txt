@@ -98,13 +98,15 @@ COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
 
 #GamePlay code
 set(GamePlay_files
-game/GameLoopScene.cpp
-game/LiverGameState.cpp
+  game/TestScene.hpp
 
-game/IntroScene.hpp
-game/GameLoopScene.hpp
-game/LiverGameState.hpp
-game/ExitScene.hpp
+# game/GameLoopScene.cpp
+# game/LiverGameState.cpp
+
+# game/IntroScene.hpp
+# game/GameLoopScene.hpp
+# game/LiverGameState.hpp
+# game/ExitScene.hpp
 )
 add_library(GamePlay STATIC ${GamePlay_files})
 target_include_directories(GamePlay PUBLIC game)

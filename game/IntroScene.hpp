@@ -1,9 +1,12 @@
 #pragma once
+#include "Engine.hpp"
+#include "gl_debug.hpp"
+
+#include "GLFW/glfw3.h"
 
 #include "Audio.hpp"
 #include "GameLoopScene.hpp"
 #include "Scene.hpp"
-#include "gl_debug.hpp"
 
 #include "Button.hpp"
 
@@ -106,6 +109,20 @@ public:
       left_click = true;
     }
 
+    float speed = 5.0f;
+    if (GLFW_PRESS == glfwGetKey(&window, GLFW_KEY_W))
+      m_camera.ShiftCamera(m_camera.GetForward() * speed * delta);
+    if (glfwGetKey(&window, GLFW_KEY_S) == GLFW_PRESS)
+      m_camera.ShiftCamera(-m_camera.GetForward() * speed * delta);
+    if (glfwGetKey(&window, GLFW_KEY_A) == GLFW_PRESS)
+      m_camera.ShiftCamera(-m_camera.GetRight() * speed * delta);
+    if (glfwGetKey(&window, GLFW_KEY_D) == GLFW_PRESS)
+      m_camera.ShiftCamera(m_camera.GetRight() * speed * delta);
+
+    // Mouse look
+    double mouseX, mouseY;
+    glfwGetCursorPos(&window, &mouseX, &mouseY);
+
     // set left click before
     if (glfwGetMouseButton(&window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
       left_click_before = true;
@@ -118,9 +135,6 @@ public:
 
     int w, h;
     glfwGetWindowSize(&window, &w, &h);
-
-    double mouseX, mouseY;
-    glfwGetCursorPos(&window, &mouseX, &mouseY);
 
     auto view = m_camera.GetViewMat();
     auto proj = m_camera.GetProjectionMat(w, h);

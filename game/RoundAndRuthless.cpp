@@ -1,26 +1,28 @@
-﻿#include <print>
-#include "Engine.hpp"
+﻿#include "Engine.hpp"
+#include <print>
 
-#include "IntroScene.hpp"
+// #include "IntroScene.hpp"
+#include "TestScene.hpp"
 
 int main() {
-//#ifdef _DEBUG
-//	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-//#endif
-	
-	std::string name = "Round And Ruthless";
-	 //GardenEngine engine(name, 1280, 720);
-	GardenEngine engine(name, false, 1920, 1080);
+  // #ifdef _DEBUG
+  //	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+  // #endif
 
-	//float fps = 30.0f;
-	float fps = 60.0f;
-	// float fps = 144.0f;
+  std::string name = "Round And Ruthless";
+  // GardenEngine engine(name, 1280, 720);
+  GardenEngine engine(name, false, 1920, 1080);
 
-	//auto scene = std::make_unique<GameLoopScene>();
-	auto scene = std::make_unique<IntroScene>();
-	int engine_test_result = engine.Start(std::move(scene), fps);
+  // float fps = 30.0f;
+  //  float fps = 60.0f;
+  float fps = 144.0f;
 
-	std::println("Engine Exit code: {}", engine_test_result);
-	
-	return engine_test_result;
+  // auto scene = std::make_unique<GameLoopScene>();
+  // auto scene = std::make_unique<IntroScene>();
+  auto scene = std::make_unique<TestScene>();
+  int engine_test_result = engine.Start(std::move(scene), fps);
+
+  std::println("Engine Exit code: {}", engine_test_result);
+
+  return engine_test_result;
 }

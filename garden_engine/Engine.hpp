@@ -1,17 +1,14 @@
 #pragma once
 #include <glad/glad.h>
 
-#include "imgui.h"
 #include <GLFW/glfw3.h>
+#include <memory>
 
-#include "Approacher.hpp"
 #include "Audio.hpp"
-#include "Button.hpp"
 #include "Camera.hpp"
 #include "ClickCounter.hpp"
 #include "Renderer.hpp"
 #include "Scene.hpp"
-#include "gl_debug.hpp"
 
 class GardenEngine {
 

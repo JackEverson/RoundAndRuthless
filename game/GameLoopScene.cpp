@@ -3,6 +3,7 @@
 
 #include "ExitScene.hpp"
 #include "GameLoopScene.hpp"
+#include "gl_debug.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -127,11 +128,24 @@ void GameLoopScene::render(GLFWwindow &window, Renderer &renderer) {
 void GameLoopScene::handleInput(GLFWwindow &window, float delta) {
   GLCall(glfwPollEvents());
 
-  if (glfwGetKey(&window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-    glfwSetWindowShouldClose(&window, true);
+  // WASD movement
+  float speed = 5.0f;
+  if (glfwGetKey(&window, GLFW_KEY_W) == GLFW_PRESS)
+    m_camera.ShiftCamera(m_camera.GetForward() * speed * delta);
+  if (glfwGetKey(&window, GLFW_KEY_S) == GLFW_PRESS)
+    m_camera.ShiftCamera(-m_camera.GetForward() * speed * delta);
+  if (glfwGetKey(&window, GLFW_KEY_A) == GLFW_PRESS)
+    m_camera.ShiftCamera(-m_camera.GetRight() * speed * delta);
+  if (glfwGetKey(&window, GLFW_KEY_D) == GLFW_PRESS)
+    m_camera.ShiftCamera(m_camera.GetRight() * speed * delta);
 
+  // Mouse look
   double mouseX, mouseY;
   glfwGetCursorPos(&window, &mouseX, &mouseY);
+  // calculate delta from last frame and call ShiftRotation
+
+  if (glfwGetKey(&window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    glfwSetWindowShouldClose(&window, true);
 
   int w, h;
   glfwGetWindowSize(&window, &w, &h);
