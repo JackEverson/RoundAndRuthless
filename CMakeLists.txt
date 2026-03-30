@@ -50,24 +50,25 @@ target_link_libraries(imgui PUBLIC
 #my libraries and resources
 #garden_engine
 set(garden_engine_src_files
+  garden_engine/Audio.cpp
+  garden_engine/Button.cpp
   garden_engine/Engine.cpp
   garden_engine/Renderer.cpp
   garden_engine/Shader.cpp
   garden_engine/Texture.cpp
-  garden_engine/Audio.cpp
-  garden_engine/Button.cpp
 
   # include files included for IDE sake
+  garden_engine/Audio.hpp
+  garden_engine/Button.hpp
+  garden_engine/Camera.hpp
   garden_engine/Engine.hpp
   garden_engine/Renderer.hpp
-  garden_engine/Shader.hpp
-  garden_engine/Texture.hpp
-  garden_engine/Camera.hpp
-  garden_engine/gl_debug.hpp
-  garden_engine/Audio.hpp
   garden_engine/Scene.hpp
-  garden_engine/Button.hpp
+  garden_engine/Shader.hpp
   garden_engine/ShaderSource.hpp
+  garden_engine/Surface.hpp
+  garden_engine/Texture.hpp
+  garden_engine/gl_debug.hpp
 )
 
 add_library(garden_engine STATIC ${garden_engine_src_files})

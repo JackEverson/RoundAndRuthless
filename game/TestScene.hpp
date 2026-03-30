@@ -1,11 +1,19 @@
 #pragma once
 
+// #include "glm/ext/vector_float3.hpp"
+#include <print>
+#include <vector>
+
 #include "Audio.hpp"
 #include "Engine.hpp"
-#include "GLFW/glfw3.h"
+#include "Renderer.hpp"
 #include "Scene.hpp"
+#include "Surface.hpp"
+#include "Texture.hpp"
+#include "glm/ext/matrix_float4x4.hpp"
+#include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/vector_float3.hpp"
-#include <print>
+#include "glm/trigonometric.hpp"
 
 class TestScene : public Scene {
 
@@ -13,24 +21,28 @@ public:
   SimpleSoundManager &soundManager;
   Camera m_camera;
 
-  Texture sushi_texture;
-  SpriteInstance sushi_sprite;
+  Texture m_sushi_texture;
+  SpriteInstance m_sushi_sprite;
+
+  Texture m_floor_texture;
 
   float m_timer = 0.0f;
 
   float m_speed = 5.0f;
 
   double m_mouse_sensitivity = 0.05;
-  bool left_click_before = false;
+  bool m_left_click_before = false;
   double m_lastMouseX;
   double m_lastMouseY;
 
+  std::vector<Surface> m_surfaces;
+
   TestScene()
       : soundManager(SimpleSoundManager::Instance()),
-        sushi_texture(Texture("./res/textures/sushi.png")) {}
+        m_sushi_texture(Texture("./res/textures/sushi.png")),
+        m_floor_texture(Texture("./res/textures/gravel_floor.png")) {}
 
   void onEnter(GLFWwindow &window) override {
-
     glfwSetInputMode(&window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     double x, y;
@@ -41,15 +53,24 @@ public:
 
     soundManager.LoadSound("beep", "./res/sounds/beep.wav");
 
-    sushi_sprite.position = glm::vec3(0.0f, 0.0f, -0.0f);
-    sushi_sprite.size = glm::vec2(1.0f, 1.0f);
-    sushi_sprite.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    sushi_sprite.texture = &sushi_texture;
+    m_sushi_sprite.position = glm::vec3(0.0f, 0.0f, -0.0f);
+    m_sushi_sprite.size = glm::vec2(1.0f, 1.0f);
+    m_sushi_sprite.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    m_sushi_sprite.texture = &m_sushi_texture;
+
+    Surface floor;
+    floor.type = SurfaceType::Floor;
+    floor.texture = &m_floor_texture;
+    floor.size = glm::vec2(10.0f, 10.0f);
+    floor.rotation =
+        glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0));
+
+    m_surfaces.push_back(floor);
   }
 
   void onExit(GLFWwindow &window) override {
     glfwSetInputMode(&window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-  };
+  }
 
   Scene *update(GLFWwindow &window, float delta) override {
     m_timer += delta;
@@ -57,9 +78,9 @@ public:
     static const float cycle_time = 0.75f;
 
     if (m_timer >= cycle_time && m_timer < cycle_time * 2) {
-      sushi_sprite.size = glm::vec2(1.2f, 0.9f);
+      m_sushi_sprite.size = glm::vec2(1.2f, 0.9f);
     } else if (m_timer > cycle_time * 2) {
-      sushi_sprite.size = glm::vec2(1.0f, 1.0f);
+      m_sushi_sprite.size = glm::vec2(1.0f, 1.0f);
       m_timer = 0.0f;
     }
 
@@ -70,7 +91,7 @@ public:
     glfwPollEvents();
 
     bool left_click = false;
-    if (!left_click_before &&
+    if (!m_left_click_before &&
         glfwGetMouseButton(&window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
       left_click = true;
     }
@@ -102,9 +123,9 @@ public:
 
     // set left click before
     if (glfwGetMouseButton(&window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-      left_click_before = true;
+      m_left_click_before = true;
     else
-      left_click_before = false;
+      m_left_click_before = false;
 
     // int w, h;
     // glfwGetWindowSize(&window, &w, &h);
@@ -117,7 +138,6 @@ public:
   }
 
   void render(GLFWwindow &window, Renderer &renderer) override {
-
     renderer.Clear(0.2f, 0.2f, 0.2f, 1.0f);
 
     // glm::vec3 campos = m_camera.GetLocation();
@@ -128,7 +148,18 @@ public:
     glm::mat4 projection = m_camera.GetProjectionMat(w, h);
 
     renderer.BeginBatchDraw(1);
-    renderer.SubmitSprite(sushi_sprite);
+    renderer.SubmitSprite(m_sushi_sprite);
     renderer.RendBatch(view, projection);
+
+    for (auto surface : m_surfaces) {
+      SpriteInstance sprite;
+      sprite.position = surface.position;
+      sprite.texture = surface.texture;
+      sprite.size = surface.size;
+
+      renderer.BeginBatchDraw(1);
+      renderer.SubmitSprite(sprite);
+      renderer.RendBatch(surface.rotation, view, projection);
+    }
   }
 };
