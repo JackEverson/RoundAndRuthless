@@ -8,9 +8,10 @@ constexpr const char *TextureVertexShader =
     layout (location = 3) in vec2 instanceSize;
     layout (location = 4) in vec4 instanceColor;
 
-    uniform mat4 aModel;
-    uniform mat4 aProjection;
-    uniform mat4 aView;
+    uniform mat4 u_model;
+    uniform mat4 u_projection;
+    uniform mat4 u_view;
+    uniform vec3 u_campos;
 
     out vec4 v_color;
     out vec2 v_texCoord;
@@ -18,38 +19,37 @@ constexpr const char *TextureVertexShader =
 
     void main()
     {
-	vec4 scaled = aModel * vec4(aPos * instanceSize, 0, 1);
-	vec4 worldPos = vec4(instancePos, 0) + scaled;
+      vec4 scaled = u_model * vec4(aPos * instanceSize, 0, 1);
+      vec4 worldpos = vec4(instancePos, 0) + scaled;
 
-	gl_Position = aProjection * aView * worldPos;
-	//gl_Position = vec4(worldPos, 0.0, 1.0);
+      gl_Position = u_projection * u_view * worldpos;
 
-        v_color = instanceColor;
-        v_texCoord = aTexCoord;
-	v_distance = worldPos.z;
+      v_color = instanceColor;
+      v_texCoord = aTexCoord;
+	    v_distance = distance(worldpos.xyz, u_campos);  
     };
   )";
 
 constexpr const char *TextureFragmentShader =
     R"(#version 460 core
-in vec4 v_color;
-in vec2 v_texCoord;
-in float v_distance;
+    in vec4 v_color;
+    in vec2 v_texCoord;
+    in float v_distance;
 
-uniform sampler2D u_Texture;
+    uniform sampler2D u_Texture;
 
-out vec4 FragColor;
+    out vec4 FragColor;
 
-void main() {
-  float fogFactor = exp(v_distance * 0.8);
-  // float fogFactor = 0.5;
+    void main() {
+      float fogFactor = exp(-v_distance * 0.15);
+      // float fogFactor = 0.5;
 
-  vec4 textureColor = v_color * texture(u_Texture, v_texCoord);
-  vec4 fogColor = vec4(0.1, 0.1, 0.1, 1.0);
+      vec4 textureColor = v_color * texture(u_Texture, v_texCoord);
+      vec4 fogColor = vec4(0.1, 0.1, 0.1, 1.0);
 
-  vec4 finalColor = mix(fogColor, textureColor, fogFactor);
-  FragColor = vec4(finalColor.rgb, textureColor.a);
-};
+      vec4 finalColor = mix(fogColor, textureColor, fogFactor);
+      FragColor = vec4(finalColor.rgb, textureColor.a);
+    };
   )";
 
 constexpr const char *BasicVertexShader =

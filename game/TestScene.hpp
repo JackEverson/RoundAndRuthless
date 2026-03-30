@@ -15,7 +15,8 @@
 #include "glm/ext/vector_float3.hpp"
 #include "glm/trigonometric.hpp"
 
-class TestScene : public Scene {
+class TestScene : public Scene
+{
 
 public:
   SimpleSoundManager &soundManager;
@@ -42,7 +43,8 @@ public:
         m_sushi_texture(Texture("./res/textures/sushi.png")),
         m_floor_texture(Texture("./res/textures/gravel_floor.png")) {}
 
-  void onEnter(GLFWwindow &window) override {
+  void onEnter(GLFWwindow &window) override
+  {
     glfwSetInputMode(&window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     double x, y;
@@ -53,7 +55,7 @@ public:
 
     soundManager.LoadSound("beep", "./res/sounds/beep.wav");
 
-    m_sushi_sprite.position = glm::vec3(0.0f, 0.0f, -0.0f);
+    m_sushi_sprite.position = glm::vec3(0.0f, 0.5f, -0.0f);
     m_sushi_sprite.size = glm::vec2(1.0f, 1.0f);
     m_sushi_sprite.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
     m_sushi_sprite.texture = &m_sushi_texture;
@@ -68,49 +70,73 @@ public:
     m_surfaces.push_back(floor);
   }
 
-  void onExit(GLFWwindow &window) override {
+  void onExit(GLFWwindow &window) override
+  {
     glfwSetInputMode(&window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
   }
 
-  Scene *update(GLFWwindow &window, float delta) override {
+  Scene *update(GLFWwindow &window, float delta) override
+  {
     m_timer += delta;
 
     static const float cycle_time = 0.75f;
 
-    if (m_timer >= cycle_time && m_timer < cycle_time * 2) {
+    if (m_timer >= cycle_time && m_timer < cycle_time * 2)
+    {
       m_sushi_sprite.size = glm::vec2(1.2f, 0.9f);
-    } else if (m_timer > cycle_time * 2) {
+      m_sushi_sprite.position = glm::vec3(0.0f, 0.45f, 0.0f);
+    }
+    else if (m_timer > cycle_time * 2)
+    {
       m_sushi_sprite.size = glm::vec2(1.0f, 1.0f);
+      m_sushi_sprite.position = glm::vec3(0.0f, 0.5f, 0.0f);
       m_timer = 0.0f;
     }
 
     return nullptr;
   }
 
-  void handleInput(GLFWwindow &window, float delta) override {
+  void handleInput(GLFWwindow &window, float delta) override
+  {
     glfwPollEvents();
+
 
     bool left_click = false;
     if (!m_left_click_before &&
-        glfwGetMouseButton(&window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+        glfwGetMouseButton(&window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+    {
       left_click = true;
+    }
+
+    if (glfwGetMouseButton(&window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) m_left_click_before = true;
+    else m_left_click_before = false;
+
+    if (left_click)
+    {
+      soundManager.PlaySound("beep");
+    }
+
+
+    float speed = m_speed;
+    if (glfwGetKey(&window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(&window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS){
+      speed *= 5;
     }
 
     auto flat_forward = m_camera.GetForward() * glm::vec3(1, 0, 1);
     auto flat_right = m_camera.GetRight() * glm::vec3(1, 0, 1);
 
     if (GLFW_PRESS == glfwGetKey(&window, GLFW_KEY_W))
-      m_camera.ShiftCamera(flat_forward * m_speed * delta);
+      m_camera.ShiftCamera(flat_forward * speed * delta);
     if (glfwGetKey(&window, GLFW_KEY_S) == GLFW_PRESS)
-      m_camera.ShiftCamera(-flat_forward * m_speed * delta);
+      m_camera.ShiftCamera(-flat_forward * speed * delta);
     if (glfwGetKey(&window, GLFW_KEY_A) == GLFW_PRESS)
-      m_camera.ShiftCamera(-flat_right * m_speed * delta);
+      m_camera.ShiftCamera(-flat_right * speed * delta);
     if (glfwGetKey(&window, GLFW_KEY_D) == GLFW_PRESS)
-      m_camera.ShiftCamera(flat_right * m_speed * delta);
+      m_camera.ShiftCamera(flat_right * speed * delta);
     if (glfwGetKey(&window, GLFW_KEY_SPACE) == GLFW_PRESS)
-      m_camera.ShiftCamera(glm::vec3(0, 1, 0) * m_speed * delta);
+      m_camera.ShiftCamera(glm::vec3(0, 1, 0) * speed * delta);
     if (glfwGetKey(&window, GLFW_KEY_C) == GLFW_PRESS)
-      m_camera.ShiftCamera(glm::vec3(0, -1, 0) * m_speed * delta);
+      m_camera.ShiftCamera(glm::vec3(0, -1, 0) * speed * delta);
 
     // Mouse look
     double mouseX, mouseY;
@@ -120,12 +146,6 @@ public:
     double deltaY = (mouseY - m_lastMouseY) * -m_mouse_sensitivity;
 
     m_camera.ShiftRotation(deltaX, deltaY);
-
-    // set left click before
-    if (glfwGetMouseButton(&window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-      m_left_click_before = true;
-    else
-      m_left_click_before = false;
 
     // int w, h;
     // glfwGetWindowSize(&window, &w, &h);
@@ -137,21 +157,24 @@ public:
     m_lastMouseY = mouseY;
   }
 
-  void render(GLFWwindow &window, Renderer &renderer) override {
+  void render(GLFWwindow &window, Renderer &renderer) override
+  {
     renderer.Clear(0.2f, 0.2f, 0.2f, 1.0f);
-
-    // glm::vec3 campos = m_camera.GetLocation();
 
     int w, h;
     glfwGetWindowSize(&window, &w, &h);
     glm::mat4 view = m_camera.GetViewMat();
     glm::mat4 projection = m_camera.GetProjectionMat(w, h);
+    glm::vec3 campos = m_camera.GetLocation();
+
+    // std::println("campos: {}, {}, {}", campos.x, campos.y, campos.z);
 
     renderer.BeginBatchDraw(1);
     renderer.SubmitSprite(m_sushi_sprite);
-    renderer.RendBatch(view, projection);
+    renderer.RendBatch(glm::mat4(1), view, projection, campos);
 
-    for (auto surface : m_surfaces) {
+    for (auto surface : m_surfaces)
+    {
       SpriteInstance sprite;
       sprite.position = surface.position;
       sprite.texture = surface.texture;
@@ -159,7 +182,7 @@ public:
 
       renderer.BeginBatchDraw(1);
       renderer.SubmitSprite(sprite);
-      renderer.RendBatch(surface.rotation, view, projection);
+      renderer.RendBatch(surface.rotation, view, projection, campos);
     }
   }
 };

@@ -43,7 +43,7 @@ public:
   void BeginBatchDraw(int countEstimate);
   void SubmitSprite(const SpriteInstance &sprite);
   void RendBatch(glm::mat4 view, glm::mat4 projection);
-  void RendBatch(glm::mat4 model, glm::mat4 view, glm::mat4 projection);
+  void RendBatch(glm::mat4 model, glm::mat4 view, glm::mat4 projection, glm::vec3 campos);
 
 private:
   void initRenderData();

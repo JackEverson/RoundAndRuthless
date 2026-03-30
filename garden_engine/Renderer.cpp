@@ -53,12 +53,8 @@ void Renderer::SubmitSprite(const SpriteInstance &sprite) {
   batch.push_back(sprite);
 }
 
-void Renderer::RendBatch(glm::mat4 view, glm::mat4 projection) {
-  RendBatch(glm::identity<glm::mat4>(), view, projection);
-}
-
 void Renderer::RendBatch(glm::mat4 model, glm::mat4 view,
-                         glm::mat4 projection) {
+                         glm::mat4 projection, glm::vec3 campos) {
   if (batch.empty())
     return;
 
@@ -66,9 +62,10 @@ void Renderer::RendBatch(glm::mat4 model, glm::mat4 view,
   tex->Bind();
 
   shader.Bind();
-  shader.SetUniformMat4f("aModel", model);
-  shader.SetUniformMat4f("aView", view);
-  shader.SetUniformMat4f("aProjection", projection);
+  shader.SetUniformMat4f("u_model", model);
+  shader.SetUniformMat4f("u_view", view);
+  shader.SetUniformMat4f("u_projection", projection);
+  shader.SetUniform3f("u_campos", campos);
 
   std::vector<float> instances;
   instances.reserve(batch.size() * m_vertexSize);
