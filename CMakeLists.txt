@@ -54,9 +54,7 @@ set(garden_engine_src_files
   garden_engine/Renderer.cpp
   garden_engine/Shader.cpp
   garden_engine/Texture.cpp
-  garden_engine/ClickCounter.cpp
   garden_engine/Audio.cpp
-  garden_engine/Approacher.cpp
   garden_engine/Button.cpp
 
   # include files included for IDE sake
@@ -65,12 +63,11 @@ set(garden_engine_src_files
   garden_engine/Shader.hpp
   garden_engine/Texture.hpp
   garden_engine/Camera.hpp
-  garden_engine/ClickCounter.hpp
   garden_engine/gl_debug.hpp
   garden_engine/Audio.hpp
-  garden_engine/Approacher.hpp
   garden_engine/Scene.hpp
   garden_engine/Button.hpp
+  garden_engine/ShaderSource.hpp
 )
 
 add_library(garden_engine STATIC ${garden_engine_src_files})

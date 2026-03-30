@@ -11,7 +11,8 @@ int main() {
 
   std::string name = "Round And Ruthless";
   // GardenEngine engine(name, 1280, 720);
-  GardenEngine engine(name, false, 1920, 1080);
+  GardenEngine engine(name, true, 1920, 1080);
+  // GardenEngine engine(name, false, 1920, 1080);
 
   // float fps = 30.0f;
   //  float fps = 60.0f;

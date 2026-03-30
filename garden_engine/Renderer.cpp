@@ -6,12 +6,13 @@
 #include "gl_debug.hpp"
 #include "glm/fwd.hpp"
 
+#include "ShaderSource.hpp"
+
 #include <print>
 
-Renderer::Renderer() :
-    shader("./res/shaders/basictexture.shader"),
-	backgroundShader("./res/shaders/background.shader")
-{
+Renderer::Renderer()
+    : shader(TextureVertexShader, TextureFragmentShader),
+      backgroundShader(BackgroundVertexShader, BackgroundFragmentShader) {
   initRenderData();
 }
 
@@ -23,28 +24,25 @@ void Renderer::Clear(float r, float g, float b, float a) const {
   GLCall(glClear(GL_DEPTH_BUFFER_BIT));
 }
 
-void Renderer::DrawBackground(const Texture& texture) {
-	
-    //Clear(sprite.color.r, sprite.color.g, sprite.color.b, sprite.color.a);
+void Renderer::DrawBackground(const Texture &texture) {
 
-    backgroundShader.Bind();
-    texture.Bind(0);
+  // Clear(sprite.color.r, sprite.color.g, sprite.color.b, sprite.color.a);
 
-	GLCall(glBindVertexArray(this->quadVAO));
+  backgroundShader.Bind();
+  texture.Bind(0);
 
-    GLCall(glDisable(GL_BLEND));
-    GLCall(glDisable(GL_DEPTH_TEST));
+  GLCall(glBindVertexArray(this->quadVAO));
 
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  GLCall(glDisable(GL_BLEND));
+  GLCall(glDisable(GL_DEPTH_TEST));
 
-    backgroundShader.Unbind();
-    glBindVertexArray(0);
+  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  backgroundShader.Unbind();
+  glBindVertexArray(0);
 }
-
-
-
 
 void Renderer::BeginBatchDraw(int countEstimate) {
   batch.clear();
@@ -56,10 +54,11 @@ void Renderer::SubmitSprite(const SpriteInstance &sprite) {
 }
 
 void Renderer::RendBatch(glm::mat4 view, glm::mat4 projection) {
-    RendBatch(glm::identity<glm::mat4>(), view, projection);
+  RendBatch(glm::identity<glm::mat4>(), view, projection);
 }
 
-void Renderer::RendBatch(glm::mat4 model, glm::mat4 view, glm::mat4 projection) {
+void Renderer::RendBatch(glm::mat4 model, glm::mat4 view,
+                         glm::mat4 projection) {
   if (batch.empty())
     return;
 
@@ -89,17 +88,16 @@ void Renderer::RendBatch(glm::mat4 model, glm::mat4 view, glm::mat4 projection) 
   GLCall(glEnable(GL_BLEND));
   GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
   GLCall(glEnable(GL_DEPTH_TEST));
-  //GLCall(glDisable(GL_DEPTH_TEST));
-
+  // GLCall(glDisable(GL_DEPTH_TEST));
 
   GLCall(glBindBuffer(GL_ARRAY_BUFFER, instanceVBO));
   GLCall(glBufferSubData(GL_ARRAY_BUFFER, 0, instances.size() * sizeof(float),
-                  instances.data()));
+                         instances.data()));
 
   GLCall(glBindVertexArray(quadVAO));
   // glDrawArraysInstanced(GL_TRIANGLES, 0, 6, instances.size());
   GLCall(glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0,
-                          instances.size() / m_vertexSize));
+                                 instances.size() / m_vertexSize));
   GLCall(glBindVertexArray(0));
 }
 
@@ -139,8 +137,9 @@ void Renderer::initRenderData() {
   GLCall(glGenBuffers(1, &instanceVBO));
   GLCall(glBindBuffer(GL_ARRAY_BUFFER, instanceVBO));
   GLCall(glBufferData(GL_ARRAY_BUFFER,
-               10000 * (sizeof(glm::vec3) + sizeof(glm::vec3) + sizeof(float) + sizeof(glm::vec4)),
-               nullptr, GL_DYNAMIC_DRAW));
+                      10000 * (sizeof(glm::vec3) + sizeof(glm::vec3) +
+                               sizeof(float) + sizeof(glm::vec4)),
+                      nullptr, GL_DYNAMIC_DRAW));
 
   int offset = 0;
   // instancePos

@@ -6,7 +6,6 @@
 
 #include "Audio.hpp"
 #include "Camera.hpp"
-#include "ClickCounter.hpp"
 #include "Renderer.hpp"
 #include "Scene.hpp"
 
