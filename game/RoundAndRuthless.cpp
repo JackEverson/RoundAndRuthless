@@ -10,7 +10,6 @@ int main() {
   // #endif
 
   std::string name = "Round And Ruthless";
-  // GardenEngine engine(name, 1280, 720);
   GardenEngine engine(name, true, 1920, 1080);
   // GardenEngine engine(name, false, 1920, 1080);
 
@@ -18,8 +17,6 @@ int main() {
   //  float fps = 60.0f;
   float fps = 144.0f;
 
-  // auto scene = std::make_unique<GameLoopScene>();
-  // auto scene = std::make_unique<IntroScene>();
   auto scene = std::make_unique<TestScene>();
   int engine_test_result = engine.Start(std::move(scene), fps);
 

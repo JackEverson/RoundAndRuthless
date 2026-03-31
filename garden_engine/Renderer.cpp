@@ -62,7 +62,7 @@ void Renderer::RendBatch(glm::mat4 view, glm::mat4 projection, glm::vec3 campos,
   if (batch.empty())
     return;
 
-    // TODO: revisit this once transparency is sorted
+  // TODO: revisit this once transparency is sorted
   // std::sort(batch.begin(), batch.end(), [](const SpriteInstance &a, const SpriteInstance &b)
   //           { return a.texture < b.texture; });
 
