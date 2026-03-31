@@ -12,20 +12,22 @@
 
 Renderer::Renderer()
     : shader(TextureVertexShader, TextureFragmentShader),
-      backgroundShader(BackgroundVertexShader, BackgroundFragmentShader) {
+      backgroundShader(BackgroundVertexShader, BackgroundFragmentShader)
+{
   initRenderData();
 }
 
 Renderer::~Renderer() {}
 
-void Renderer::Clear(float r, float g, float b, float a) const {
+void Renderer::Clear(float r, float g, float b, float a) const
+{
   glClearColor(r, g, b, a);
   GLCall(glClear(GL_COLOR_BUFFER_BIT));
   GLCall(glClear(GL_DEPTH_BUFFER_BIT));
 }
 
-void Renderer::DrawBackground(const Texture &texture) {
-
+void Renderer::DrawBackground(const Texture &texture)
+{
   // Clear(sprite.color.r, sprite.color.g, sprite.color.b, sprite.color.a);
 
   backgroundShader.Bind();
@@ -44,33 +46,40 @@ void Renderer::DrawBackground(const Texture &texture) {
   glBindVertexArray(0);
 }
 
-void Renderer::BeginBatchDraw(int countEstimate) {
+void Renderer::BeginBatchDraw(int countEstimate)
+{
   batch.clear();
-  batch.reserve(countEstimate * 9);
+  batch.reserve(countEstimate * 1.2);
 }
 
-void Renderer::SubmitSprite(const SpriteInstance &sprite) {
+void Renderer::SubmitSprite(const SpriteInstance &sprite)
+{
   batch.push_back(sprite);
 }
 
-void Renderer::RendBatch(glm::mat4 model, glm::mat4 view,
-                         glm::mat4 projection, glm::vec3 campos) {
+void Renderer::RendBatch(glm::mat4 view, glm::mat4 projection, glm::vec3 campos, float fogfactor)
+{
   if (batch.empty())
     return;
+
+    // TODO: revisit this once transparency is sorted
+  // std::sort(batch.begin(), batch.end(), [](const SpriteInstance &a, const SpriteInstance &b)
+  //           { return a.texture < b.texture; });
 
   Texture *tex = batch[0].texture;
   tex->Bind();
 
   shader.Bind();
-  shader.SetUniformMat4f("u_model", model);
   shader.SetUniformMat4f("u_view", view);
   shader.SetUniformMat4f("u_projection", projection);
   shader.SetUniform3f("u_campos", campos);
+  shader.SetUniform1f("u_fogfactor", fogfactor);
 
   std::vector<float> instances;
   instances.reserve(batch.size() * m_vertexSize);
 
-  for (auto &s : batch) {
+  for (auto &s : batch)
+  {
     instances.push_back(s.position.x);
     instances.push_back(s.position.y);
     instances.push_back(s.position.z);
@@ -80,6 +89,14 @@ void Renderer::RendBatch(glm::mat4 model, glm::mat4 view,
     instances.push_back(s.color.g);
     instances.push_back(s.color.b);
     instances.push_back(s.color.a);
+
+    for (int i = 0; i < 4; i++)
+    {
+      instances.push_back(s.model_mat[i][0]);
+      instances.push_back(s.model_mat[i][1]);
+      instances.push_back(s.model_mat[i][2]);
+      instances.push_back(s.model_mat[i][3]);
+    }
   }
 
   GLCall(glEnable(GL_BLEND));
@@ -92,20 +109,50 @@ void Renderer::RendBatch(glm::mat4 model, glm::mat4 view,
                          instances.data()));
 
   GLCall(glBindVertexArray(quadVAO));
-  // glDrawArraysInstanced(GL_TRIANGLES, 0, 6, instances.size());
-  GLCall(glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0,
-                                 instances.size() / m_vertexSize));
+  // GLCall(glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0,
+  //                                instances.size() / m_vertexSize));
+
+  size_t groupStart = 0;
+  while (groupStart < batch.size()) {
+      Texture* groupTex = batch[groupStart].texture;
+      size_t groupEnd = groupStart;
+      
+      // find where this texture group ends
+      while (groupEnd < batch.size() && batch[groupEnd].texture == groupTex)
+          groupEnd++;
+      
+      groupTex->Bind();
+      GLCall(glDrawElementsInstancedBaseInstance(
+          GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0,
+          (GLsizei)(groupEnd - groupStart),  // how many instances
+          (GLuint)groupStart));               // where in the buffer to start
+      
+      groupStart = groupEnd;
+  }
+
   GLCall(glBindVertexArray(0));
 }
 
-void Renderer::initRenderData() {
-
+void Renderer::initRenderData()
+{
   float vertices[] = {
       // pos        // tex
-      -0.5f, -0.5f, 0.0f, 0.0f, // Bottom-left
-      0.5f,  -0.5f, 1.0f, 0.0f, // Bottom-right
-      -0.5f, 0.5f,  0.0f, 1.0f, // Top-left
-      0.5f,  0.5f,  1.0f, 1.0f, // Top-right
+      -0.5f,
+      -0.5f,
+      0.0f,
+      0.0f, // Bottom-left
+      0.5f,
+      -0.5f,
+      1.0f,
+      0.0f, // Bottom-right
+      -0.5f,
+      0.5f,
+      0.0f,
+      1.0f, // Top-left
+      0.5f,
+      0.5f,
+      1.0f,
+      1.0f, // Top-right
   };
 
   unsigned int indices[] = {0, 1, 2, 1, 2, 3};
@@ -134,28 +181,36 @@ void Renderer::initRenderData() {
   GLCall(glGenBuffers(1, &instanceVBO));
   GLCall(glBindBuffer(GL_ARRAY_BUFFER, instanceVBO));
   GLCall(glBufferData(GL_ARRAY_BUFFER,
-                      10000 * (sizeof(glm::vec3) + sizeof(glm::vec3) +
-                               sizeof(float) + sizeof(glm::vec4)),
+                      10000 * m_vertexSize * sizeof(float),
                       nullptr, GL_DYNAMIC_DRAW));
 
   int offset = 0;
   // instancePos
-  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 9, (void *)0);
+  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(float) * m_vertexSize, (void *)0);
   glEnableVertexAttribArray(2);
   glVertexAttribDivisor(2, 1);
   offset += 3;
 
   // instanceSize
   glEnableVertexAttribArray(3);
-  glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 9,
+  glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(float) * m_vertexSize,
                         (void *)(sizeof(float) * offset));
   glVertexAttribDivisor(3, 1);
   offset += 2;
 
   // instanceColor
   glEnableVertexAttribArray(4);
-  glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 9,
-                        (void *)(sizeof(float) * offset));
+  glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(float) * m_vertexSize, (void *)(sizeof(float) * offset));
   glVertexAttribDivisor(4, 1);
   offset += 4;
+
+  // instance model matrix
+  for (int i = 0; i < 4; i++)
+  {
+    glEnableVertexAttribArray(5 + i);
+    glVertexAttribPointer(5 + i, 4, GL_FLOAT, GL_FALSE,
+                          sizeof(float) * m_vertexSize,
+                          (void *)(sizeof(float) * (9 + i * 4)));
+    glVertexAttribDivisor(5 + i, 1);
+  }
 }

@@ -12,7 +12,7 @@ class Camera {
 public:
   Camera() {
     m_position.z = 2;
-    m_position.y = 1.8f;
+    m_position.y = 1.6f;
     m_yaw = glm::radians(-90.0);
     CalcLookAt();
   };

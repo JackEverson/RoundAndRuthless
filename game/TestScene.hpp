@@ -55,8 +55,8 @@ public:
 
     soundManager.LoadSound("beep", "./res/sounds/beep.wav");
 
-    m_sushi_sprite.position = glm::vec3(0.0f, 0.5f, -0.0f);
-    m_sushi_sprite.size = glm::vec2(1.0f, 1.0f);
+    m_sushi_sprite.position = glm::vec3(0.0f, 1.0f, 0.0f);
+    m_sushi_sprite.size = glm::vec2(2.0f, 2.0f);
     m_sushi_sprite.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
     m_sushi_sprite.texture = &m_sushi_texture;
 
@@ -83,13 +83,13 @@ public:
 
     if (m_timer >= cycle_time && m_timer < cycle_time * 2)
     {
-      m_sushi_sprite.size = glm::vec2(1.2f, 0.9f);
-      m_sushi_sprite.position = glm::vec3(0.0f, 0.45f, 0.0f);
+      m_sushi_sprite.size = glm::vec2(2.4f, 1.8f);
+      m_sushi_sprite.position = glm::vec3(0.0f, 0.9f, 0.0f);
     }
     else if (m_timer > cycle_time * 2)
     {
-      m_sushi_sprite.size = glm::vec2(1.0f, 1.0f);
-      m_sushi_sprite.position = glm::vec3(0.0f, 0.5f, 0.0f);
+      m_sushi_sprite.size = glm::vec2(2.0f, 2.0f);
+      m_sushi_sprite.position = glm::vec3(0.0f, 1.0f, 0.0f);
       m_timer = 0.0f;
     }
 
@@ -160,6 +160,7 @@ public:
   void render(GLFWwindow &window, Renderer &renderer) override
   {
     renderer.Clear(0.2f, 0.2f, 0.2f, 1.0f);
+    renderer.BeginBatchDraw(10);
 
     int w, h;
     glfwGetWindowSize(&window, &w, &h);
@@ -167,22 +168,19 @@ public:
     glm::mat4 projection = m_camera.GetProjectionMat(w, h);
     glm::vec3 campos = m_camera.GetLocation();
 
-    // std::println("campos: {}, {}, {}", campos.x, campos.y, campos.z);
-
-    renderer.BeginBatchDraw(1);
-    renderer.SubmitSprite(m_sushi_sprite);
-    renderer.RendBatch(glm::mat4(1), view, projection, campos);
-
     for (auto surface : m_surfaces)
     {
       SpriteInstance sprite;
       sprite.position = surface.position;
       sprite.texture = surface.texture;
       sprite.size = surface.size;
+      sprite.model_mat = surface.rotation;
 
-      renderer.BeginBatchDraw(1);
       renderer.SubmitSprite(sprite);
-      renderer.RendBatch(surface.rotation, view, projection, campos);
     }
+
+    renderer.SubmitSprite(m_sushi_sprite);
+
+    renderer.RendBatch(view, projection, campos, 0.3f);
   }
 };

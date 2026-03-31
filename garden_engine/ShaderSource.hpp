@@ -2,13 +2,13 @@
 
 constexpr const char *TextureVertexShader =
     R"(#version 460 core
-    layout (location = 0) in vec2 aPos;
-    layout (location = 1) in vec2 aTexCoord;
-    layout (location = 2) in vec3 instancePos;
-    layout (location = 3) in vec2 instanceSize;
-    layout (location = 4) in vec4 instanceColor;
+    layout (location = 0) in vec2 a_pos;
+    layout (location = 1) in vec2 a_tex_coord;
+    layout (location = 2) in vec3 i_pos;
+    layout (location = 3) in vec2 i_size;
+    layout (location = 4) in vec4 i_color;
+    layout (location = 5) in mat4 i_model;
 
-    uniform mat4 u_model;
     uniform mat4 u_projection;
     uniform mat4 u_view;
     uniform vec3 u_campos;
@@ -19,13 +19,13 @@ constexpr const char *TextureVertexShader =
 
     void main()
     {
-      vec4 scaled = u_model * vec4(aPos * instanceSize, 0, 1);
-      vec4 worldpos = vec4(instancePos, 0) + scaled;
+      vec4 scaled = i_model * vec4(a_pos * i_size, 0, 1);
+      vec4 worldpos = vec4(i_pos, 0) + scaled;
 
       gl_Position = u_projection * u_view * worldpos;
 
-      v_color = instanceColor;
-      v_texCoord = aTexCoord;
+      v_color = i_color;
+      v_texCoord = a_tex_coord;
 	    v_distance = distance(worldpos.xyz, u_campos);  
     };
   )";
@@ -37,12 +37,13 @@ constexpr const char *TextureFragmentShader =
     in float v_distance;
 
     uniform sampler2D u_Texture;
+    uniform float u_fogfactor = 0.15;
 
     out vec4 FragColor;
 
     void main() {
-      float fogFactor = exp(-v_distance * 0.15);
-      // float fogFactor = 0.5;
+
+      float fogFactor = exp(-v_distance * u_fogfactor);
 
       vec4 textureColor = v_color * texture(u_Texture, v_texCoord);
       vec4 fogColor = vec4(0.1, 0.1, 0.1, 1.0);
