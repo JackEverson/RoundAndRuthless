@@ -1,7 +1,5 @@
 #pragma once
 
-#include <GLFW/glfw3.h>
-
 #include "Camera.hpp"
 #include "Surface.hpp"
 
@@ -15,6 +13,7 @@ private:
     double m_mouse_sensitivity = 0.05;
     double m_lastMouseX = 0.0;
     double m_lastMouseY = 0.0;
+    bool no_clip = false;
 
     bool m_left_click_before = false;
 
@@ -95,12 +94,14 @@ inline void FPSController::HandleInput(GLFWwindow &window, float delta)
 
 inline void FPSController::ResolveCollisions(const std::vector<Surface> &surfaces)
 {
+    if (no_clip) return;
+
     glm::vec3 campos = m_camera.GetLocation();
 
     for (auto surface : surfaces)
     {
-        if (surface.type != SurfaceType::Wall)
-            continue;
+        // if (surface.type != SurfaceType::Wall)
+        //     continue;
 
         glm::vec3 normal = glm::normalize(glm::vec3(surface.rotation[2]));
         glm::vec3 to_player = campos - surface.position;

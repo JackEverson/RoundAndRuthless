@@ -11,11 +11,12 @@ constexpr const char *TextureVertexShader =
 
     uniform mat4 u_projection;
     uniform mat4 u_view;
-    uniform vec3 u_campos;
+    uniform vec3 u_cam_pos;
 
     out vec4 v_color;
-    out vec2 v_texCoord;
+    out vec2 v_tex_coord;
     out float v_distance;
+    out vec3 v_world_pos;
 
     void main()
     {
@@ -24,32 +25,52 @@ constexpr const char *TextureVertexShader =
 
       gl_Position = u_projection * u_view * worldpos;
 
-      v_color = i_color;
-      v_texCoord = a_tex_coord;
-	    v_distance = distance(worldpos.xyz, u_campos);  
+      v_color = i_color;      
+      v_tex_coord = a_tex_coord;
+	    v_distance = distance(worldpos.xyz, u_cam_pos);  
+      v_world_pos = worldpos.xyz;
     };
   )";
 
 constexpr const char *TextureFragmentShader =
     R"(#version 460 core
     in vec4 v_color;
-    in vec2 v_texCoord;
+    in vec2 v_tex_coord;
     in float v_distance;
+    in vec3 v_world_pos;
 
-    uniform sampler2D u_Texture;
-    uniform float u_fogfactor = 0.15;
+    struct PointLight{
+      vec3 position;
+      vec3 color;
+      float radius;
+    };
+
+    const int MAX_LIGHTS = 8;
+    uniform PointLight u_lights[MAX_LIGHTS];
+    uniform int u_light_count = 0;
+    uniform float u_ambient = 0.1;
+
+    uniform sampler2D u_texture;
+    uniform float u_fog_factor = 0.15;
 
     out vec4 FragColor;
 
     void main() {
 
-      float fogFactor = exp(-v_distance * u_fogfactor);
+      float fog_factor = exp(-v_distance * u_fog_factor);
 
-      vec4 textureColor = v_color * texture(u_Texture, v_texCoord);
-      vec4 fogColor = vec4(0.1, 0.1, 0.1, 1.0);
+      vec3 light_total = vec3(u_ambient);
+      for (int i = 0; i < u_light_count; i++) {
+          float d = distance(v_world_pos, u_lights[i].position);
+          float atten = 1.0 / (1.0 + pow(d / u_lights[i].radius, 2.0));
+          light_total += atten * u_lights[i].color;
+      }
+      vec4 texture_color = v_color * texture(u_texture, v_tex_coord) * vec4(clamp(light_total, 0.0, 1.0), 1.0);
 
-      vec4 finalColor = mix(fogColor, textureColor, fogFactor);
-      FragColor = vec4(finalColor.rgb, textureColor.a);
+
+      vec4 fog_color = vec4(0.1, 0.1, 0.1, 1.0);
+      vec4 final_color = mix(fog_color, texture_color, fog_factor);
+      FragColor = vec4(final_color.rgb, texture_color.a);
     };
   )";
 

@@ -1,8 +1,10 @@
 #pragma once
-#include <glm/glm.hpp>
 
 #include "Shader.hpp"
 #include "Texture.hpp"
+#include "PointLight.hpp"
+
+#include <glm/glm.hpp>
 
 struct SpriteInstance
 {
@@ -34,6 +36,10 @@ private:
 
   int m_vertexSize = 25;
 
+  float m_ambient_light = 0.25f;
+  std::vector<PointLight> m_point_lights;
+
+
 public:
   Renderer();
   ~Renderer();
@@ -43,6 +49,8 @@ public:
 
   // void DrawSprite(Texture &texture, glm::vec2 position, glm::vec2 size,
   // float rotate, glm::vec4 color, glm::mat4 projection);
+  void SetLights(const std::vector<PointLight>& lights, float ambient);
+
   void BeginBatchDraw(int countEstimate);
   void SubmitSprite(const SpriteInstance &sprite);
   void RendBatch(glm::mat4 view, glm::mat4 projection, glm::vec3 campos, float fogfactor = 0.15f);

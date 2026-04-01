@@ -51,7 +51,6 @@ target_link_libraries(imgui PUBLIC
 #garden_engine
 set(garden_engine_src_files
   garden_engine/Audio.cpp
-  garden_engine/Button.cpp
   garden_engine/Engine.cpp
   garden_engine/Renderer.cpp
   garden_engine/Shader.cpp
@@ -62,13 +61,15 @@ set(garden_engine_src_files
   garden_engine/Button.hpp
   garden_engine/Camera.hpp
   garden_engine/Engine.hpp
+  garden_engine/FPSController.hpp
+  garden_engine/gl_debug.hpp
+  garden_engine/PointLight.hpp
   garden_engine/Renderer.hpp
   garden_engine/Scene.hpp
   garden_engine/Shader.hpp
   garden_engine/ShaderSource.hpp
   garden_engine/Surface.hpp
   garden_engine/Texture.hpp
-  garden_engine/gl_debug.hpp
 )
 
 add_library(garden_engine STATIC ${garden_engine_src_files})

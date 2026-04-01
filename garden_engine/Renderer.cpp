@@ -1,12 +1,10 @@
-#include <glad/glad.h>
-
-#include <glm/gtc/matrix_transform.hpp>
-
-#include "Renderer.hpp"
 #include "gl_debug.hpp"
-#include "glm/fwd.hpp"
-
+#include "Renderer.hpp"
 #include "ShaderSource.hpp"
+
+#include <glad/glad.h>
+#include <glm/fwd.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <print>
 
@@ -46,6 +44,12 @@ void Renderer::DrawBackground(const Texture &texture)
   glBindVertexArray(0);
 }
 
+void Renderer::SetLights(const std::vector<PointLight> &lights, float ambient)
+{
+  m_ambient_light = ambient;
+  m_point_lights = lights;
+}
+
 void Renderer::BeginBatchDraw(int countEstimate)
 {
   batch.clear();
@@ -72,8 +76,19 @@ void Renderer::RendBatch(glm::mat4 view, glm::mat4 projection, glm::vec3 campos,
   shader.Bind();
   shader.SetUniformMat4f("u_view", view);
   shader.SetUniformMat4f("u_projection", projection);
-  shader.SetUniform3f("u_campos", campos);
-  shader.SetUniform1f("u_fogfactor", fogfactor);
+  shader.SetUniform3f("u_cam_pos", campos);
+  shader.SetUniform1f("u_fog_factor", fogfactor);
+  shader.SetUniform1f("u_ambient", m_ambient_light);
+
+  int count = std::min((int)m_point_lights.size(), 8); // hardcoded 8 lights max in shader
+  for (int i = 0; i < count; i++)
+  {
+    std::string base = "u_lights[" + std::to_string(i) + "].";
+    shader.SetUniform3f(base + "position", m_point_lights[i].position);
+    shader.SetUniform3f(base + "color", m_point_lights[i].color);
+    shader.SetUniform1f(base + "radius", m_point_lights[i].radius);
+  }
+  shader.SetUniform1i("u_light_count", count);
 
   std::vector<float> instances;
   instances.reserve(batch.size() * m_vertexSize);
@@ -113,21 +128,22 @@ void Renderer::RendBatch(glm::mat4 view, glm::mat4 projection, glm::vec3 campos,
   //                                instances.size() / m_vertexSize));
 
   size_t groupStart = 0;
-  while (groupStart < batch.size()) {
-      Texture* groupTex = batch[groupStart].texture;
-      size_t groupEnd = groupStart;
-      
-      // find where this texture group ends
-      while (groupEnd < batch.size() && batch[groupEnd].texture == groupTex)
-          groupEnd++;
-      
-      groupTex->Bind();
-      GLCall(glDrawElementsInstancedBaseInstance(
-          GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0,
-          (GLsizei)(groupEnd - groupStart),  // how many instances
-          (GLuint)groupStart));               // where in the buffer to start
-      
-      groupStart = groupEnd;
+  while (groupStart < batch.size())
+  {
+    Texture *groupTex = batch[groupStart].texture;
+    size_t groupEnd = groupStart;
+
+    // find where this texture group ends
+    while (groupEnd < batch.size() && batch[groupEnd].texture == groupTex)
+      groupEnd++;
+
+    groupTex->Bind();
+    GLCall(glDrawElementsInstancedBaseInstance(
+        GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0,
+        (GLsizei)(groupEnd - groupStart), // how many instances
+        (GLuint)groupStart));             // where in the buffer to start
+
+    groupStart = groupEnd;
   }
 
   GLCall(glBindVertexArray(0));

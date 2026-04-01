@@ -1,14 +1,5 @@
 #pragma once
 
-// #include "glm/ext/vector_float3.hpp"
-#include <print>
-#include <vector>
-
-#include "glm/ext/matrix_float4x4.hpp"
-#include "glm/ext/matrix_transform.hpp"
-#include "glm/ext/vector_float3.hpp"
-#include "glm/trigonometric.hpp"
-
 #include "Audio.hpp"
 #include "Engine.hpp"
 #include "Renderer.hpp"
@@ -16,6 +7,16 @@
 #include "Surface.hpp"
 #include "Texture.hpp"
 #include "FPSController.hpp"
+#include "PointLight.hpp"
+
+#include "glm/ext/matrix_float4x4.hpp"
+#include "glm/ext/matrix_transform.hpp"
+#include "glm/ext/vector_float3.hpp"
+#include "glm/trigonometric.hpp"
+// #include "glm/ext/vector_float3.hpp"
+
+#include <print>
+#include <vector>
 
 class TestScene : public Scene
 {
@@ -28,8 +29,9 @@ public:
   Texture m_sushi_texture;
   SpriteInstance m_sushi_sprite;
 
-  Texture m_floor_texture;
+  Texture m_ceiling_texture;
   Texture m_wall_texture;
+  Texture m_floor_texture;
 
   float m_timer = 0.0f;
 
@@ -38,8 +40,9 @@ public:
   TestScene()
       : soundManager(SimpleSoundManager::Instance()),
         m_sushi_texture(Texture("./res/textures/sushi.png")),
-        m_floor_texture(Texture("./res/textures/gravel_floor.png")),
+        m_ceiling_texture(Texture("./res/textures/plaster_ceiling.png")),
         m_wall_texture(Texture("./res/textures/concrete_wall.png")),
+        m_floor_texture(Texture("./res/textures/gravel_floor.png")),
         m_controller(m_camera)
   {
   }
@@ -57,12 +60,13 @@ public:
     m_sushi_sprite.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
     m_sushi_sprite.texture = &m_sushi_texture;
 
-    Surface floor;
-    floor.type = SurfaceType::Floor;
-    floor.texture = &m_floor_texture;
-    floor.size = glm::vec2(10.0f, 10.0f);
-    floor.rotation = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0));
-    m_surfaces.push_back(floor);
+    Surface ceiling;
+    ceiling.type = SurfaceType::Ceiling;
+    ceiling.texture = &m_ceiling_texture;
+    ceiling.size = glm::vec2(10.0f, 10.0f);
+    ceiling.rotation = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0));
+    ceiling.position = glm::vec3(0.0f, 3.0f, 0.0f);
+    m_surfaces.push_back(ceiling);
 
     Surface wall_front;
     wall_front.type = SurfaceType::Wall;
@@ -93,6 +97,14 @@ public:
     wall_right.position = glm::vec3(5.0f, 1.5f, 0.0f);
     wall_right.rotation = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0, 1, 0));
     m_surfaces.push_back(wall_right);
+
+    Surface floor;
+    floor.type = SurfaceType::Floor;
+    floor.texture = &m_floor_texture;
+    floor.size = glm::vec2(10.0f, 10.0f);
+    floor.rotation = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0));
+    m_surfaces.push_back(floor);
+
   }
 
   void onExit(GLFWwindow &window) override
@@ -134,7 +146,17 @@ public:
 
   void render(GLFWwindow &window, Renderer &renderer) override
   {
-    renderer.Clear(0.2f, 0.2f, 0.2f, 1.0f);
+    renderer.Clear(0.1f, 0.1f, 0.1f, 1.0f);
+    
+    PointLight light;
+    light.position = glm::vec3(0.0f, 3.0f, 0.0f);
+    light.color = glm::vec3(0.9f, 0.8f, 0.5f);
+    light.radius = 5.0f;
+
+    std::vector<PointLight> lights;
+    lights.push_back(light);
+    renderer.SetLights(lights, 0.0f);
+
     renderer.BeginBatchDraw(10);
 
     int w, h;
