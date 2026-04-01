@@ -4,6 +4,10 @@
 #include "Interactable.hpp"
 #include "Surface.hpp"
 
+#include "GLFW/glfw3.h"
+
+#include <algorithm>
+
 class FPSController
 {
 private:
@@ -20,6 +24,7 @@ private:
     bool m_interaction_before = false;
 
 public:
+
     int KeyForward = GLFW_KEY_W;
     int KeyBack = GLFW_KEY_S;
     int KeyLeft = GLFW_KEY_A;

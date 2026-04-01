@@ -2,13 +2,14 @@
 
 #include "Audio.hpp"
 #include "Engine.hpp"
+#include "FPSController.hpp"
+#include "Interactable.hpp"
+#include "NotificationManager.hpp"
+#include "PointLight.hpp"
 #include "Renderer.hpp"
 #include "Scene.hpp"
 #include "Surface.hpp"
 #include "Texture.hpp"
-#include "FPSController.hpp"
-#include "PointLight.hpp"
-#include "Interactable.hpp"
 
 #include "glm/ext/matrix_float4x4.hpp"
 #include "glm/ext/matrix_transform.hpp"
@@ -16,13 +17,15 @@
 #include "glm/trigonometric.hpp"
 
 #include <print>
+#include <string>
 #include <vector>
 
-class TestScene : public Scene
-{
+class TestScene : public Scene {
 
 public:
   SimpleSoundManager &soundManager;
+  NotificationManager m_notification_manager;
+
   Camera m_camera;
   FPSController m_controller;
 
@@ -44,12 +47,9 @@ public:
         m_ceiling_texture(Texture("./res/textures/plaster_ceiling.png")),
         m_wall_texture(Texture("./res/textures/concrete_wall.png")),
         m_floor_texture(Texture("./res/textures/gravel_floor.png")),
-        m_controller(m_camera)
-  {
-  }
+        m_controller(m_camera) {}
 
-  void onEnter(GLFWwindow &window) override
-  {
+  void onEnter(GLFWwindow &window) override {
     glfwSetInputMode(&window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     soundManager.LoadSound("beep", "./res/sounds/beep.wav");
@@ -65,9 +65,11 @@ public:
 
     Interactable sushi_interact;
     sushi_interact.on_interact = [this]() {
-      std::println("You have poked Sushi {} times", sushi_touches++); 
+      std::println("You have poked Sushi {} times", sushi_touches++);
       soundManager.PlaySound("beep");
+      m_notification_manager.Push("SUSHI: STOP IT!!!");
     };
+
     sushi_interact.position = glm::vec3(0.0f, 1.0f, 0.0f);
     sushi_interact.size = glm::vec3(2.0f, 2.0f, 0.1f);
     sushi_interact.interaction_distance = 2.0f;
@@ -77,7 +79,8 @@ public:
     ceiling.type = SurfaceType::Ceiling;
     ceiling.texture = &m_ceiling_texture;
     ceiling.size = glm::vec2(10.0f, 10.0f);
-    ceiling.rotation = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0));
+    ceiling.rotation =
+        glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0));
     ceiling.position = glm::vec3(0.0f, 3.0f, 0.0f);
     m_surfaces.push_back(ceiling);
 
@@ -100,7 +103,8 @@ public:
     wall_left.texture = &m_wall_texture;
     wall_left.size = glm::vec2(10.0f, 3.0f);
     wall_left.position = glm::vec3(-5.0f, 1.5f, 0.0f);
-    wall_left.rotation = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0, 1, 0));
+    wall_left.rotation =
+        glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0, 1, 0));
     m_surfaces.push_back(wall_left);
 
     Surface wall_right;
@@ -108,36 +112,35 @@ public:
     wall_right.texture = &m_wall_texture;
     wall_right.size = glm::vec2(10.0f, 3.0f);
     wall_right.position = glm::vec3(5.0f, 1.5f, 0.0f);
-    wall_right.rotation = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0, 1, 0));
+    wall_right.rotation =
+        glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0, 1, 0));
     m_surfaces.push_back(wall_right);
 
     Surface floor;
     floor.type = SurfaceType::Floor;
     floor.texture = &m_floor_texture;
     floor.size = glm::vec2(10.0f, 10.0f);
-    floor.rotation = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0));
+    floor.rotation =
+        glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0));
     m_surfaces.push_back(floor);
-
   }
 
-  void onExit(GLFWwindow &window) override
-  {
+  void onExit(GLFWwindow &window) override {
     glfwSetInputMode(&window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
   }
 
-  Scene *update(GLFWwindow &window, float delta) override
-  {
+  Scene *update(GLFWwindow &window, float delta) override {
+    
+    m_notification_manager.Update(delta);
+    
     m_timer += delta;
 
     static const float cycle_time = 0.75f;
 
-    if (m_timer >= cycle_time && m_timer < cycle_time * 2)
-    {
+    if (m_timer >= cycle_time && m_timer < cycle_time * 2) {
       m_sushi_sprite.size = glm::vec2(2.4f, 1.8f);
       m_sushi_sprite.position = glm::vec3(0.0f, 0.9f, 0.0f);
-    }
-    else if (m_timer > cycle_time * 2)
-    {
+    } else if (m_timer > cycle_time * 2) {
       m_sushi_sprite.size = glm::vec2(2.0f, 2.0f);
       m_sushi_sprite.position = glm::vec3(0.0f, 1.0f, 0.0f);
       m_timer = 0.0f;
@@ -146,23 +149,20 @@ public:
     return nullptr;
   }
 
-  void handleInput(GLFWwindow &window, float delta) override
-  {
+  void handleInput(GLFWwindow &window, float delta) override {
     glfwPollEvents();
 
     m_controller.HandleInput(window, delta);
     m_controller.ResolveCollisions(m_surfaces);
     m_controller.CheckInteraction(window, m_interactables);
 
-
     if (glfwGetKey(&window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
       glfwSetWindowShouldClose(&window, true);
   }
 
-  void render(GLFWwindow &window, Renderer &renderer) override
-  {
+  void render(GLFWwindow &window, Renderer &renderer) override {
     renderer.Clear(0.1f, 0.1f, 0.1f, 1.0f);
-    
+
     PointLight light;
     light.position = glm::vec3(0.0f, 3.0f, 0.0f);
     // light.color = glm::vec3(0.9f, 0.8f, 0.5f);
@@ -181,8 +181,7 @@ public:
     glm::mat4 projection = m_camera.GetProjectionMat(w, h);
     glm::vec3 campos = m_camera.GetLocation();
 
-    for (auto surface : m_surfaces)
-    {
+    for (auto surface : m_surfaces) {
       SpriteInstance sprite;
       sprite.position = surface.position;
       sprite.texture = surface.texture;
@@ -195,5 +194,8 @@ public:
     renderer.SubmitSprite(m_sushi_sprite);
 
     renderer.RendBatch(view, projection, campos, 0.3f);
+
+
+    m_notification_manager.Render(w, h);
   }
 };

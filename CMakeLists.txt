@@ -64,6 +64,7 @@ set(garden_engine_src_files
   garden_engine/FPSController.hpp
   garden_engine/gl_debug.hpp
   garden_engine/Interactable.hpp
+  garden_engine/NotificationManager.hpp
   garden_engine/PointLight.hpp
   garden_engine/Renderer.hpp
   garden_engine/Scene.hpp
