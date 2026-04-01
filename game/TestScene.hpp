@@ -8,12 +8,12 @@
 #include "Texture.hpp"
 #include "FPSController.hpp"
 #include "PointLight.hpp"
+#include "Interactable.hpp"
 
 #include "glm/ext/matrix_float4x4.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/vector_float3.hpp"
 #include "glm/trigonometric.hpp"
-// #include "glm/ext/vector_float3.hpp"
 
 #include <print>
 #include <vector>
@@ -35,6 +35,7 @@ public:
 
   float m_timer = 0.0f;
 
+  std::vector<Interactable> m_interactables;
   std::vector<Surface> m_surfaces;
 
   TestScene()
@@ -59,6 +60,18 @@ public:
     m_sushi_sprite.size = glm::vec2(2.0f, 2.0f);
     m_sushi_sprite.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
     m_sushi_sprite.texture = &m_sushi_texture;
+
+    static int sushi_touches = 1;
+
+    Interactable sushi_interact;
+    sushi_interact.on_interact = [this]() {
+      std::println("You have poked Sushi {} times", sushi_touches++); 
+      soundManager.PlaySound("beep");
+    };
+    sushi_interact.position = glm::vec3(0.0f, 1.0f, 0.0f);
+    sushi_interact.size = glm::vec3(2.0f, 2.0f, 0.1f);
+    sushi_interact.interaction_distance = 2.0f;
+    m_interactables.push_back(sushi_interact);
 
     Surface ceiling;
     ceiling.type = SurfaceType::Ceiling;
@@ -139,6 +152,8 @@ public:
 
     m_controller.HandleInput(window, delta);
     m_controller.ResolveCollisions(m_surfaces);
+    m_controller.CheckInteraction(window, m_interactables);
+
 
     if (glfwGetKey(&window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
       glfwSetWindowShouldClose(&window, true);
@@ -150,7 +165,8 @@ public:
     
     PointLight light;
     light.position = glm::vec3(0.0f, 3.0f, 0.0f);
-    light.color = glm::vec3(0.9f, 0.8f, 0.5f);
+    // light.color = glm::vec3(0.9f, 0.8f, 0.5f);
+    light.color = glm::vec3(0.0f, 0.5f, 0.5f);
     light.radius = 5.0f;
 
     std::vector<PointLight> lights;

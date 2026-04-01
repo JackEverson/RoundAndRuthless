@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Camera.hpp"
+#include "Interactable.hpp"
 #include "Surface.hpp"
 
 class FPSController
@@ -16,6 +17,7 @@ private:
     bool no_clip = false;
 
     bool m_left_click_before = false;
+    bool m_interaction_before = false;
 
 public:
     int KeyForward = GLFW_KEY_W;
@@ -24,6 +26,7 @@ public:
     int KeyRight = GLFW_KEY_D;
     int KeyJump = GLFW_KEY_SPACE;
     int KeyCrouch = GLFW_KEY_C;
+    int KeyInteract = GLFW_KEY_E;
 
 public:
     FPSController(Camera &camera);
@@ -31,6 +34,7 @@ public:
     void Init(GLFWwindow &window);
     void HandleInput(GLFWwindow &window, float delta);
     void ResolveCollisions(const std::vector<Surface> &surfaces);
+    void CheckInteraction(GLFWwindow &window, const std::vector<Interactable> &interactables);
 };
 
 FPSController::FPSController(Camera &camera) : m_camera(camera)
@@ -94,7 +98,8 @@ inline void FPSController::HandleInput(GLFWwindow &window, float delta)
 
 inline void FPSController::ResolveCollisions(const std::vector<Surface> &surfaces)
 {
-    if (no_clip) return;
+    if (no_clip)
+        return;
 
     glm::vec3 campos = m_camera.GetLocation();
 
@@ -125,4 +130,61 @@ inline void FPSController::ResolveCollisions(const std::vector<Surface> &surface
     }
 
     m_camera.SetCamera(campos);
+}
+
+inline void FPSController::CheckInteraction(GLFWwindow &window, const std::vector<Interactable> &interactables)
+{
+    if (glfwGetKey(&window, KeyInteract) != GLFW_PRESS)
+    {
+        m_interaction_before = false;
+        return;
+    }
+
+    if (!m_interaction_before)
+    {
+        m_interaction_before = true;
+    }
+    else
+    {
+        return;
+    }
+
+    glm::vec3 origin = m_camera.GetLocation();
+    glm::vec3 dir = m_camera.GetForward();
+
+    for (Interactable interactable : interactables)
+    {
+        if (glm::length(interactable.position - origin) > interactable.interaction_distance)
+            continue;
+
+        glm::mat4 inv_rot = glm::inverse(interactable.rotation);
+        glm::vec3 local_origin = glm::vec3(inv_rot * glm::vec4(origin - interactable.position, 0.0f));
+        glm::vec3 local_dir = glm::vec3(inv_rot * glm::vec4(dir, 0.0f));
+
+        glm::vec3 half = interactable.size / 2.0f;
+
+        float tmin_x = (-half.x - local_origin.x) / local_dir.x;
+        float tmax_x = (half.x - local_origin.x) / local_dir.x;
+        if (tmin_x > tmax_x)
+            std::swap(tmin_x, tmax_x);
+
+        float tmin_y = (-half.y - local_origin.y) / local_dir.y;
+        float tmax_y = (half.y - local_origin.y) / local_dir.y;
+        if (tmin_y > tmax_y)
+            std::swap(tmin_y, tmax_y);
+
+        float tmin_z = (-half.z - local_origin.z) / local_dir.z;
+        float tmax_z = (half.z - local_origin.z) / local_dir.z;
+        if (tmin_z > tmax_z)
+            std::swap(tmin_z, tmax_z);
+
+        float tmin = std::max({tmin_x, tmin_y, tmin_z});
+        float tmax = std::min({tmax_x, tmax_y, tmax_z});
+
+        if (tmin <= tmax && tmax > 0.0f)
+        {
+            interactable.on_interact();
+            return;
+        }
+    }
 }
