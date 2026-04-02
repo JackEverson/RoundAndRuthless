@@ -6,8 +6,6 @@
 #include <glm/fwd.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <print>
-
 Renderer::Renderer()
     : shader(TextureVertexShader, TextureFragmentShader),
       backgroundShader(BackgroundVertexShader, BackgroundFragmentShader)

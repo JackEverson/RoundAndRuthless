@@ -1,6 +1,5 @@
 #include <chrono>
 #include <cstdio>
-#include <print>
 #include <string>
 #include <thread>
 
@@ -18,14 +17,14 @@
 GardenEngine::GardenEngine(std::string name, bool windowed, int win_width,
                            int win_height)
     : soundManager(SimpleSoundManager::Instance()) {
-  std::println("Creating GardenEngine...");
+  printf("Creating GardenEngine...\n");
 
   setupGlfwWindow(name, windowed, win_width, win_height);
   setupOpenGl();
   setupImGui();
   setupAudio();
 
-  std::println("GardenEngine Created!");
+  printf("GardenEngine Created!\n");
 }
 
 GardenEngine::~GardenEngine() {
@@ -43,7 +42,7 @@ GardenEngine::~GardenEngine() {
 }
 
 int GardenEngine::Start(std::unique_ptr<Scene> scene, float fps) {
-  std::println("GardenEngine Starting...");
+  printf("GardenEngine Starting...\n");
 
   glClearColor(0.1, 0.6f, 0.2f, 1.0f);
   int frame_time_limit_ms = (int)((1 / fps) * 1000);
@@ -91,16 +90,16 @@ int GardenEngine::Start(std::unique_ptr<Scene> scene, float fps) {
   }
 
   // glfwTerminate();
-  std::println("GardenEngine Exited Successfully!");
+  printf("GardenEngine Exited Successfully!\n");
   return 0;
 }
 
 void GardenEngine::setupGlfwWindow(std::string win_name, bool windowed,
                                    int win_width, int win_height) {
-  std::println("Creating GLFW Window...");
+  printf("Creating GLFW Window...\n");
 
   if (!glfwInit()) {
-    std::println("Failed to Initialize GLFW");
+    printf("Failed to Initialize GLFW\n");
     throw std::runtime_error("Failed to Initialize GLFW");
   };
 
@@ -112,15 +111,14 @@ void GardenEngine::setupGlfwWindow(std::string win_name, bool windowed,
   int monitor_count;
   GLFWmonitor **_monitors = glfwGetMonitors(&monitor_count);
   if (!monitor_count) {
-    std::println("GLFWmonitor found monitors to be null");
+    printf("GLFWmonitor found monitors to be null\n");
     throw std::runtime_error("GLFWMonitor found monitors to be null");
   }
 
-  std::println("GLFWmonitors has found {} monitors", monitor_count);
+  printf("GLFWmonitors has found %d monitors\n", monitor_count);
   for (int i = 0; i < monitor_count; i++) {
     const GLFWvidmode *mode = glfwGetVideoMode(_monitors[i]);
-    std::println("Monitor {} has resolution {} x {}", i, mode->width,
-                 mode->height);
+    printf("Monitor %d has resolution %d x %d\n", i, mode->width, mode->height);
   }
 
   GLFWmonitor *pMonitor = glfwGetPrimaryMonitor();
@@ -162,7 +160,7 @@ void GardenEngine::setupGlfwWindow(std::string win_name, bool windowed,
   // glfwSetWindowIcon(window, 1, &icon);
 
   if (!m_window) {
-    std::println("Failed to create GLFW window");
+    printf("Failed to create GLFW window\n");
     glfwTerminate();
     throw std::runtime_error("Failed to create GLFW window");
   }
@@ -171,12 +169,12 @@ void GardenEngine::setupGlfwWindow(std::string win_name, bool windowed,
 
   glfwSetFramebufferSizeCallback(m_window, framebuffer_size_callback);
 
-  std::println("GLFW Window Created Successfully!");
+  printf("GLFW Window Created Successfully!\n");
 }
 
 void GardenEngine::setupOpenGl() {
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-    std::println("Failed to initialize OpenGL context");
+    printf("Failed to initialize OpenGL context\n");
     throw std::runtime_error(
         "Failed to initialize OpenGL context through gladLoadGLLoader");
   }
@@ -189,7 +187,7 @@ void GardenEngine::setupOpenGl() {
 }
 
 void GardenEngine::setupImGui() {
-  std::println("Creating ImGui Context...");
+  printf("Creating ImGui Context...\n");
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGuiIO io = ImGui::GetIO();
@@ -202,7 +200,7 @@ void GardenEngine::setupImGui() {
   ImGui_ImplGlfw_InitForOpenGL(m_window, true);
   ImGui_ImplOpenGL3_Init();
 
-  std::println("ImGui Context Created!");
+  printf("ImGui Context Created!\n");
 }
 
 void GardenEngine::setupAudio() {

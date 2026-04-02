@@ -18,6 +18,7 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++23")
 endif()
 
+
 #External libraries
 add_subdirectory(external/glad)
 add_subdirectory(external/glfw)
@@ -26,7 +27,10 @@ add_subdirectory(external/glm)
 
 set(LIBTYPE STATIC CACHE STRING "" FORCE)
 set(ALSOFT_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(ALSOFT_UTILS OFF)
 add_subdirectory(external/openal-soft)
+
+
 
 #ImGui
 file(GLOB imgui_src
@@ -100,14 +104,6 @@ COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
 #GamePlay code
 set(GamePlay_files
   game/TestScene.hpp
-
-# game/GameLoopScene.cpp
-# game/LiverGameState.cpp
-
-# game/IntroScene.hpp
-# game/GameLoopScene.hpp
-# game/LiverGameState.hpp
-# game/ExitScene.hpp
 )
 add_library(GamePlay STATIC ${GamePlay_files})
 target_include_directories(GamePlay PUBLIC game)

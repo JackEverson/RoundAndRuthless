@@ -20,12 +20,14 @@ cd RoundAndRuthless
 cmake -B ./build -S .
 
 # g++
-cmake --build ./build
+cmake --build ./build --parallel
 # MSVC
-cmake --build ./build --config Release
+cmake --build ./build --config Release --parallel
+
+# or if you are building for windows on Linux
+cmake -B ./build-windows -S . -DCMAKE_TOOLCHAIN_FILE=mingw-toolchain.cmake
+cmake --build ./build-windows --parallel
 ```
-
-
 
 
 # Attributions 

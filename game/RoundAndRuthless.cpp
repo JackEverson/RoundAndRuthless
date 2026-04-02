@@ -1,5 +1,5 @@
 ﻿#include "Engine.hpp"
-#include <print>
+#include <cstdio>
 
 // #include "IntroScene.hpp"
 #include "TestScene.hpp"
@@ -20,7 +20,7 @@ int main() {
   auto scene = std::make_unique<TestScene>();
   int engine_test_result = engine.Start(std::move(scene), fps);
 
-  std::println("Engine Exit code: {}", engine_test_result);
+  printf("Engine Exit code: %d\n", engine_test_result);
 
   return engine_test_result;
 }

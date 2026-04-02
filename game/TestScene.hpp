@@ -16,7 +16,7 @@
 #include "glm/ext/vector_float3.hpp"
 #include "glm/trigonometric.hpp"
 
-#include <print>
+#include <cstdio>
 #include <string>
 #include <vector>
 
@@ -31,6 +31,8 @@ public:
 
   Texture m_sushi_texture;
   SpriteInstance m_sushi_sprite;
+  SpriteInstance m_sushi_billboard;
+  bool m_billboard_sushi = true;
 
   Texture m_ceiling_texture;
   Texture m_wall_texture;
@@ -40,6 +42,13 @@ public:
 
   std::vector<Interactable> m_interactables;
   std::vector<Surface> m_surfaces;
+
+  bool m_tab_before = false;
+  bool m_cursor_captured = true;
+  float m_fog_density = 0.15f;
+  float m_light_radius = 20.0f;
+  float m_ambient = 0.15f;
+  glm::vec3 m_light_color = glm::vec3(1.0f);
 
   TestScene()
       : soundManager(SimpleSoundManager::Instance()),
@@ -61,13 +70,19 @@ public:
     m_sushi_sprite.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
     m_sushi_sprite.texture = &m_sushi_texture;
 
+    m_sushi_billboard.position = glm::vec3(0.0f, 1.0f, 0.0f);
+    m_sushi_billboard.size = glm::vec2(2.0f, 2.0f);
+    m_sushi_billboard.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    m_sushi_billboard.texture = &m_sushi_texture;
+
     static int sushi_touches = 1;
 
     Interactable sushi_interact;
     sushi_interact.on_interact = [this]() {
-      std::println("You have poked Sushi {} times", sushi_touches++);
+      printf("You have poked Sushi %d times\n", sushi_touches++);
       soundManager.PlaySound("beep");
       m_notification_manager.Push("SUSHI: STOP IT!!!");
+      m_billboard_sushi = !m_billboard_sushi;
     };
 
     sushi_interact.position = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -75,34 +90,37 @@ public:
     sushi_interact.interaction_distance = 2.0f;
     m_interactables.push_back(sushi_interact);
 
+    float room_size = 20.0f;
+    float room_height = 5.0f;
+
     Surface ceiling;
     ceiling.type = SurfaceType::Ceiling;
     ceiling.texture = &m_ceiling_texture;
-    ceiling.size = glm::vec2(10.0f, 10.0f);
+    ceiling.size = glm::vec2(room_size, room_size);
     ceiling.rotation =
         glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0));
-    ceiling.position = glm::vec3(0.0f, 3.0f, 0.0f);
+    ceiling.position = glm::vec3(0.0f, room_height, 0.0f);
     m_surfaces.push_back(ceiling);
 
     Surface wall_front;
     wall_front.type = SurfaceType::Wall;
     wall_front.texture = &m_wall_texture;
-    wall_front.size = glm::vec2(10.0f, 3.0f);
-    wall_front.position = glm::vec3(0.0f, 1.5f, -5.0f);
+    wall_front.size = glm::vec2(room_size, room_height);
+    wall_front.position = glm::vec3(0.0f, room_height / 2, -room_size / 2);
     m_surfaces.push_back(wall_front);
 
     Surface wall_back;
     wall_back.type = SurfaceType::Wall;
     wall_back.texture = &m_wall_texture;
-    wall_back.size = glm::vec2(10.0f, 3.0f);
-    wall_back.position = glm::vec3(0.0f, 1.5f, 5.0f);
+    wall_back.size = glm::vec2(room_size, room_height);
+    wall_back.position = glm::vec3(0.0f, room_height / 2, room_size / 2);
     m_surfaces.push_back(wall_back);
 
     Surface wall_left;
     wall_left.type = SurfaceType::Wall;
     wall_left.texture = &m_wall_texture;
-    wall_left.size = glm::vec2(10.0f, 3.0f);
-    wall_left.position = glm::vec3(-5.0f, 1.5f, 0.0f);
+    wall_left.size = glm::vec2(room_size, room_height);
+    wall_left.position = glm::vec3(-room_size / 2, room_height / 2, 0.0f);
     wall_left.rotation =
         glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0, 1, 0));
     m_surfaces.push_back(wall_left);
@@ -110,8 +128,8 @@ public:
     Surface wall_right;
     wall_right.type = SurfaceType::Wall;
     wall_right.texture = &m_wall_texture;
-    wall_right.size = glm::vec2(10.0f, 3.0f);
-    wall_right.position = glm::vec3(5.0f, 1.5f, 0.0f);
+    wall_right.size = glm::vec2(room_size, room_height);
+    wall_right.position = glm::vec3(room_size / 2, room_height / 2, 0.0f);
     wall_right.rotation =
         glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0, 1, 0));
     m_surfaces.push_back(wall_right);
@@ -119,7 +137,7 @@ public:
     Surface floor;
     floor.type = SurfaceType::Floor;
     floor.texture = &m_floor_texture;
-    floor.size = glm::vec2(10.0f, 10.0f);
+    floor.size = glm::vec2(room_size, room_size);
     floor.rotation =
         glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0));
     m_surfaces.push_back(floor);
@@ -130,9 +148,9 @@ public:
   }
 
   Scene *update(GLFWwindow &window, float delta) override {
-    
+
     m_notification_manager.Update(delta);
-    
+
     m_timer += delta;
 
     static const float cycle_time = 0.75f;
@@ -140,9 +158,17 @@ public:
     if (m_timer >= cycle_time && m_timer < cycle_time * 2) {
       m_sushi_sprite.size = glm::vec2(2.4f, 1.8f);
       m_sushi_sprite.position = glm::vec3(0.0f, 0.9f, 0.0f);
+
+      m_sushi_billboard.size = glm::vec2(2.4f, 1.8f);
+      m_sushi_billboard.position = glm::vec3(0.0f, 0.9f, 0.0f);
+
     } else if (m_timer > cycle_time * 2) {
       m_sushi_sprite.size = glm::vec2(2.0f, 2.0f);
       m_sushi_sprite.position = glm::vec3(0.0f, 1.0f, 0.0f);
+      
+      m_sushi_billboard.size = glm::vec2(2.0f, 2.0f);
+      m_sushi_billboard.position = glm::vec3(0.0f, 1.0f, 0.0f);
+      
       m_timer = 0.0f;
     }
 
@@ -152,26 +178,38 @@ public:
   void handleInput(GLFWwindow &window, float delta) override {
     glfwPollEvents();
 
-    m_controller.HandleInput(window, delta);
+    if (m_cursor_captured)
+      m_controller.HandleInput(window, delta);
     m_controller.ResolveCollisions(m_surfaces);
     m_controller.CheckInteraction(window, m_interactables);
 
     if (glfwGetKey(&window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
       glfwSetWindowShouldClose(&window, true);
+
+    bool tab_pressed = glfwGetKey(&window, GLFW_KEY_TAB) == GLFW_PRESS;
+
+    if (!m_tab_before && tab_pressed) {
+      m_cursor_captured = !m_cursor_captured;
+      glfwSetInputMode(&window, GLFW_CURSOR,
+                       m_cursor_captured ? GLFW_CURSOR_DISABLED
+                                         : GLFW_CURSOR_NORMAL);
+      m_controller.Init(window);
+    }
+    m_tab_before = tab_pressed;
   }
 
   void render(GLFWwindow &window, Renderer &renderer) override {
     renderer.Clear(0.1f, 0.1f, 0.1f, 1.0f);
 
     PointLight light;
-    light.position = glm::vec3(0.0f, 3.0f, 0.0f);
+    light.position = glm::vec3(0.0f, 5.0f, 0.0f);
     // light.color = glm::vec3(0.9f, 0.8f, 0.5f);
-    light.color = glm::vec3(0.0f, 0.5f, 0.5f);
-    light.radius = 5.0f;
+    light.color = m_light_color;
+    light.radius = m_light_radius;
 
     std::vector<PointLight> lights;
     lights.push_back(light);
-    renderer.SetLights(lights, 0.0f);
+    renderer.SetLights(lights, m_ambient);
 
     renderer.BeginBatchDraw(10);
 
@@ -191,11 +229,25 @@ public:
       renderer.SubmitSprite(sprite);
     }
 
-    renderer.SubmitSprite(m_sushi_sprite);
+    if (!m_billboard_sushi) {
+      renderer.SubmitSprite(m_sushi_sprite);
+    } else {
+      glm::mat4 billboard = glm::transpose(glm::mat4(glm::mat3(view)));
+      m_sushi_billboard.model_mat = billboard;
+      renderer.SubmitSprite(m_sushi_billboard);
+    }
 
-    renderer.RendBatch(view, projection, campos, 0.3f);
-
+    renderer.RendBatch(view, projection, campos, m_fog_density);
 
     m_notification_manager.Render(w, h);
+
+    if (!m_cursor_captured) {
+      ImGui::Begin("Effects");
+      ImGui::SliderFloat("Fog Density", &m_fog_density, 0.0f, 1.0f);
+      ImGui::SliderFloat("Ambient Light", &m_ambient, 0.0f, 1.0f);
+      ImGui::SliderFloat("Light Radius", &m_light_radius, 0.0f, 30.0f);
+      ImGui::ColorEdit3("Light Color", &m_light_color.x);
+      ImGui::End();
+    }
   }
 };
