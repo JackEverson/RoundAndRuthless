@@ -17,7 +17,6 @@ private:
   double m_mouse_sensitivity = 0.05;
   double m_lastMouseX = 0.0;
   double m_lastMouseY = 0.0;
-  bool no_clip = false;
 
   bool m_left_click_before = false;
   bool m_interaction_before = false;
@@ -29,6 +28,8 @@ public:
   int KeyRight = GLFW_KEY_D;
   int KeyJump = GLFW_KEY_SPACE;
   int KeyCrouch = GLFW_KEY_C;
+
+  bool NoClip = false;
 
   int KeyInteract = GLFW_KEY_E;
   int MouseClick = GLFW_MOUSE_BUTTON_LEFT;
@@ -98,7 +99,7 @@ inline void FPSController::HandleInput(GLFWwindow &window, float delta) {
 
 inline void
 FPSController::ResolveCollisions(const std::vector<Surface> &surfaces) {
-  if (no_clip)
+  if (NoClip)
     return;
 
   glm::vec3 campos = m_camera.GetLocation();

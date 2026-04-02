@@ -14,7 +14,9 @@
 #include "glm/ext/matrix_float4x4.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/vector_float3.hpp"
+#include "glm/ext/vector_float4.hpp"
 #include "glm/trigonometric.hpp"
+#include "imgui.h"
 
 #include <cstdio>
 #include <string>
@@ -125,7 +127,7 @@ public:
         glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0, 1, 0));
     m_surfaces.push_back(wall_left);
 
-    Surface wall_right;
+    Surface wall_right; // half size
     wall_right.type = SurfaceType::Wall;
     wall_right.texture = &m_wall_texture;
     wall_right.size = glm::vec2(room_size, room_height);
@@ -133,6 +135,17 @@ public:
     wall_right.rotation =
         glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0, 1, 0));
     m_surfaces.push_back(wall_right);
+
+    // Surface invisible_right; // half size
+    // invisible_right.type = SurfaceType::Wall;
+    // invisible_right.texture = &m_wall_texture;
+    // invisible_right.size = glm::vec2(room_size, room_height);
+    // invisible_right.position = glm::vec3(room_size / 2, room_height / 2, 0.0f);
+    // invisible_right.rotation =
+    //     glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0, 1, 0));
+    //     invisible_right.color = glm::vec4(0.0f);
+    // m_surfaces.push_back(invisible_right);
+
 
     Surface floor;
     floor.type = SurfaceType::Floor;
@@ -225,6 +238,7 @@ public:
       sprite.texture = surface.texture;
       sprite.size = surface.size;
       sprite.model_mat = surface.rotation;
+      sprite.color = surface.color;
 
       renderer.SubmitSprite(sprite);
     }
@@ -243,6 +257,7 @@ public:
 
     if (!m_cursor_captured) {
       ImGui::Begin("Effects");
+      ImGui::Checkbox("No Clip", &m_controller.NoClip);
       ImGui::SliderFloat("Fog Density", &m_fog_density, 0.0f, 1.0f);
       ImGui::SliderFloat("Ambient Light", &m_ambient, 0.0f, 1.0f);
       ImGui::SliderFloat("Light Radius", &m_light_radius, 0.0f, 30.0f);
