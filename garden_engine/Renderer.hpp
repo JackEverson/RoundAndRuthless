@@ -33,6 +33,7 @@ private:
   unsigned int backgroundVBO = 0;
 
   std::vector<SpriteInstance> batch;
+  std::vector<SpriteInstance> transparent_batch;
 
   int m_vertexSize = 25;
 
@@ -51,8 +52,9 @@ public:
   // float rotate, glm::vec4 color, glm::mat4 projection);
   void SetLights(const std::vector<PointLight>& lights, float ambient);
 
-  void BeginBatchDraw(int countEstimate);
+  void BeginBatchDraw(int opaqueEstimate = 10, int transparentEstimate = 10);
   void SubmitSprite(const SpriteInstance &sprite);
+  void SubmitTransparentSprite(const SpriteInstance &sprite);
   void RendBatch(glm::mat4 view, glm::mat4 projection, glm::vec3 campos, float fogfactor = 0.15f);
 
 private:

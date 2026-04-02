@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run RoundAndRuthless",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/RoundAndRuthless",
+            "args": [],
+            "cwd": "${workspaceFolder}/build",
+            "MIMode": "gdb",
+            "externalConsole": false,
+            "preLaunchTask": "cmake build"
+        }
+    ]
+}

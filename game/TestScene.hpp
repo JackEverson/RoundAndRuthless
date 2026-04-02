@@ -127,25 +127,25 @@ public:
         glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0, 1, 0));
     m_surfaces.push_back(wall_left);
 
-    Surface wall_right; // half size
-    wall_right.type = SurfaceType::Wall;
-    wall_right.texture = &m_wall_texture;
-    wall_right.size = glm::vec2(room_size, room_height);
-    wall_right.position = glm::vec3(room_size / 2, room_height / 2, 0.0f);
-    wall_right.rotation =
+    // Surface wall_right; // half size
+    // wall_right.type = SurfaceType::Wall;
+    // wall_right.texture = &m_wall_texture;
+    // wall_right.size = glm::vec2(room_size, room_height);
+    // wall_right.position = glm::vec3(room_size / 2, room_height / 2, 0.0f);
+    // wall_right.rotation =
+    //     glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0, 1,
+    //     0));
+    // m_surfaces.push_back(wall_right);
+
+    Surface invisible_right;
+    invisible_right.type = SurfaceType::Wall;
+    invisible_right.texture = &m_wall_texture;
+    invisible_right.size = glm::vec2(room_size, room_height);
+    invisible_right.position = glm::vec3(room_size / 2, room_height / 2, 0.0f);
+    invisible_right.rotation =
         glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0, 1, 0));
-    m_surfaces.push_back(wall_right);
-
-    // Surface invisible_right; // half size
-    // invisible_right.type = SurfaceType::Wall;
-    // invisible_right.texture = &m_wall_texture;
-    // invisible_right.size = glm::vec2(room_size, room_height);
-    // invisible_right.position = glm::vec3(room_size / 2, room_height / 2, 0.0f);
-    // invisible_right.rotation =
-    //     glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0, 1, 0));
-    //     invisible_right.color = glm::vec4(0.0f);
-    // m_surfaces.push_back(invisible_right);
-
+    invisible_right.color = glm::vec4(0.0f);
+    m_surfaces.push_back(invisible_right);
 
     Surface floor;
     floor.type = SurfaceType::Floor;
@@ -178,10 +178,10 @@ public:
     } else if (m_timer > cycle_time * 2) {
       m_sushi_sprite.size = glm::vec2(2.0f, 2.0f);
       m_sushi_sprite.position = glm::vec3(0.0f, 1.0f, 0.0f);
-      
+
       m_sushi_billboard.size = glm::vec2(2.0f, 2.0f);
       m_sushi_billboard.position = glm::vec3(0.0f, 1.0f, 0.0f);
-      
+
       m_timer = 0.0f;
     }
 
@@ -224,7 +224,7 @@ public:
     lights.push_back(light);
     renderer.SetLights(lights, m_ambient);
 
-    renderer.BeginBatchDraw(10);
+    renderer.BeginBatchDraw(10, 5);
 
     int w, h;
     glfwGetWindowSize(&window, &w, &h);
@@ -240,15 +240,19 @@ public:
       sprite.model_mat = surface.rotation;
       sprite.color = surface.color;
 
-      renderer.SubmitSprite(sprite);
+      if (sprite.color.a < 0.95f) {
+        renderer.SubmitTransparentSprite(sprite);
+      } else {
+        renderer.SubmitSprite(sprite);
+      }
     }
 
     if (!m_billboard_sushi) {
-      renderer.SubmitSprite(m_sushi_sprite);
+      renderer.SubmitTransparentSprite(m_sushi_sprite);
     } else {
       glm::mat4 billboard = glm::transpose(glm::mat4(glm::mat3(view)));
       m_sushi_billboard.model_mat = billboard;
-      renderer.SubmitSprite(m_sushi_billboard);
+      renderer.SubmitTransparentSprite(m_sushi_billboard);
     }
 
     renderer.RendBatch(view, projection, campos, m_fog_density);
