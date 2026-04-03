@@ -110,7 +110,7 @@ FPSController::ResolveCollisions(const std::vector<Surface> &surfaces) {
 
   glm::vec3 campos = m_camera.GetLocation();
 
-  for (const auto& surface : surfaces) {
+  for (const auto &surface : surfaces) {
     // if (surface.type != SurfaceType::Wall)
     //     continue;
 
@@ -153,20 +153,19 @@ FPSController::CheckTriggers(GLFWwindow &window, float delta,
   glm::vec3 origin = m_camera.GetLocation();
   glm::vec3 dir = m_camera.GetForward();
 
-  for (auto& trigger : interactables) {
+  for (auto &trigger : interactables) {
     // distance cull
     if (glm::length(trigger.position - origin) > trigger.interaction_distance &&
-        trigger.interaction_distance > 0)
-        {
-          trigger.Reset();
-    continue;
-        }
+        trigger.interaction_distance > 0) {
+      trigger.Reset();
+      continue;
+    }
 
     switch (trigger.type) {
 
     case TriggerType::Interact:
-    
-    // ray cull
+
+      // ray cull
       if (!RayInBox(origin, dir, trigger.position, trigger.size,
                     trigger.rotation)) {
         trigger.Reset();

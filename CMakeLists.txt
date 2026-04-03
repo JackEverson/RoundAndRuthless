@@ -103,6 +103,7 @@ COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
 #GamePlay code
 set(GamePlay_files
   game/TestScene.hpp
+  game/Room1Scene.hpp
 )
 add_library(GamePlay STATIC ${GamePlay_files})
 target_include_directories(GamePlay PUBLIC game)
