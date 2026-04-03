@@ -1,10 +1,11 @@
 #pragma once
 
 #include "Camera.hpp"
-#include "Interactable.hpp"
 #include "Surface.hpp"
+#include "TriggerVolume.hpp"
 
 #include "GLFW/glfw3.h"
+#include "glm/ext/matrix_float4x4.hpp"
 
 #include <algorithm>
 
@@ -40,13 +41,18 @@ public:
   void Init(GLFWwindow &window);
   void HandleInput(GLFWwindow &window, float delta);
   void ResolveCollisions(const std::vector<Surface> &surfaces);
-  void CheckInteraction(GLFWwindow &window,
-                        const std::vector<Interactable> &interactables);
+  void CheckTriggers(GLFWwindow &window, float delta,
+                     std::vector<TriggerVolume> &interactables);
+
+private:
+  bool RayInBox(const glm::vec3 &sourcePos, const glm::vec3 &sourceDir,
+                const glm::vec3 &targetPos, const glm::vec3 &targetSize,
+                const glm::mat4 &targetRotation) const;
 };
 
-FPSController::FPSController(Camera &camera) : m_camera(camera) {}
+inline FPSController::FPSController(Camera &camera) : m_camera(camera) {}
 
-FPSController::~FPSController() {}
+inline FPSController::~FPSController() {}
 
 inline void FPSController::Init(GLFWwindow &window) {
   double x, y;
@@ -104,7 +110,7 @@ FPSController::ResolveCollisions(const std::vector<Surface> &surfaces) {
 
   glm::vec3 campos = m_camera.GetLocation();
 
-  for (auto surface : surfaces) {
+  for (const auto& surface : surfaces) {
     // if (surface.type != SurfaceType::Wall)
     //     continue;
 
@@ -132,56 +138,105 @@ FPSController::ResolveCollisions(const std::vector<Surface> &surfaces) {
   m_camera.SetCamera(campos);
 }
 
-inline void FPSController::CheckInteraction(
-    GLFWwindow &window, const std::vector<Interactable> &interactables) {
-  if (glfwGetKey(&window, KeyInteract) != GLFW_PRESS &&
-      glfwGetMouseButton(&window, MouseClick) != GLFW_PRESS) {
-    m_interaction_before = false;
-    return;
-  }
+inline void
+FPSController::CheckTriggers(GLFWwindow &window, float delta,
+                             std::vector<TriggerVolume> &interactables) {
 
-  if (!m_interaction_before) {
-    m_interaction_before = true;
-  } else {
-    return;
+  bool interaction_held = glfwGetKey(&window, KeyInteract) == GLFW_PRESS ||
+                          glfwGetMouseButton(&window, MouseClick) == GLFW_PRESS;
+
+  bool interaction_started = false;
+  if (!m_interaction_before && interaction_held) {
+    interaction_started = true;
   }
 
   glm::vec3 origin = m_camera.GetLocation();
   glm::vec3 dir = m_camera.GetForward();
 
-  for (Interactable interactable : interactables) {
-    if (glm::length(interactable.position - origin) >
-        interactable.interaction_distance)
-      continue;
+  for (auto& trigger : interactables) {
+    // distance cull
+    if (glm::length(trigger.position - origin) > trigger.interaction_distance &&
+        trigger.interaction_distance > 0)
+        {
+          trigger.Reset();
+    continue;
+        }
 
-    glm::mat4 inv_rot = glm::inverse(interactable.rotation);
-    glm::vec3 local_origin =
-        glm::vec3(inv_rot * glm::vec4(origin - interactable.position, 0.0f));
-    glm::vec3 local_dir = glm::vec3(inv_rot * glm::vec4(dir, 0.0f));
+    switch (trigger.type) {
 
-    glm::vec3 half = interactable.size / 2.0f;
+    case TriggerType::Interact:
+    
+    // ray cull
+      if (!RayInBox(origin, dir, trigger.position, trigger.size,
+                    trigger.rotation)) {
+        trigger.Reset();
+        continue;
+      }
 
-    float tmin_x = (-half.x - local_origin.x) / local_dir.x;
-    float tmax_x = (half.x - local_origin.x) / local_dir.x;
-    if (tmin_x > tmax_x)
-      std::swap(tmin_x, tmax_x);
+      if (!interaction_held) {
+        trigger.Reset();
+        continue;
+      }
+      if (interaction_started || trigger.trigger_timer != 0) {
+        trigger.Fuse(delta);
+      } else {
+        trigger.Reset();
+        continue;
+      }
+      break;
 
-    float tmin_y = (-half.y - local_origin.y) / local_dir.y;
-    float tmax_y = (half.y - local_origin.y) / local_dir.y;
-    if (tmin_y > tmax_y)
-      std::swap(tmin_y, tmax_y);
+    case TriggerType::LookAt:
+      if (!RayInBox(origin, dir, trigger.position, trigger.size,
+                    trigger.rotation)) {
+        trigger.Reset();
+        continue;
+      }
+      trigger.Fuse(delta);
+      break;
 
-    float tmin_z = (-half.z - local_origin.z) / local_dir.z;
-    float tmax_z = (half.z - local_origin.z) / local_dir.z;
-    if (tmin_z > tmax_z)
-      std::swap(tmin_z, tmax_z);
-
-    float tmin = std::max({tmin_x, tmin_y, tmin_z});
-    float tmax = std::min({tmax_x, tmax_y, tmax_z});
-
-    if (tmin <= tmax && tmax > 0.0f) {
-      interactable.on_interact();
-      return;
+    case TriggerType::Proximity:
+      trigger.Fuse(delta);
+      break;
     }
+  }
+
+  m_interaction_before = interaction_held;
+}
+
+inline bool FPSController::RayInBox(const glm::vec3 &sourcePos,
+                                    const glm::vec3 &sourceDir,
+                                    const glm::vec3 &targetPos,
+                                    const glm::vec3 &targetSize,
+                                    const glm::mat4 &targetRotation) const {
+
+  glm::mat4 inv_rot = glm::inverse(targetRotation);
+  glm::vec3 local_origin =
+      glm::vec3(inv_rot * glm::vec4(sourcePos - targetPos, 0.0f));
+  glm::vec3 local_dir = glm::vec3(inv_rot * glm::vec4(sourceDir, 0.0f));
+
+  glm::vec3 half = targetSize / 2.0f;
+
+  float tmin_x = (-half.x - local_origin.x) / local_dir.x;
+  float tmax_x = (half.x - local_origin.x) / local_dir.x;
+  if (tmin_x > tmax_x)
+    std::swap(tmin_x, tmax_x);
+
+  float tmin_y = (-half.y - local_origin.y) / local_dir.y;
+  float tmax_y = (half.y - local_origin.y) / local_dir.y;
+  if (tmin_y > tmax_y)
+    std::swap(tmin_y, tmax_y);
+
+  float tmin_z = (-half.z - local_origin.z) / local_dir.z;
+  float tmax_z = (half.z - local_origin.z) / local_dir.z;
+  if (tmin_z > tmax_z)
+    std::swap(tmin_z, tmax_z);
+
+  float tmin = std::max({tmin_x, tmin_y, tmin_z});
+  float tmax = std::min({tmax_x, tmax_y, tmax_z});
+
+  if (tmin <= tmax && tmax > 0.0f) {
+    return true;
+  } else {
+    return false;
   }
 }

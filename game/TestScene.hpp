@@ -3,7 +3,7 @@
 #include "Audio.hpp"
 #include "Engine.hpp"
 #include "FPSController.hpp"
-#include "Interactable.hpp"
+#include "TriggerVolume.hpp"
 #include "NotificationManager.hpp"
 #include "PointLight.hpp"
 #include "Renderer.hpp"
@@ -42,14 +42,14 @@ public:
 
   float m_timer = 0.0f;
 
-  std::vector<Interactable> m_interactables;
+  std::vector<TriggerVolume> m_interactables;
   std::vector<Surface> m_surfaces;
 
   bool m_tab_before = false;
   bool m_cursor_captured = true;
-  float m_fog_density = 0.15f;
-  float m_light_radius = 20.0f;
-  float m_ambient = 0.15f;
+  float m_fog_density = 0.05f;
+  float m_light_radius = 5.0f;
+  float m_ambient = 0.05f;
   glm::vec3 m_light_color = glm::vec3(1.0f);
 
   TestScene()
@@ -79,8 +79,8 @@ public:
 
     static int sushi_touches = 1;
 
-    Interactable sushi_interact;
-    sushi_interact.on_interact = [this]() {
+    TriggerVolume sushi_interact;
+    sushi_interact.on_triggered = [this]() {
       printf("You have poked Sushi %d times\n", sushi_touches++);
       soundManager.PlaySound("beep");
       m_notification_manager.Push("SUSHI: STOP IT!!!");
@@ -90,6 +90,9 @@ public:
     sushi_interact.position = glm::vec3(0.0f, 1.0f, 0.0f);
     sushi_interact.size = glm::vec3(2.0f, 2.0f, 0.1f);
     sushi_interact.interaction_distance = 2.0f;
+    sushi_interact.type = TriggerType::Interact;
+    // sushi_interact.time_to_trigger = 1.0f;
+
     m_interactables.push_back(sushi_interact);
 
     float room_size = 20.0f;
@@ -127,15 +130,15 @@ public:
         glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0, 1, 0));
     m_surfaces.push_back(wall_left);
 
-    // Surface wall_right; // half size
-    // wall_right.type = SurfaceType::Wall;
-    // wall_right.texture = &m_wall_texture;
-    // wall_right.size = glm::vec2(room_size, room_height);
-    // wall_right.position = glm::vec3(room_size / 2, room_height / 2, 0.0f);
-    // wall_right.rotation =
-    //     glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0, 1,
-    //     0));
-    // m_surfaces.push_back(wall_right);
+    Surface wall_right; // half size
+    wall_right.type = SurfaceType::Wall;
+    wall_right.texture = &m_wall_texture;
+    wall_right.size = glm::vec2(room_size, room_height / 4);
+    wall_right.position = glm::vec3(room_size / 2, room_height / 8, 0.0f);
+    wall_right.rotation =
+        glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0, 1,
+        0));
+    m_surfaces.push_back(wall_right);
 
     Surface invisible_right;
     invisible_right.type = SurfaceType::Wall;
@@ -194,7 +197,7 @@ public:
     if (m_cursor_captured)
       m_controller.HandleInput(window, delta);
     m_controller.ResolveCollisions(m_surfaces);
-    m_controller.CheckInteraction(window, m_interactables);
+    m_controller.CheckTriggers(window, delta, m_interactables);
 
     if (glfwGetKey(&window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
       glfwSetWindowShouldClose(&window, true);
@@ -216,7 +219,6 @@ public:
 
     PointLight light;
     light.position = glm::vec3(0.0f, 5.0f, 0.0f);
-    // light.color = glm::vec3(0.9f, 0.8f, 0.5f);
     light.color = m_light_color;
     light.radius = m_light_radius;
 
