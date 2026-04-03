@@ -3,7 +3,13 @@
 #include "Engine.hpp"
 
 #include "GameScene.hpp"
+#include "Renderer.hpp"
+#include "Texture.hpp"
+#include "glm/ext/matrix_float4x4.hpp"
+#include "glm/ext/matrix_transform.hpp"
+#include "glm/ext/vector_float2.hpp"
 #include "glm/ext/vector_float3.hpp"
+#include "glm/trigonometric.hpp"
 
 class Room1Scene : public GameScene {
 
@@ -13,9 +19,12 @@ public:
   Texture m_wall_texture;
   Texture m_floor_texture;
   Texture m_sushi_texture;
-  // TODO: add eye chart, button, scale textures
+  Texture m_eye_chart_texture;
+  Texture m_scale_texture;
+  Texture m_button_texture;
 
-  // Sushi observer billboard
+  // Sprites
+  std::vector<SpriteInstance> m_static_sprites;
   SpriteInstance m_sushi_observer;
 
   // Door animation
@@ -34,7 +43,10 @@ public:
       : m_ceiling_texture("./res/textures/plaster_ceiling.png"),
         m_wall_texture("./res/textures/concrete_wall.png"),
         m_floor_texture("./res/textures/gravel_floor.png"),
-        m_sushi_texture("./res/textures/sushi.png") {}
+        m_sushi_texture("./res/textures/sushi.png"),
+        m_eye_chart_texture("./res/textures/shark.png"),
+        m_scale_texture("./res/textures/rock.png"),
+        m_button_texture("./res/textures/button_red.png") {}
 
   void onEnter(GLFWwindow &window) override {
     glfwSetInputMode(&window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -43,6 +55,7 @@ public:
     float room_size = 10.0f;
     float room_height = 3.0f;
     float sushi_size = 2.0f;
+    float player_height = 1.6f;
 
     float half_room_size = room_size / 2;
     float half_room_height = room_height / 2;
@@ -51,6 +64,7 @@ public:
 
     glm::vec3 sushi_position =
         glm::vec3(0.0f, half_sushi_size, -half_room_size - half_sushi_size);
+    m_camera.SetCamera(glm::vec3(0.0f, player_height, 0.0f));
 
     glm::vec3 light_color = glm::vec3(0.85f, 0.92f, 1.0f) / 3.0f;
 
@@ -92,45 +106,84 @@ public:
     AddCeiling(glm::vec3(0.0f, room_height, -half_roomsushi_size),
                glm::vec2(room_size, sushi_size), &m_ceiling_texture);
 
-    // --- Sushi observer ---
+    // Sushi
+
     m_sushi_observer.texture = &m_sushi_texture;
     m_sushi_observer.size = glm::vec2(sushi_size, sushi_size);
     m_sushi_observer.color = glm::vec4(1.0f);
     m_sushi_observer.position = sushi_position;
 
     // --- Triggers ---
-
     // Stage 0: Look at eye chart
+    glm::vec3 chart_pos =
+        glm::vec3(0, half_room_height, half_room_size - 0.0001f);
+    glm::vec2 chart_size = glm::vec2(half_sushi_size, half_sushi_size);
+
+    SpriteInstance eye_sprite;
+    eye_sprite.position = chart_pos;
+    eye_sprite.size = chart_size;
+    eye_sprite.texture = &m_eye_chart_texture;
+    m_static_sprites.push_back(eye_sprite);
+
     TriggerVolume eye_chart;
     eye_chart.type = TriggerType::LookAt;
-    eye_chart.single_trigger = true;
-    // TODO: set position and size to match chart sprite on wall
+    eye_chart.position = chart_pos;
+    eye_chart.time_to_trigger = 2.0f;
+    eye_chart.size = glm::vec3(chart_size, 0.01f) * 1.2f;
+    eye_chart.interaction_distance = -1.0f;
     eye_chart.on_triggered = [this]() {
       if (m_stage != 0)
         return;
       m_stage = 1;
-      m_notification_manager.Push("Good. Visual acuity confirmed.", 3.0f);
+      // Please direct your gaze to the eye chart.
+      m_notification_manager.Push("Good. Visual acuity confirmed.", 6.0f);
     };
     m_triggers.push_back(eye_chart);
 
     // Stage 1: Stand on scale
+    glm::vec3 scale_pos = glm::vec3(half_room_size - half_sushi_size, 0.001f,
+                                    -(half_room_size - half_sushi_size));
+    glm::vec2 scale_size = glm::vec2(sushi_size, sushi_size);
+
+    SpriteInstance scale_sprite;
+    scale_sprite.position = scale_pos;
+    scale_sprite.size = scale_size;
+    scale_sprite.texture = &m_scale_texture;
+    scale_sprite.model_mat = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f),
+                                         glm::vec3(1.0f, 0.0f, 0.0f));
+    m_static_sprites.push_back(scale_sprite);
+
     TriggerVolume scale;
     scale.type = TriggerType::Proximity;
-    scale.single_trigger = true;
-    // TODO: set position and interaction_distance
+    scale.position = glm::vec3(scale_pos.x, player_height, scale_pos.z);
+    scale.interaction_distance = half_sushi_size;
+    scale.time_to_trigger = 2.0f;
     scale.on_triggered = [this]() {
       if (m_stage != 1)
         return;
       m_stage = 2;
-      m_notification_manager.Push("Weight noted.", 3.0f);
+      m_notification_manager.Push("Weight noted.", 6.0f);
     };
     m_triggers.push_back(scale);
 
     // Stage 2: Press the button
+    glm::vec3 button_pos =
+        glm::vec3(-(half_room_size - 0.001f), player_height, 0);
+    glm::vec2 button_size = glm::vec2(half_sushi_size / 2, half_sushi_size / 2);
+    glm::mat4 button_rot = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f),
+                                       glm::vec3(0.0f, 1.0f, 0.0f));
+    SpriteInstance button_sprite;
+    button_sprite.position = button_pos;
+    button_sprite.size = button_size;
+    button_sprite.texture = &m_button_texture;
+    button_sprite.model_mat = button_rot;
+    m_static_sprites.push_back(button_sprite);
+
     TriggerVolume button;
     button.type = TriggerType::Interact;
-    button.single_trigger = true;
-    // TODO: set position and size to match button sprite on wall
+    button.position = button_pos;
+    button.size = glm::vec3(button_size, 0.01f);
+    button.rotation = button_rot;
     button.on_triggered = [this]() {
       if (m_stage != 2)
         return;
@@ -165,7 +218,6 @@ public:
       }
     }
 
-    // TODO: return next scene when room is complete
     return nullptr;
   }
 
@@ -188,6 +240,10 @@ public:
     m_sushi_observer.model_mat = billboard;
     renderer.SubmitTransparentSprite(m_sushi_observer);
 
+    for (const auto &sprite : m_static_sprites) {
+      renderer.SubmitTransparentSprite(sprite);
+    }
+
     renderer.RendBatch(view, projection, campos, 0.05f);
 
     // HUD: current task instruction
@@ -196,21 +252,23 @@ public:
     switch (m_stage) {
 
     case 0:
-      task_text = "Please direct your gaze to the eye chart.";
+      task_text = "Look at the eye chart (Mouse to look around)";
       break;
     case 1:
-      task_text = "Please step onto the scale for weighing.";
+      task_text = "Step onto the scale (WASD)";
       break;
     case 2:
-      task_text = "Please press the call button when ready to proceed.";
+      task_text = "Press the button to continue ('e' key to interact)";
       break;
     case 3:
-      task_text = "You may proceed through the door.";
+      task_text = "Proceed through the door.";
       break;
     }
 
-    ImGui::SetNextWindowPos(ImVec2(w / 2.0f, 20.0f), ImGuiCond_Always,
-                            ImVec2(0.5f, 0.0f));
+    ImGui::SetNextWindowPos(
+        ImVec2(w * 0.75f, h - 40.0f), ImGuiCond_Always,
+        // ImGui::SetNextWindowPos(ImVec2(50.0f, h - 20.0f), ImGuiCond_Always,
+        ImVec2(0.5f, 0.0f));
     ImGui::SetNextWindowBgAlpha(0.0f);
     ImGui::Begin("##task", nullptr,
                  ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
