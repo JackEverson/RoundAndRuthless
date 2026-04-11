@@ -110,13 +110,14 @@ protected:
   }
 
   // Add a point light
-  void AddLight(glm::vec3 pos, float radius,
+  PointLight &AddLight(glm::vec3 pos, float radius,
                 glm::vec3 color = glm::vec3(1.0f)) {
     PointLight l;
     l.position = pos;
     l.radius = radius;
     l.color = color;
     m_lights.push_back(l);
+    return m_lights.back();
   }
 
   // --- Common input handling (cursor capture toggle) ---
@@ -147,11 +148,6 @@ protected:
   // --- Common render setup ---
   // Submits all surfaces to the renderer. Call between BeginBatchDraw and RendBatch.
   void SetupRenderingObjects(Renderer &renderer, int opaque = 30, int transparent = 10 ) {
-    renderer.Clear(0.05f, 0.05f, 0.05f, 1.0f);
-    renderer.SetLights(m_lights, 0.05f);
-    
-    renderer.BeginBatchDraw(opaque, transparent);
-    
     for (auto &surface : m_surfaces) {
       SpriteInstance sprite;
       sprite.position = surface.position;
