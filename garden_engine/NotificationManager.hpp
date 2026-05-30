@@ -49,7 +49,7 @@ inline void NotificationManager::Update(float delta) {
 
 inline void NotificationManager::Render(int w, int h){
     if (m_notifications.empty()) return;
-    
+
     ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.85f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
     ImGui::SetNextWindowBgAlpha(0.0f);
     ImGui::Begin("##notifications", nullptr,
@@ -61,6 +61,7 @@ inline void NotificationManager::Render(int w, int h){
 
     for (auto& n : m_notifications) {
         float alpha = n.remaining / n.duration;
+        ImGui::SetWindowFontScale(2.0f);
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 1, 1, alpha));
         ImGui::TextUnformatted(n.message.c_str());
         ImGui::PopStyleColor();

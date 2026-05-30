@@ -328,6 +328,7 @@ public:
                      ImGuiWindowFlags_NoMove |
                      ImGuiWindowFlags_AlwaysAutoResize);
     ImGui::Text("%s", task_text);
+    ImGui::SetWindowFontScale(2.0f);
     ImGui::End();
 
     m_notification_manager.Render(w, h);
