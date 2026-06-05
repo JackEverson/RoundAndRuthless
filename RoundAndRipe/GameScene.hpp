@@ -2,7 +2,6 @@
 
 #include "Renderer.hpp"
 
-
 #include "Audio.hpp"
 #include "FPSController.hpp"
 #include "NotificationManager.hpp"
