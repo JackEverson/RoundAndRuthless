@@ -22,7 +22,7 @@
 
 // Game-specific base scene. Inherits from Scene and provides shared state
 // and geometry helpers for all RoundAndRuthless room scenes.
-class GameScene : public Scene {
+class GardenRoom : public Scene {
 
 protected:
   SimpleSoundManager &soundManager;
@@ -39,7 +39,7 @@ protected:
   bool m_cursor_captured = true;
   bool m_tab_before = false;
 
-  GameScene()
+  GardenRoom()
       : soundManager(SimpleSoundManager::Instance()),
         m_controller(m_camera) {}
 

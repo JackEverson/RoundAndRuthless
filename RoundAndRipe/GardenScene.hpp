@@ -2,7 +2,8 @@
 
 #include "Engine.hpp"
 
-#include "GameScene.hpp"
+#include "GardenRoom.hpp"
+#include "Plants.hpp"
 #include "PointLight.hpp"
 #include "Renderer.hpp"
 #include "Texture.hpp"
@@ -11,9 +12,10 @@
 #include "glm/ext/vector_float2.hpp"
 #include "glm/ext/vector_float3.hpp"
 #include "glm/trigonometric.hpp"
+#include "Plot.hpp"
 #include <vector>
 
-class GardenScene : public GameScene {
+class GardenScene : public GardenRoom{
 
 public:
   SimpleSoundManager &sound_manager;
@@ -24,17 +26,24 @@ public:
   Texture m_floor_texture;
   Texture m_sushi_texture;
   
-  Texture m_gravel_texture;
+  Texture m_soil_texture;
+  Texture m_pot_texture;
   Texture m_button_texture;
   Texture m_door_texture;
+  Texture m_radish_texture;
 
   // Sprites
   std::vector<SpriteInstance> m_static_sprites;
   SpriteInstance m_sushi_observer;
-
-  SpriteInstance m_plot;
+  std::vector<Plot> m_plots;
+  std::vector<PlantDef> m_plant_defs;
 
   PointLight m_task_light;
+
+  float m_font_size = 2.0f;
+
+  // progression
+  float m_biomass = 0.0f;
 
   // Door animation
   int m_door_index = -1;
@@ -47,9 +56,11 @@ public:
         m_wall_texture("./res/textures/concrete_wall.png"),
         m_floor_texture("./res/textures/gravel_floor.png"),
         m_sushi_texture("./res/textures/sushi.png"),
-        m_gravel_texture("./res/textures/rock.png"),
+        m_soil_texture("./res/textures/gravel_floor.png"),
+        m_pot_texture("./res/textures/concrete_wall.png"),
         m_button_texture("./res/textures/button_red.png"),
-        m_door_texture("./res/textures/metal_door.png") {}
+        m_door_texture("./res/textures/metal_door.png"),
+        m_radish_texture("./res/textures/radish.png") {}
 
   void onEnter(GLFWwindow &window) override {
     glfwSetInputMode(&window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -148,13 +159,13 @@ public:
     m_sushi_observer.color = glm::vec4(1.0f);
     m_sushi_observer.position = sushi_position;
 
+    // plots
+    m_plots.emplace_back(glm::vec3(0), &m_soil_texture, &m_pot_texture);
 
-    // Plot
-      m_plot.texture = &m_gravel_texture;
-      m_plot.size = plot_size;
-      m_plot.color = glm::vec4(0.66f, 0.60f, 0.50f, 1.0f);
-      m_plot.position = plot_pos;
-      m_plot.model_mat = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0));
+    m_plant_defs.push_back(Radish(&m_radish_texture));
+    Plot plot2(glm::vec3(0, 0, 1), &m_soil_texture, &m_pot_texture);
+    plot2.Plant(&m_plant_defs.back());
+    m_plots.push_back(plot2);
 
     // --- Triggers ---
     m_task_light.position = plot_pos;
@@ -184,6 +195,10 @@ public:
         // m_door_index = -1;
         m_door_opening = false;
       }
+    }
+
+    for(auto &p:m_plots){
+      p.Update(delta);
     }
 
     return nullptr;
@@ -219,12 +234,14 @@ public:
       renderer.SubmitTransparentSprite(sprite);
     }
 
-    renderer.SubmitTransparentSprite(m_plot);
+    for(auto &p:m_plots){
+      p.Render(renderer);
+    }
 
     renderer.RendBatch(view, projection, campos, 0.05f);
 
     // HUD: current task instruction
-    const char *task_text = "Just be a Sushi!";
+    const char *task_text = "Just cooperate and hand over the liver!";
 
 
     ImGui::SetNextWindowPos(
@@ -237,7 +254,20 @@ public:
                      ImGuiWindowFlags_NoMove |
                      ImGuiWindowFlags_AlwaysAutoResize);
     ImGui::Text("%s", task_text);
-    ImGui::SetWindowFontScale(2.0f);
+    ImGui::SetWindowFontScale(m_font_size);
+    ImGui::End();
+
+    ImGui::SetNextWindowPos(
+        ImVec2(w * 0.25f, h - 40.0f), ImGuiCond_Always,
+        // ImGui::SetNextWindowPos(ImVec2(50.0f, h - 20.0f), ImGuiCond_Always,
+        ImVec2(0.5f, 0.0f));
+    ImGui::SetNextWindowBgAlpha(0.0f);
+    ImGui::Begin("##biomass", nullptr,
+                 ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
+                     ImGuiWindowFlags_NoMove |
+                     ImGuiWindowFlags_AlwaysAutoResize);
+    ImGui::Text("Biomass: %f kg", m_biomass);
+    ImGui::SetWindowFontScale(m_font_size);
     ImGui::End();
 
     m_notification_manager.Render(w, h);

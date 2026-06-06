@@ -107,11 +107,13 @@ endif()
 #RoundAndRipe executable
 set(RoundAndRipe_files
   RoundAndRipe/GardenScene.hpp
-  # RoundAndRipe/GameScene.hpp
+  RoundAndRipe/GardenRoom.hpp
+  RoundAndRipe/Plot.hpp
+  RoundAndRipe/Plants.hpp
 )
 
 add_library(RoundAndRipe_game STATIC ${RoundAndRipe_files})
-target_include_directories(RoundAndRipe_game PUBLIC game)
+target_include_directories(RoundAndRipe_game PUBLIC RoundAndRipe)
 target_compile_features(RoundAndRipe_game PUBLIC cxx_std_23)
 target_link_libraries(RoundAndRipe_game PUBLIC garden_engine)
 
