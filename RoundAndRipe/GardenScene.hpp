@@ -2,8 +2,10 @@
 
 #include "Engine.hpp"
 
+#include "GLFW/glfw3.h"
 #include "GardenRoom.hpp"
 #include "Plants.hpp"
+#include "Plot.hpp"
 #include "PointLight.hpp"
 #include "Renderer.hpp"
 #include "Texture.hpp"
@@ -12,12 +14,12 @@
 #include "glm/ext/vector_float2.hpp"
 #include "glm/ext/vector_float3.hpp"
 #include "glm/trigonometric.hpp"
-#include "Plot.hpp"
+#include <string>
 #include <vector>
 
-class GardenScene : public GardenRoom{
+class GardenScene : public GardenRoom {
 
-public:
+private:
   SimpleSoundManager &sound_manager;
 
   // Textures
@@ -25,7 +27,7 @@ public:
   Texture m_wall_texture;
   Texture m_floor_texture;
   Texture m_sushi_texture;
-  
+
   Texture m_soil_texture;
   Texture m_pot_texture;
   Texture m_button_texture;
@@ -36,6 +38,15 @@ public:
   std::vector<SpriteInstance> m_static_sprites;
   SpriteInstance m_sushi_observer;
   std::vector<Plot> m_plots;
+
+  enum class MenuMode { None, Plant, PullUp };
+  MenuMode m_menu_mode = MenuMode::None;
+  int m_menu_plot = -1;
+  void CloseMenu() {
+    m_menu_plot = -1;
+    m_menu_mode = MenuMode::None;
+  }
+
   std::vector<PlantDef> m_plant_defs;
 
   PointLight m_task_light;
@@ -50,6 +61,7 @@ public:
   bool m_door_opening = false;
   float m_door_open_progress = 0.0f;
 
+public:
   GardenScene()
       : sound_manager(SimpleSoundManager::Instance()),
         m_ceiling_texture("./res/textures/plaster_ceiling.png"),
@@ -83,10 +95,10 @@ public:
     float half_sushi_size = sushi_size / 2;
     float half_roomsushi_size = half_sushi_size + half_room_size;
 
-
     glm::vec3 sushi_position =
         glm::vec3(0.0f, half_sushi_size, -half_room_size - half_sushi_size);
-    m_camera.SetCamera(glm::vec3(-(half_room_size - half_sushi_size), player_height, 0.0f));
+    m_camera.SetCamera(
+        glm::vec3(-(half_room_size - half_sushi_size), player_height, 0.0f));
 
     glm::vec3 light_color = glm::vec3(0.85f, 0.92f, 1.0f) / 3.0f;
 
@@ -137,8 +149,8 @@ public:
                    glm::vec2(sushi_size, room_height), 90.0f, &m_door_texture);
 
     // observation room
-    AddLight(glm::vec3(sushi_position.x, 0, sushi_position.z),
-             half_sushi_size, light_color);
+    AddLight(glm::vec3(sushi_position.x, 0, sushi_position.z), half_sushi_size,
+             light_color);
     AddWallRotated(
         glm::vec3(half_room_size, half_room_height, -half_roomsushi_size),
         glm::vec2(sushi_size, room_height), 90.0f, &m_wall_texture);
@@ -160,17 +172,45 @@ public:
     m_sushi_observer.position = sushi_position;
 
     // plots
-    m_plots.emplace_back(glm::vec3(0), &m_soil_texture, &m_pot_texture);
-
     m_plant_defs.push_back(Radish(&m_radish_texture));
-    Plot plot2(glm::vec3(0, 0, 1), &m_soil_texture, &m_pot_texture);
-    plot2.Plant(&m_plant_defs.back());
-    m_plots.push_back(plot2);
+
+    m_plots.emplace_back(glm::vec3(-1, 0, 0), &m_soil_texture, &m_pot_texture);
+    m_plots.emplace_back(glm::vec3(0, 0, 0), &m_soil_texture, &m_pot_texture);
+    m_plots.emplace_back(glm::vec3(1, 0, 0), &m_soil_texture, &m_pot_texture);
 
     // --- Triggers ---
     m_task_light.position = plot_pos;
     m_task_light.color = light_color;
     m_task_light.radius = 0.5f;
+
+    // TODO: should be in plot
+    for (size_t i = 0; i < m_plots.size(); i++) {
+      TriggerVolume t;
+      t.type = TriggerType::Interact;
+      t.position =
+          m_plots[i].Position() + glm::vec3(0, 0.5f, 0); // around the plant
+      t.size = glm::vec3(0.6f, 0.6f, 0.6f);
+      t.interaction_distance = 3.0f;
+      t.time_to_trigger = 0.1f; // brief hold; tune to taste
+
+      t.on_triggered = [this, i]() {
+        Plot &plot = m_plots[i];
+        if (plot.IsRipe()) {
+          std::string name = plot.GetPlantName();
+          m_biomass += plot.Harvest();
+          std::string mess = "Harvested " + name;
+          m_notification_manager.Push(mess, 2.0f);
+        } else if (plot.IsEmpty()) {
+          m_menu_plot = (int)i;
+          m_menu_mode = MenuMode::Plant;
+        } else if (plot.IsGrowing()) {
+          m_menu_plot = (int)i;
+          m_menu_mode = MenuMode::PullUp;
+        }
+      };
+
+      m_triggers.push_back(t);
+    }
   }
 
   void onExit(GLFWwindow &window) override {
@@ -197,7 +237,7 @@ public:
       }
     }
 
-    for(auto &p:m_plots){
+    for (auto &p : m_plots) {
       p.Update(delta);
     }
 
@@ -206,21 +246,47 @@ public:
 
   void handleInput(GLFWwindow &window, float delta) override {
     HandleCommonInput(window, delta);
+
+    if (m_menu_plot >= 0) {
+      if (glfwGetKey(&window, GLFW_KEY_X) == GLFW_PRESS) {
+        CloseMenu();
+      } else if (m_menu_mode == MenuMode::Plant) {
+        for (int n = 0; n < (int)m_plant_defs.size(); n++)
+          if (glfwGetKey(&window, GLFW_KEY_1 + n) == GLFW_PRESS) {
+            m_plots[m_menu_plot].Plant(&m_plant_defs[n]);
+            CloseMenu();
+            break;
+          }
+      } else if (m_menu_mode == MenuMode::PullUp) {
+        if (glfwGetKey(&window, GLFW_KEY_1) == GLFW_PRESS) {
+          m_plots[m_menu_plot].PullUp();
+          CloseMenu();
+        }
+      }
+    }
   }
 
   void render(GLFWwindow &window, Renderer &renderer) override {
+    int w, h;
+    glfwGetWindowSize(&window, &w, &h);
+    if (w == 0 || h == 0) return;
 
     renderer.Clear(0.05f, 0.05f, 0.05f, 1.0f);
     renderer.BeginBatchDraw(30, 10);
 
     std::vector<PointLight> lights = m_lights;
-    lights.push_back(m_task_light);
+    // lights.push_back(m_task_light);
+
+    for (auto &p : m_plots) {
+      if (auto light = p.RipeLight()) {
+        lights.push_back(*light);
+      }
+    }
+
     renderer.SetLights(lights, 0.05f);
 
     SetupRenderingObjects(renderer);
 
-    int w, h;
-    glfwGetWindowSize(&window, &w, &h);
     glm::mat4 view = m_camera.GetViewMat();
     glm::mat4 projection = m_camera.GetProjectionMat(w, h);
     glm::vec3 campos = m_camera.GetLocation();
@@ -234,7 +300,7 @@ public:
       renderer.SubmitTransparentSprite(sprite);
     }
 
-    for(auto &p:m_plots){
+    for (auto &p : m_plots) {
       p.Render(renderer, campos);
     }
 
@@ -242,7 +308,6 @@ public:
 
     // HUD: current task instruction
     const char *task_text = "Just cooperate and hand over the liver!";
-
 
     ImGui::SetNextWindowPos(
         ImVec2(w * 0.75f, h - 40.0f), ImGuiCond_Always,
@@ -269,6 +334,27 @@ public:
     ImGui::Text("Biomass: %f kg", m_biomass);
     ImGui::SetWindowFontScale(m_font_size);
     ImGui::End();
+
+    // rendering planting menu
+
+    if (m_menu_mode != MenuMode::None) {
+      ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f), ImGuiCond_Always,
+                              ImVec2(0.5f, 0.5f));
+      ImGui::Begin("##plant", nullptr,
+                   ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
+                       ImGuiWindowFlags_AlwaysAutoResize);
+      ImGui::SetWindowFontScale(m_font_size);
+
+      if (m_menu_mode == MenuMode::Plant) {
+        ImGui::Text("Plant what?");
+        for (int n = 0; n < (int)m_plant_defs.size(); n++)
+          ImGui::Text("[%d] %s", n + 1, m_plant_defs[n].name.c_str());
+      } else if (m_menu_mode == MenuMode::PullUp) {
+        ImGui::Text("[1] Pull up?");
+      }
+      ImGui::Text("[X] Cancel");
+      ImGui::End();
+    }
 
     m_notification_manager.Render(w, h);
   }

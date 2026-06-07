@@ -32,6 +32,8 @@ public:
 
   glm::mat4 GetProjectionMat(float screen_width, float screen_height) const
   {
+    if (screen_height == 0) screen_height = 1;
+
     glm::mat4 proj = glm::perspective(glm::radians(m_fov), screen_width / screen_height,
                                       m_clip_near, m_clip_far);
     return proj;

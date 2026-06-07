@@ -10,6 +10,8 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <optional>
+#include <string>
 #include <vector>
 
 
@@ -20,9 +22,18 @@ public:
     Plot(glm::vec3 position, Texture* soil_texture, Texture* pot_texture);
 
     void Update(float delta);
-    void Render(Renderer& renderer, glm::vec3& campos);
+    void Render(Renderer& renderer, const glm::vec3& campos);
     void Plant(PlantDef* plant);
     float Harvest();
+    void PullUp();
+
+    bool IsRipe()   const { return m_state == State::Ripe; }
+    bool IsEmpty()   const { return m_state == State::Empty; }
+    bool IsGrowing() const {return m_state == State::Growing; }
+    glm::vec3 Position() const { return m_position; }
+    float SoilSurfaceY() const { return m_position.y + (PLOT_SIZE / 2 - SOIL_OFFSET); }
+    std::optional<PointLight> RipeLight() const{ if (IsRipe()) return m_ripe_light; else return std::nullopt;};
+    std::string GetPlantName() const { return m_plant ? m_plant->name : ""; } 
 
 private:
 
@@ -30,6 +41,7 @@ private:
     const float SOIL_OFFSET = 0.05f;
     glm::vec3 m_position;
     std::vector<SpriteInstance> m_bed;
+    PointLight m_ripe_light;
 
     float m_growth_timer = 0.0f;
     State m_state = State::Empty;
@@ -42,7 +54,11 @@ m_position(position)
 {
     glm::vec2 side_size(PLOT_SIZE, PLOT_SIZE / 2);
     glm::vec2 top_size(PLOT_SIZE, PLOT_SIZE);
-    
+
+    m_ripe_light.position = position;
+    m_ripe_light.color = glm::vec3(0.85f, 0.92f, 1.0f) / 3.0f;;
+    m_ripe_light.radius = PLOT_SIZE / 2;
+
     SpriteInstance front;
     front.size = side_size;
     front.position = position + glm::vec3(0, PLOT_SIZE / 4, PLOT_SIZE / 2);
@@ -92,16 +108,17 @@ m_position(position)
 }
 
 inline void Plot::Update(float delta) {
-    if (m_state == State::Empty) return;
+    if (m_state != State::Growing) return;
 
-    m_growth_timer += delta;
-    m_plant_sprite.size = m_plant->full_size * std::min((m_growth_timer / m_plant->growth_time), 1.0f);
-    
-    float soil_surface_y = m_position.y + (PLOT_SIZE / 2 - SOIL_OFFSET);
-    m_plant_sprite.position.y = soil_surface_y + (m_plant_sprite.size.y / 2);   
+     m_growth_timer += delta;
+    float t = std::min(m_growth_timer / m_plant->growth_time, 1.0f);
+    m_plant_sprite.size = m_plant->full_size * t;
+    m_plant_sprite.position.y = SoilSurfaceY() + (m_plant_sprite.size.y / 2);
+
+    if (t >= 1.0f) m_state = State::Ripe;  
 }
 
-inline void Plot::Render(Renderer& renderer, glm::vec3& campos){
+inline void Plot::Render(Renderer& renderer, const glm::vec3& campos){
     
     for (auto &p:m_bed){
         renderer.SubmitSprite(p);
@@ -134,8 +151,13 @@ inline void Plot::Plant(PlantDef* plant){
 
 inline float Plot::Harvest(){
     float yield = m_plant->biomass_yield;
+    PullUp();
+    return yield;
+}
+
+inline void Plot::PullUp(){
     m_plant = nullptr;
     m_state = State::Empty;
     m_growth_timer = 0.0f;
-    return yield;
 }
+
