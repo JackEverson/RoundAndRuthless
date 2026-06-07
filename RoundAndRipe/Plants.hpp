@@ -27,7 +27,7 @@ inline PlantDef Radish(Texture* sprite){
     radish.growth_time = 10.0f;
     radish.biomass_yield = 0.01f;
     radish.texture = sprite;
-    radish.full_size = glm::vec2(0.5f, 0.5f);
+    radish.full_size = glm::vec2(0.8f, 0.8f);
     return radish;
 }
 

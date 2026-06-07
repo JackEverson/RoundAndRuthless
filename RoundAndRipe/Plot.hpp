@@ -20,7 +20,7 @@ public:
     Plot(glm::vec3 position, Texture* soil_texture, Texture* pot_texture);
 
     void Update(float delta);
-    void Render(Renderer& renderer);
+    void Render(Renderer& renderer, glm::vec3& campos);
     void Plant(PlantDef* plant);
     float Harvest();
 
@@ -101,14 +101,23 @@ inline void Plot::Update(float delta) {
     m_plant_sprite.position.y = soil_surface_y + (m_plant_sprite.size.y / 2);   
 }
 
-inline void Plot::Render(Renderer& renderer){
+inline void Plot::Render(Renderer& renderer, glm::vec3& campos){
     
     for (auto &p:m_bed){
         renderer.SubmitSprite(p);
     }
+
     if (m_state != State::Empty) {
+    // non-billboarding
+        //     renderer.SubmitTransparentSprite(m_plant_sprite);
+
+    // billboarding
+        glm::vec3 to_cam = campos - m_plant_sprite.position;
+        float yaw = std::atan2(to_cam.x, to_cam.z);          // angle around Y
+        m_plant_sprite.model_mat = glm::rotate(glm::mat4(1.0f), yaw, glm::vec3(0,1,0));
         renderer.SubmitTransparentSprite(m_plant_sprite);
     }
+
 }
 
 inline void Plot::Plant(PlantDef* plant){

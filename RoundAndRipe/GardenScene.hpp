@@ -235,7 +235,7 @@ public:
     }
 
     for(auto &p:m_plots){
-      p.Render(renderer);
+      p.Render(renderer, campos);
     }
 
     renderer.RendBatch(view, projection, campos, 0.05f);
