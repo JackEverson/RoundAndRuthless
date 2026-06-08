@@ -1,5 +1,6 @@
 #pragma once
 
+#include "GLFW/glfw3.h"
 #include "Renderer.hpp"
 
 #include "Audio.hpp"
@@ -44,7 +45,6 @@ protected:
         m_controller(m_camera) {}
 
   // --- Geometry helpers ---
-
   // Add a wall aligned to the Z axis (facing +Z or -Z)
   Surface &AddWall(glm::vec3 pos, glm::vec2 size, Texture *texture) {
     Surface s;
@@ -132,7 +132,7 @@ protected:
     m_controller.ResolveCollisions(m_tsurfaces);
     m_controller.CheckTriggers(window, delta, m_triggers);
 
-    if (glfwGetKey(&window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    if (glfwGetKey(&window, GLFW_KEY_MINUS) == GLFW_PRESS)
       glfwSetWindowShouldClose(&window, true);
 
     bool tab_pressed = glfwGetKey(&window, GLFW_KEY_TAB) == GLFW_PRESS;

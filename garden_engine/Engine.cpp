@@ -44,7 +44,6 @@ GardenEngine::~GardenEngine() {
 int GardenEngine::Start(std::unique_ptr<Scene> scene, float fps) {
   printf("GardenEngine Starting...\n");
 
-  glClearColor(0.1, 0.6f, 0.2f, 1.0f);
   int frame_time_limit_ms = (int)((1 / fps) * 1000);
 
   m_currentScene = std::move(scene);

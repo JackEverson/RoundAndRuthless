@@ -49,6 +49,8 @@ constexpr const char *TextureFragmentShader =
     uniform PointLight u_lights[MAX_LIGHTS];
     uniform int u_light_count = 0;
     uniform float u_ambient = 0.1;
+    uniform vec4 u_fog_color = vec4(0.1, 0.1, 0.1, 1.0);
+
 
     uniform sampler2D u_texture;
     uniform float u_fog_factor = 0.15;
@@ -68,8 +70,7 @@ constexpr const char *TextureFragmentShader =
       vec4 texture_color = v_color * texture(u_texture, v_tex_coord) * vec4(clamp(light_total, 0.0, 1.0), 1.0);
 
 
-      vec4 fog_color = vec4(0.1, 0.1, 0.1, 1.0);
-      vec4 final_color = mix(fog_color, texture_color, fog_factor);
+      vec4 final_color = mix(u_fog_color, texture_color, fog_factor);
       FragColor = vec4(final_color.rgb, texture_color.a);
     };
   )";

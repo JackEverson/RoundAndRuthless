@@ -39,22 +39,25 @@ private:
   SpriteInstance m_sushi_observer;
   std::vector<Plot> m_plots;
 
-  enum class MenuMode { None, Plant, PullUp };
+  enum class MenuMode { None, Plant, Tend };
   MenuMode m_menu_mode = MenuMode::None;
   int m_menu_plot = -1;
   void CloseMenu() {
     m_menu_plot = -1;
     m_menu_mode = MenuMode::None;
   }
-
-  std::vector<PlantDef> m_plant_defs;
-
-  PointLight m_task_light;
-
   float m_font_size = 2.0f;
 
+  std::vector<PlantDef> m_plant_defs;
+  PointLight m_task_light;
+
   // progression
-  float m_biomass = 0.0f;
+  int m_day = 1;
+  int m_biomass = 0;
+  bool m_sleep_held = false;
+  int m_max_energy = 10;
+  int m_energy = m_max_energy;
+  const int WATER_COST = 1;
 
   // Door animation
   int m_door_index = -1;
@@ -85,85 +88,27 @@ public:
     sound_manager.PlayBackgroundMusic("background_noise");
 
     // room variables
-    float room_size = 10.0f;
-    float room_height = 3.0f;
-    float sushi_size = 2.0f;
+    const float FLOOR_TILE_SIZE = 10.0f;
     float player_height = 1.6f;
 
-    float half_room_size = room_size / 2;
-    float half_room_height = room_height / 2;
+    float sushi_size = 2.0f;
     float half_sushi_size = sushi_size / 2;
-    float half_roomsushi_size = half_sushi_size + half_room_size;
 
     glm::vec3 sushi_position =
-        glm::vec3(0.0f, half_sushi_size, -half_room_size - half_sushi_size);
+        glm::vec3(0.0f, half_sushi_size, -FLOOR_TILE_SIZE);
     m_camera.SetCamera(
-        glm::vec3(-(half_room_size - half_sushi_size), player_height, 0.0f));
+        glm::vec3(0.0f, player_height, 0.0f));
 
     glm::vec3 light_color = glm::vec3(0.85f, 0.92f, 1.0f) / 3.0f;
+    AddLight(glm::vec3(sushi_position.x, 0, sushi_position.z), half_sushi_size,
+             light_color);
+    AddLight(glm::vec3(sushi_position.x, -3, sushi_position.z), FLOOR_TILE_SIZE / 2,
+             light_color);
 
     glm::vec3 plot_pos = glm::vec3(0, 0.001f, 0);
     glm::vec2 plot_size = glm::vec2(sushi_size, sushi_size);
 
-    glm::vec3 button_pos =
-        glm::vec3(half_room_size - 0.001f, player_height, half_room_height);
-    glm::vec2 button_size = glm::vec2(half_sushi_size / 2, half_sushi_size / 2);
-    glm::mat4 button_rot = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f),
-                                       glm::vec3(0.0f, 1.0f, 0.0f));
-
-    // test room
-    AddLight(glm::vec3(0, room_height, 0), half_room_size, light_color);
-
-    AddFloor(glm::vec3(0.0f), glm::vec2(room_size), &m_floor_texture);
-    AddCeiling(glm::vec3(0.0f, room_height, 0.0f), glm::vec2(room_size),
-               &m_ceiling_texture);
-
-    AddWall(glm::vec3(0.0f, half_room_height / 2, -half_room_size),
-            glm::vec2(room_size, half_room_height), &m_wall_texture);
-    AddGlassRotated(
-        glm::vec3(0.0f, 3 * (half_room_height / 2), -half_room_size),
-        glm::vec2(room_size, half_room_height), 0.0f, 0.2f, &m_wall_texture);
-    AddWall(glm::vec3(0.0f, half_room_height, half_room_size),
-            glm::vec2(room_size, room_height), &m_wall_texture);
-    AddWallRotated(glm::vec3(-half_room_size, half_room_height,
-                             -((half_room_size / 2) + (half_sushi_size / 2))),
-                   glm::vec2(half_room_size - half_sushi_size, room_height),
-                   90.0f, &m_wall_texture);
-    AddWallRotated(glm::vec3(-half_room_size, half_room_height,
-                             (half_room_size / 2) + (half_sushi_size / 2)),
-                   glm::vec2(half_room_size - half_sushi_size, room_height),
-                   90.0f, &m_wall_texture);
-    AddWallRotated(glm::vec3(-half_room_size, half_room_height, 0.0f),
-                   glm::vec2(sushi_size, room_height), 90.0f, &m_door_texture);
-    AddWallRotated(glm::vec3(half_room_size, half_room_height,
-                             -((half_room_size / 2) + (half_sushi_size / 2))),
-                   glm::vec2(half_room_size - half_sushi_size, room_height),
-                   90.0f, &m_wall_texture);
-    AddWallRotated(glm::vec3(half_room_size, half_room_height,
-                             (half_room_size / 2) + (half_sushi_size / 2)),
-                   glm::vec2(half_room_size - half_sushi_size, room_height),
-                   90.0f, &m_wall_texture);
-
-    m_door_index = m_surfaces.size();
-    AddWallRotated(glm::vec3(half_room_size, half_room_height, 0.0f),
-                   glm::vec2(sushi_size, room_height), 90.0f, &m_door_texture);
-
-    // observation room
-    AddLight(glm::vec3(sushi_position.x, 0, sushi_position.z), half_sushi_size,
-             light_color);
-    AddWallRotated(
-        glm::vec3(half_room_size, half_room_height, -half_roomsushi_size),
-        glm::vec2(sushi_size, room_height), 90.0f, &m_wall_texture);
-    AddWallRotated(
-        glm::vec3(-half_room_size, half_room_height, -half_roomsushi_size),
-        glm::vec2(sushi_size, room_height), 90.0f, &m_wall_texture);
-    AddWall(glm::vec3(0.0f, half_room_height, -(half_room_size + sushi_size)),
-            glm::vec2(room_size, room_height), &m_wall_texture);
-
-    AddFloor(glm::vec3(0.0f, 0.0f, -half_roomsushi_size),
-             glm::vec2(room_size, sushi_size), &m_floor_texture);
-    AddCeiling(glm::vec3(0.0f, room_height, -half_roomsushi_size),
-               glm::vec2(room_size, sushi_size), &m_ceiling_texture);
+    AddFloor(glm::vec3(0.0f), glm::vec2(FLOOR_TILE_SIZE), &m_floor_texture);
 
     // Sushi
     m_sushi_observer.texture = &m_sushi_texture;
@@ -174,9 +119,10 @@ public:
     // plots
     m_plant_defs.push_back(Radish(&m_radish_texture));
 
-    m_plots.emplace_back(glm::vec3(-1, 0, 0), &m_soil_texture, &m_pot_texture);
-    m_plots.emplace_back(glm::vec3(0, 0, 0), &m_soil_texture, &m_pot_texture);
-    m_plots.emplace_back(glm::vec3(1, 0, 0), &m_soil_texture, &m_pot_texture);
+    for (int i = -5; i < 5; i++)
+    {
+      m_plots.emplace_back(glm::vec3(i, 0, 0), &m_soil_texture, &m_pot_texture);
+    }
 
     // --- Triggers ---
     m_task_light.position = plot_pos;
@@ -205,7 +151,7 @@ public:
           m_menu_mode = MenuMode::Plant;
         } else if (plot.IsGrowing()) {
           m_menu_plot = (int)i;
-          m_menu_mode = MenuMode::PullUp;
+          m_menu_mode = MenuMode::Tend;
         }
       };
 
@@ -237,10 +183,6 @@ public:
       }
     }
 
-    for (auto &p : m_plots) {
-      p.Update(delta);
-    }
-
     return nullptr;
   }
 
@@ -248,7 +190,7 @@ public:
     HandleCommonInput(window, delta);
 
     if (m_menu_plot >= 0) {
-      if (glfwGetKey(&window, GLFW_KEY_X) == GLFW_PRESS) {
+      if (glfwGetKey(&window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         CloseMenu();
       } else if (m_menu_mode == MenuMode::Plant) {
         for (int n = 0; n < (int)m_plant_defs.size(); n++)
@@ -257,19 +199,35 @@ public:
             CloseMenu();
             break;
           }
-      } else if (m_menu_mode == MenuMode::PullUp) {
+      } else if (m_menu_mode == MenuMode::Tend) {
         if (glfwGetKey(&window, GLFW_KEY_1) == GLFW_PRESS) {
+          if (!m_plots[m_menu_plot].IsWatered()){
+            if (m_energy >= WATER_COST){
+              m_plots[m_menu_plot].Water();
+              m_energy -= WATER_COST;
+            }
+            else {m_notification_manager.Push("Too Tired to Water!", 2.0f);}
+            CloseMenu();
+          }
+        }
+        else if (glfwGetKey(&window, GLFW_KEY_2) == GLFW_PRESS) {
           m_plots[m_menu_plot].PullUp();
           CloseMenu();
         }
       }
     }
+
+    bool s = glfwGetKey(&window, GLFW_KEY_K) == GLFW_PRESS;
+    if (s && !m_sleep_held) Sleep();
+    m_sleep_held = s;
+
   }
 
   void render(GLFWwindow &window, Renderer &renderer) override {
     int w, h;
     glfwGetWindowSize(&window, &w, &h);
-    if (w == 0 || h == 0) return;
+    if (w == 0 || h == 0)
+      return;
 
     renderer.Clear(0.05f, 0.05f, 0.05f, 1.0f);
     renderer.BeginBatchDraw(30, 10);
@@ -310,9 +268,7 @@ public:
     const char *task_text = "Just cooperate and hand over the liver!";
 
     ImGui::SetNextWindowPos(
-        ImVec2(w * 0.75f, h - 40.0f), ImGuiCond_Always,
-        // ImGui::SetNextWindowPos(ImVec2(50.0f, h - 20.0f), ImGuiCond_Always,
-        ImVec2(0.5f, 0.0f));
+        ImVec2(w * 0.75f, h - 40.0f), ImGuiCond_Always, ImVec2(0.5f, 0.0f));
     ImGui::SetNextWindowBgAlpha(0.0f);
     ImGui::Begin("##task", nullptr,
                  ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
@@ -323,20 +279,18 @@ public:
     ImGui::End();
 
     ImGui::SetNextWindowPos(
-        ImVec2(w * 0.25f, h - 40.0f), ImGuiCond_Always,
-        // ImGui::SetNextWindowPos(ImVec2(50.0f, h - 20.0f), ImGuiCond_Always,
-        ImVec2(0.5f, 0.0f));
+        ImVec2(w * 0.15f, h - 100.0f), ImGuiCond_Always, ImVec2(0.5f, 0.0f));
     ImGui::SetNextWindowBgAlpha(0.0f);
-    ImGui::Begin("##biomass", nullptr,
+    ImGui::Begin("##hud", nullptr,
                  ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
                      ImGuiWindowFlags_NoMove |
                      ImGuiWindowFlags_AlwaysAutoResize);
-    ImGui::Text("Biomass: %f kg", m_biomass);
+    ImGui::Text("Day: %d\nBiomass: %d g\nEnergy: %d/%d", m_day, m_biomass, m_energy, m_max_energy);
     ImGui::SetWindowFontScale(m_font_size);
     ImGui::End();
 
-    // rendering planting menu
 
+    // rendering planting menu
     if (m_menu_mode != MenuMode::None) {
       ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f), ImGuiCond_Always,
                               ImVec2(0.5f, 0.5f));
@@ -349,13 +303,23 @@ public:
         ImGui::Text("Plant what?");
         for (int n = 0; n < (int)m_plant_defs.size(); n++)
           ImGui::Text("[%d] %s", n + 1, m_plant_defs[n].name.c_str());
-      } else if (m_menu_mode == MenuMode::PullUp) {
-        ImGui::Text("[1] Pull up?");
+      } else if (m_menu_mode == MenuMode::Tend) {
+        if (m_plots[m_menu_plot].IsWatered()){ImGui::Text("Plot Watered");}
+        else{ ImGui::Text("[1] Water?"); }
+        ImGui::Text("[2] Pull up?");
       }
-      ImGui::Text("[X] Cancel");
+      ImGui::Text("[ESCAPE] Cancel");
       ImGui::End();
     }
 
     m_notification_manager.Render(w, h);
+  }
+
+  void Sleep() {
+    m_day++;
+    m_energy = m_max_energy;
+    for (auto &p : m_plots) {
+      p.Advance();
+    }
   }
 };

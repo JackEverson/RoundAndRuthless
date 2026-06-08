@@ -3,6 +3,7 @@
 #include "Shader.hpp"
 #include "Texture.hpp"
 #include "PointLight.hpp"
+#include "glm/ext/vector_float4.hpp"
 
 #include <glm/glm.hpp>
 
@@ -45,7 +46,7 @@ public:
   Renderer();
   ~Renderer();
 
-  void Clear(float r, float g, float b, float a) const;
+  void Clear(float r, float g, float b, float a);
   void DrawBackground(const Texture &texture);
 
   // void DrawSprite(Texture &texture, glm::vec2 position, glm::vec2 size,
@@ -59,4 +60,5 @@ public:
 
 private:
   void initRenderData();
+  glm::vec4 m_clear_color = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 };

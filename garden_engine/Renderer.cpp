@@ -1,6 +1,7 @@
 #include "Renderer.hpp"
 #include "ShaderSource.hpp"
 #include "gl_debug.hpp"
+#include "glm/ext/vector_float4.hpp"
 
 #include <algorithm>
 #include <glad/glad.h>
@@ -15,8 +16,9 @@ Renderer::Renderer()
 
 Renderer::~Renderer() {}
 
-void Renderer::Clear(float r, float g, float b, float a) const {
+void Renderer::Clear(float r, float g, float b, float a) {
   glClearColor(r, g, b, a);
+  m_clear_color = glm::vec4(r, g, b, a);
   GLCall(glClear(GL_COLOR_BUFFER_BIT));
   GLCall(glClear(GL_DEPTH_BUFFER_BIT));
 }
@@ -72,6 +74,7 @@ void Renderer::RendBatch(glm::mat4 view, glm::mat4 projection, glm::vec3 campos,
   shader.SetUniform3f("u_cam_pos", campos);
   shader.SetUniform1f("u_fog_factor", fogfactor);
   shader.SetUniform1f("u_ambient", m_ambient_light);
+  shader.SetUniform4f("u_fog_color", m_clear_color);
 
   int count = std::min((int)m_point_lights.size(),
                        8); // hardcoded 8 lights max in shader

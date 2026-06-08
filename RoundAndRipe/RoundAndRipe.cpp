@@ -13,7 +13,6 @@ int main() {
   // GardenEngine engine(name, true, 1920, 1080);
   GardenEngine engine(name, false, 1920, 1080);
 
-  // float fps = 30.0f;
   //  float fps = 60.0f;
   float fps = 144.0f;
 

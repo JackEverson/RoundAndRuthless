@@ -7,6 +7,7 @@
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/vector_float2.hpp"
 #include "glm/ext/vector_float3.hpp"
+#include "glm/ext/vector_float4.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -21,30 +22,37 @@ public:
     
     Plot(glm::vec3 position, Texture* soil_texture, Texture* pot_texture);
 
-    void Update(float delta);
+    void Advance();
     void Render(Renderer& renderer, const glm::vec3& campos);
     void Plant(PlantDef* plant);
-    float Harvest();
+    int Harvest();
+    void Water();
     void PullUp();
 
     bool IsRipe()   const { return m_state == State::Ripe; }
     bool IsEmpty()   const { return m_state == State::Empty; }
-    bool IsGrowing() const {return m_state == State::Growing; }
+    bool IsGrowing() const { return m_state == State::Growing; }
+    bool IsWatered() const { return m_watered; }
     glm::vec3 Position() const { return m_position; }
     float SoilSurfaceY() const { return m_position.y + (PLOT_SIZE / 2 - SOIL_OFFSET); }
     std::optional<PointLight> RipeLight() const{ if (IsRipe()) return m_ripe_light; else return std::nullopt;};
     std::string GetPlantName() const { return m_plant ? m_plant->name : ""; } 
 
 private:
-
+    const glm::vec4 SOIL_COLOR = glm::vec4(0.62f, 0.52f, 0.40f, 1.0f);
+    const float WET_FACTOR = 0.5;
     const float PLOT_SIZE = 1.0f;
     const float SOIL_OFFSET = 0.05f;
+
     glm::vec3 m_position;
     std::vector<SpriteInstance> m_bed;
     PointLight m_ripe_light;
 
-    float m_growth_timer = 0.0f;
+    SpriteInstance m_soil;
+
+    int m_days_growing = 0;
     State m_state = State::Empty;
+    bool m_watered = false;
     const PlantDef* m_plant = nullptr;
     SpriteInstance m_plant_sprite;
 };
@@ -97,25 +105,27 @@ m_position(position)
     // base.model_mat = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0));
     // m_bed.push_back(base);
 
-    SpriteInstance soil;
-    soil.size = top_size;
-    soil.position = position + glm::vec3(0, PLOT_SIZE / 2 - SOIL_OFFSET, 0);
-    soil.texture = soil_texture;
-    soil.color = glm::vec4(0.66f, 0.60f, 0.50f, 1.0f);
-    soil.model_mat = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0));
-    m_bed.push_back(soil);
+    m_soil.size = top_size;
+    m_soil.position = position + glm::vec3(0, PLOT_SIZE / 2 - SOIL_OFFSET, 0);
+    m_soil.texture = soil_texture;
+    m_soil.color = SOIL_COLOR;
+    m_soil.model_mat = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0));
+    // m_bed.push_back(m_soil);
 
 }
 
-inline void Plot::Update(float delta) {
+inline void Plot::Advance(){
+    bool was_watered = m_watered;
+    m_watered = false; 
+    m_soil.color = SOIL_COLOR;
     if (m_state != State::Growing) return;
-
-     m_growth_timer += delta;
-    float t = std::min(m_growth_timer / m_plant->growth_time, 1.0f);
-    m_plant_sprite.size = m_plant->full_size * t;
-    m_plant_sprite.position.y = SoilSurfaceY() + (m_plant_sprite.size.y / 2);
-
-    if (t >= 1.0f) m_state = State::Ripe;  
+    if (was_watered) {                       // only grows if it was watered today
+        m_days_growing++;
+        float t = std::min((float)m_days_growing / m_plant->days_to_ripen, 1.0f);
+        m_plant_sprite.size = m_plant->full_size * t;
+        m_plant_sprite.position.y = SoilSurfaceY() + (m_plant_sprite.size.y / 2);
+        if (m_days_growing >= m_plant->days_to_ripen) m_state = State::Ripe;
+    }
 }
 
 inline void Plot::Render(Renderer& renderer, const glm::vec3& campos){
@@ -123,6 +133,7 @@ inline void Plot::Render(Renderer& renderer, const glm::vec3& campos){
     for (auto &p:m_bed){
         renderer.SubmitSprite(p);
     }
+    renderer.SubmitSprite(m_soil);
 
     if (m_state != State::Empty) {
     // non-billboarding
@@ -134,11 +145,10 @@ inline void Plot::Render(Renderer& renderer, const glm::vec3& campos){
         m_plant_sprite.model_mat = glm::rotate(glm::mat4(1.0f), yaw, glm::vec3(0,1,0));
         renderer.SubmitTransparentSprite(m_plant_sprite);
     }
-
 }
 
 inline void Plot::Plant(PlantDef* plant){
-    m_growth_timer = 0;
+    m_days_growing = 0;
     m_plant = plant;
     m_state = State::Growing;
 
@@ -149,8 +159,14 @@ inline void Plot::Plant(PlantDef* plant){
     m_plant_sprite = plant_sprite;
 }
 
-inline float Plot::Harvest(){
-    float yield = m_plant->biomass_yield;
+inline void Plot::Water(){
+    m_watered = true;
+    m_soil.color = SOIL_COLOR * glm::vec4(WET_FACTOR, WET_FACTOR, WET_FACTOR, 1.0f);
+}
+
+
+inline int Plot::Harvest(){
+    int yield = m_plant->biomass_yield;
     PullUp();
     return yield;
 }
@@ -158,6 +174,6 @@ inline float Plot::Harvest(){
 inline void Plot::PullUp(){
     m_plant = nullptr;
     m_state = State::Empty;
-    m_growth_timer = 0.0f;
+    m_days_growing = 0;
 }
 
