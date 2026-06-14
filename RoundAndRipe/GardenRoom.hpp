@@ -126,8 +126,8 @@ protected:
   void HandleCommonInput(GLFWwindow &window, float delta) {
     glfwPollEvents();
 
-    if (m_cursor_captured)
-      m_controller.HandleInput(window, delta);
+    if (m_cursor_captured) m_controller.HandleInput(window, delta);
+    
     m_controller.ResolveCollisions(m_surfaces);
     m_controller.ResolveCollisions(m_tsurfaces);
     m_controller.CheckTriggers(window, delta, m_triggers);

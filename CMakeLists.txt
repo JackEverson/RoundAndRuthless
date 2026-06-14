@@ -108,7 +108,8 @@ endif()
 set(RoundAndRipe_files
   RoundAndRipe/GardenScene.hpp
   RoundAndRipe/GardenRoom.hpp
-  RoundAndRipe/Plot.hpp
+  RoundAndRipe/Tile.hpp
+  RoundAndRipe/Field.hpp
   RoundAndRipe/Plants.hpp
 )
 

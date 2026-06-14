@@ -16,11 +16,11 @@
 #include <vector>
 
 
-class Plot {
+class Tile {
 public:
-    enum class State { Empty, Growing, Ripe };
+    enum class State { Refuse, Empty, Tilled, Growing, Ripe };
     
-    Plot(glm::vec3 position, Texture* soil_texture, Texture* pot_texture);
+    Tile(glm::vec3 position, Texture* soil_texture, Texture* refuse_texture, Texture* tilled_texture);
 
     void Advance();
     void Render(Renderer& renderer, const glm::vec3& campos);
@@ -28,9 +28,12 @@ public:
     int Harvest();
     void Water();
     void PullUp();
+    void Clear() { if (m_state == State::Refuse) m_state = State::Empty; }
+    void Till() { if (m_state == State::Empty) m_state = State::Tilled; }
+
 
     bool IsRipe()   const { return m_state == State::Ripe; }
-    bool IsEmpty()   const { return m_state == State::Empty; }
+    bool IsTilled()   const { return m_state == State::Tilled; }
     bool IsGrowing() const { return m_state == State::Growing; }
     bool IsWatered() const { return m_watered; }
     glm::vec3 Position() const { return m_position; }
@@ -45,10 +48,11 @@ private:
     const float SOIL_OFFSET = 0.05f;
 
     glm::vec3 m_position;
-    std::vector<SpriteInstance> m_bed;
     PointLight m_ripe_light;
 
-    SpriteInstance m_soil;
+    SpriteInstance m_soil_sprite;
+    SpriteInstance m_till_sprite;
+    SpriteInstance m_refuse_sprite;
 
     int m_days_growing = 0;
     State m_state = State::Empty;
@@ -57,67 +61,35 @@ private:
     SpriteInstance m_plant_sprite;
 };
 
-inline Plot::Plot(glm::vec3 position, Texture* soil_texture, Texture* pot_texture) :
+inline Tile::Tile(glm::vec3 position, Texture* soil_texture, Texture* refuse_texture, Texture* tilled_texture) :
 m_position(position)
 {
-    glm::vec2 side_size(PLOT_SIZE, PLOT_SIZE / 2);
     glm::vec2 top_size(PLOT_SIZE, PLOT_SIZE);
 
     m_ripe_light.position = position;
     m_ripe_light.color = glm::vec3(0.85f, 0.92f, 1.0f) / 3.0f;;
     m_ripe_light.radius = PLOT_SIZE / 2;
 
-    SpriteInstance front;
-    front.size = side_size;
-    front.position = position + glm::vec3(0, PLOT_SIZE / 4, PLOT_SIZE / 2);
-    front.texture = pot_texture;
-    front.color = glm::vec4(1, 1, 1, 1);
-    m_bed.push_back(front);
+    m_soil_sprite.size = top_size;
+    m_soil_sprite.position = position + glm::vec3(0.0f, 0.001f, 0.0f);
+    m_soil_sprite.texture = soil_texture;
+    m_soil_sprite.color = SOIL_COLOR;
+    m_soil_sprite.model_mat = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0));
 
-    SpriteInstance back;
-    back.size = side_size;
-    back.position = position + glm::vec3(0, PLOT_SIZE / 4, -PLOT_SIZE / 2);
-    back.texture = pot_texture;
-    back.color = glm::vec4(1, 1, 1, 1);
-    m_bed.push_back(back);
+    m_till_sprite.size = top_size;
+    m_till_sprite.position = position + glm::vec3(0.0f, 0.002f, 0.0f);
+    m_till_sprite.texture = tilled_texture;
+    m_till_sprite.model_mat = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0));
 
-    SpriteInstance side1;
-    side1.size = side_size;
-    side1.position = position + glm::vec3(PLOT_SIZE / 2, PLOT_SIZE / 4, 0);
-    side1.texture = pot_texture;
-    side1.color = glm::vec4(1, 1, 1, 1);
-    side1.model_mat = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0, 1, 0));
-    m_bed.push_back(side1);
-
-    SpriteInstance side2;
-    side2.size = side_size;
-    side2.position = position + glm::vec3(-PLOT_SIZE / 2, PLOT_SIZE / 4, 0);
-    side2.texture = pot_texture;
-    side2.color = glm::vec4(1, 1, 1, 1);
-    side2.model_mat = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0, 1, 0));
-    m_bed.push_back(side2);
-
-    // SpriteInstance base;
-    // base.size = top_size;
-    // base.position = position;
-    // base.texture = pot_texture;
-    // base.color = glm::vec4(1, 1, 1, 1);
-    // base.model_mat = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0));
-    // m_bed.push_back(base);
-
-    m_soil.size = top_size;
-    m_soil.position = position + glm::vec3(0, PLOT_SIZE / 2 - SOIL_OFFSET, 0);
-    m_soil.texture = soil_texture;
-    m_soil.color = SOIL_COLOR;
-    m_soil.model_mat = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0));
-    // m_bed.push_back(m_soil);
-
+    m_refuse_sprite.position = glm::vec3(m_position) + glm::vec3(0, SOIL_OFFSET, 0);
+    m_refuse_sprite.size = glm::vec2(0.8f);
+    m_refuse_sprite.texture = refuse_texture;
 }
 
-inline void Plot::Advance(){
+inline void Tile::Advance(){
     bool was_watered = m_watered;
     m_watered = false; 
-    m_soil.color = SOIL_COLOR;
+    m_soil_sprite.color = SOIL_COLOR;
     if (m_state != State::Growing) return;
     if (was_watered) {                       // only grows if it was watered today
         m_days_growing++;
@@ -128,26 +100,37 @@ inline void Plot::Advance(){
     }
 }
 
-inline void Plot::Render(Renderer& renderer, const glm::vec3& campos){
+inline void Tile::Render(Renderer& renderer, const glm::vec3& campos){
     
-    for (auto &p:m_bed){
-        renderer.SubmitSprite(p);
-    }
-    renderer.SubmitSprite(m_soil);
+    // for (auto &p:m_bed){
+    //     renderer.SubmitSprite(p);
+    // }
+    renderer.SubmitSprite(m_soil_sprite);
 
-    if (m_state != State::Empty) {
-    // non-billboarding
-        //     renderer.SubmitTransparentSprite(m_plant_sprite);
+    switch (m_state) {
 
-    // billboarding
+        case State::Refuse:
+        renderer.SubmitTransparentSprite(m_refuse_sprite);
+        break;
+
+        case State::Empty:
+        break;
+        
+        case State::Tilled:
+        renderer.SubmitTransparentSprite(m_till_sprite);
+        break;
+
+        case State::Growing:
+        case State::Ripe:
         glm::vec3 to_cam = campos - m_plant_sprite.position;
         float yaw = std::atan2(to_cam.x, to_cam.z);          // angle around Y
         m_plant_sprite.model_mat = glm::rotate(glm::mat4(1.0f), yaw, glm::vec3(0,1,0));
         renderer.SubmitTransparentSprite(m_plant_sprite);
+        break;
     }
 }
 
-inline void Plot::Plant(PlantDef* plant){
+inline void Tile::Plant(PlantDef* plant){
     m_days_growing = 0;
     m_plant = plant;
     m_state = State::Growing;
@@ -159,19 +142,19 @@ inline void Plot::Plant(PlantDef* plant){
     m_plant_sprite = plant_sprite;
 }
 
-inline void Plot::Water(){
+inline void Tile::Water(){
     m_watered = true;
-    m_soil.color = SOIL_COLOR * glm::vec4(WET_FACTOR, WET_FACTOR, WET_FACTOR, 1.0f);
+    m_soil_sprite.color = SOIL_COLOR * glm::vec4(WET_FACTOR, WET_FACTOR, WET_FACTOR, 1.0f);
 }
 
 
-inline int Plot::Harvest(){
+inline int Tile::Harvest(){
     int yield = m_plant->biomass_yield;
     PullUp();
     return yield;
 }
 
-inline void Plot::PullUp(){
+inline void Tile::PullUp(){
     m_plant = nullptr;
     m_state = State::Empty;
     m_days_growing = 0;
