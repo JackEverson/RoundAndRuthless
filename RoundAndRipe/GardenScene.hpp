@@ -1,25 +1,23 @@
 #pragma once
 
-#include "Engine.hpp"
 #include "Field.hpp"
 #include "GardenRoom.hpp"
-
-#include "GLFW/glfw3.h"
 #include "Plants.hpp"
 #include "PointLight.hpp"
 #include "Renderer.hpp"
 #include "Texture.hpp"
 #include "Tile.hpp"
+
+#include "GLFW/glfw3.h"
+#include "TriggerVolume.hpp"
 #include "glm/ext/matrix_float4x4.hpp"
-#include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/vector_float2.hpp"
 #include "glm/ext/vector_float3.hpp"
-#include "glm/trigonometric.hpp"
+#include "glm/geometric.hpp"
 
 #include <cstddef>
 #include <string>
 #include <vector>
-
 
 class GardenScene : public GardenRoom {
 
@@ -30,18 +28,22 @@ private:
   Texture m_ceiling_texture;
   Texture m_wall_texture;
   Texture m_floor_texture;
+  
   Texture m_sushi_texture;
+  Texture m_house_texture;
 
   Texture m_soil_texture;
   Texture m_rock_texture;
   Texture m_till_texture;
   Texture m_button_texture;
   Texture m_door_texture;
+
   Texture m_radish_texture;
 
   // Sprites
   std::vector<SpriteInstance> m_static_sprites;
   SpriteInstance m_sushi_observer;
+  SpriteInstance m_house;
 
   // menu
   enum class MenuMode { None, Plant, Tend };
@@ -52,6 +54,7 @@ private:
   // field
   std::vector<PlantDef> m_plant_defs;
   PointLight m_task_light;
+  bool m_show_task_light = false;
   Field m_field;
 
   // progression
@@ -64,11 +67,15 @@ private:
   int m_energy = m_max_energy;
   enum class Tool { Shovel, Hoe, WateringCan, SeedPacket, None };
   Tool m_tool = Tool::None;
+  int m_selected_seed = 0;
 
   const int WATER_COST = 1;
   const int CLEAR_COST = 1;
   const int TILL_COST = 1;
-  const float FLOOR_TILE_SIZE = 10.0f;
+  const float FLOOR_TILE_SIZE = 100.0f;
+  const float SUSHI_SIZE = 2.0f;
+  const float HALF_SUSHI_SIZE = SUSHI_SIZE / 2;
+  const float PLAYER_HEIGHT = 1.6f;
 
   // Door animation
   int m_door_index = -1;
@@ -82,13 +89,14 @@ public:
         m_wall_texture("./res/textures/concrete_wall.png"),
         m_floor_texture("./res/textures/gravel_floor.png"),
         m_sushi_texture("./res/textures/sushi.png"),
+        m_house_texture("./res/textures/house.png"),
         m_soil_texture("./res/textures/gravel_floor.png"),
         m_rock_texture("./res/textures/rock.png"),
         m_till_texture("./res/textures/hole.png"),
         m_button_texture("./res/textures/button_red.png"),
         m_door_texture("./res/textures/metal_door.png"),
         m_radish_texture("./res/textures/radish.png"),
-        m_field(glm::vec3(0.0f, 0, 0.0f), 3, 3, 1.0f, &m_soil_texture,
+        m_field(glm::vec3(-5.0f, 0.0f, -5.0f), 10, 10, 1.0f, &m_soil_texture,
                 &m_rock_texture, &m_till_texture) {}
 
   void onEnter(GLFWwindow &window) override {
@@ -101,33 +109,48 @@ public:
 
     sound_manager.PlayBackgroundMusic("background_noise");
 
-    // room variables
-    float player_height = 1.6f;
-
-    float sushi_size = 2.0f;
-    float half_sushi_size = sushi_size / 2;
-
     glm::vec3 sushi_position =
-        glm::vec3(0.0f, half_sushi_size, -FLOOR_TILE_SIZE);
-    m_camera.SetCamera(glm::vec3(0.0f, player_height, 0.0f));
+        glm::vec3(0.0f, HALF_SUSHI_SIZE, -10.0f);
+    m_camera.SetCamera(glm::vec3(0.0f, PLAYER_HEIGHT, 0.0f));
 
     // lights
     glm::vec3 light_color = glm::vec3(0.85f, 0.92f, 1.0f) / 3.0f;
-    AddLight(glm::vec3(sushi_position.x, 0, sushi_position.z), half_sushi_size,
+    AddLight(glm::vec3(sushi_position.x, 0, sushi_position.z), HALF_SUSHI_SIZE,
              light_color);
     AddLight(glm::vec3(0), FLOOR_TILE_SIZE / 2, light_color);
 
-    m_task_light.color = glm::vec3(1.0, 0.8, 0.8);
+    m_task_light.color = glm::vec3(0.5);
     m_task_light.position = glm::vec3(sushi_position.x, 1, sushi_position.z);
-    m_task_light.radius = half_sushi_size;
+    m_task_light.radius = 0.25f;
 
     AddFloor(glm::vec3(0.0f), glm::vec2(FLOOR_TILE_SIZE), &m_floor_texture);
+    AddWall(glm::vec3(0.0f, 0.0f, FLOOR_TILE_SIZE / 2), glm::vec2(FLOOR_TILE_SIZE, 4.0f), &m_wall_texture);
+    AddWall(glm::vec3(0.0f, 0.0f, -FLOOR_TILE_SIZE / 2), glm::vec2(FLOOR_TILE_SIZE, 4.0f), &m_wall_texture);
+    AddWallRotated(glm::vec3(FLOOR_TILE_SIZE / 2, 0.0f, 0.0f), glm::vec2(FLOOR_TILE_SIZE, 4.0f), 90.0f, &m_wall_texture);
+    AddWallRotated(glm::vec3(-FLOOR_TILE_SIZE / 2, 0.0f, 0.0f), glm::vec2(FLOOR_TILE_SIZE, 4.0f), 90.0f, &m_wall_texture);
 
     // Sushi
     m_sushi_observer.texture = &m_sushi_texture;
-    m_sushi_observer.size = glm::vec2(sushi_size, sushi_size);
+    m_sushi_observer.size = glm::vec2(SUSHI_SIZE, SUSHI_SIZE);
     m_sushi_observer.color = glm::vec4(1.0f);
     m_sushi_observer.position = sushi_position;
+
+    // house 
+    glm::vec3 house_pos = glm::vec3(-5.0f, HALF_SUSHI_SIZE, -10.0f);
+
+    m_house.texture = &m_house_texture;
+    m_house.size = glm::vec2(SUSHI_SIZE, SUSHI_SIZE);
+    m_house.color = glm::vec4(1.0f);
+    m_house.position = house_pos;
+
+    TriggerVolume house_trigger;
+    house_trigger.position = house_pos;
+    house_trigger.size = glm::vec3(SUSHI_SIZE, SUSHI_SIZE, 0.25f);
+    house_trigger.time_to_trigger = 1.0f;
+    house_trigger.type = TriggerType::Interact;
+    house_trigger.on_triggered = [this]() { Sleep(); };
+
+    m_triggers.push_back(house_trigger);
 
     // plots
     m_plant_defs.push_back(Radish(&m_radish_texture));
@@ -139,6 +162,14 @@ public:
 
   Scene *update(GLFWwindow &window, float delta) override {
     m_notification_manager.Update(delta);
+
+    // // sushi observer follows the player
+    // glm::vec3 campos = m_camera.GetLocation();
+    // glm::vec3 forward = m_camera.GetForward();
+    // glm::vec3 f = glm::normalize(forward);
+    // glm::vec3 p = campos + (forward * 0.01f);
+    // p.y -= (PLAYER_HEIGHT / 2);
+    // m_sushi_observer.position = p;
 
     // Animate door sliding open
     if (m_door_opening && m_door_index >= 0 &&
@@ -163,11 +194,18 @@ public:
   void handleInput(GLFWwindow &window, float delta) override {
     HandleCommonInput(window, delta);
 
-    if (m_controller.InteractionHeld()) {
-      glm::vec3 campos = m_camera.GetLocation();
-      glm::vec3 forward = m_camera.GetForward();
-      auto tile = m_field.TileAtRay(campos, forward);
+    glm::vec3 campos = m_camera.GetLocation();
+    glm::vec3 forward = m_camera.GetForward();
+    auto tile = m_field.TileAtRay(campos, forward);
 
+    if (tile) {
+      m_task_light.position = tile->Position();
+      m_show_task_light = true;
+    } else {
+      m_show_task_light = false;
+    }
+
+    if (m_controller.InteractionHeld()) {
       if (tile)
         UseToolOn(*tile);
     }
@@ -218,20 +256,25 @@ public:
     renderer.BeginBatchDraw(30, 10);
 
     std::vector<PointLight> lights = m_lights;
-    lights.push_back(m_task_light);
+    m_field.CollectLights(lights);
 
-    renderer.SetLights(lights, 0.05f);
+    if (m_show_task_light)
+      lights.push_back(m_task_light);
+
+    renderer.SetLights(lights, 0.15f);
 
     SetupRenderingObjects(renderer);
 
+    glm::vec3 campos = m_camera.GetLocation();
     glm::mat4 view = m_camera.GetViewMat();
     glm::mat4 projection = m_camera.GetProjectionMat(w, h);
-    glm::vec3 campos = m_camera.GetLocation();
 
     // Sushi observer billboard
     glm::mat4 billboard = glm::transpose(glm::mat4(glm::mat3(view)));
     m_sushi_observer.model_mat = billboard;
     renderer.SubmitTransparentSprite(m_sushi_observer);
+
+    renderer.SubmitTransparentSprite(m_house);
 
     for (const auto &sprite : m_static_sprites) {
       renderer.SubmitTransparentSprite(sprite);
@@ -283,7 +326,6 @@ public:
       } else if (m_menu_mode == MenuMode::Tend) {
         ImGui::Text("[1] Pull up?");
       }
-      ImGui::Text("[ESCAPE] Cancel");
       ImGui::End();
     }
 
@@ -320,7 +362,7 @@ public:
         t.Till();
       break;
     case Tool::WateringCan:
-      if (t.IsGrowing() && !t.IsWatered() && Spend(WATER_COST))
+      if (!t.IsWatered() && Spend(WATER_COST))
         t.Water();
       break;
     case Tool::None:
@@ -330,8 +372,9 @@ public:
       break;
     case Tool::SeedPacket:
       if (t.IsTilled()) {
-        m_menu_tile = &t;
-        m_menu_mode = MenuMode::Plant;
+        // m_menu_tile = &t;
+        // m_menu_mode = MenuMode::Plant;
+        t.Plant(&m_plant_defs.at(m_selected_seed));
       }
       break;
     }

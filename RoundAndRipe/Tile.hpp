@@ -39,7 +39,7 @@ public:
     bool IsWatered() const { return m_watered; }
 
     glm::vec3 Position() const { return m_position; }
-    float SoilSurfaceY() const { return m_position.y + (PLOT_SIZE / 2 - SOIL_OFFSET); }
+
     std::optional<PointLight> RipeLight() const{ if (IsRipe()) return m_ripe_light; else return std::nullopt;};
     std::string GetPlantName() const { return m_plant ? m_plant->name : ""; } 
 
@@ -98,7 +98,7 @@ inline void Tile::Advance(){
         m_days_growing++;
         float t = std::min((float)m_days_growing / m_plant->days_to_ripen, 1.0f);
         m_plant_sprite.size = m_plant->full_size * t;
-        m_plant_sprite.position.y = SoilSurfaceY() + (m_plant_sprite.size.y / 2);
+        m_plant_sprite.position.y = m_position.y + (m_plant_sprite.size.y / 2);
         if (m_days_growing >= m_plant->days_to_ripen) m_state = State::Ripe;
     }
 }

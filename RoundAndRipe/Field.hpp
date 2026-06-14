@@ -32,8 +32,8 @@ inline Field::Field(glm::vec3 origin, int w, int h, float tileSize,
   for (int col = 0; col < m_h; col++) {
     for (int row = 0; row < m_w; row++) {
       m_tiles.emplace_back(
-          origin + glm::vec3(row * m_tile_size, 0, col * m_tile_size), soil,
-          refuse, till);
+          origin + glm::vec3((row + 0.5f) * m_tile_size, 0, (col + 0.5f) * m_tile_size), 
+          soil, refuse, till);
     }
   }
 }
