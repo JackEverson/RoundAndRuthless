@@ -15,27 +15,29 @@
 #include <string>
 #include <vector>
 
-
 class Tile {
 public:
     enum class State { Refuse, Empty, Tilled, Growing, Ripe };
     
-    Tile(glm::vec3 position, Texture* soil_texture, Texture* refuse_texture, Texture* tilled_texture);
+    Tile(glm::vec3 position, Texture* soil_texture, Texture* refuse_texture, Texture* tilled_texture, State state = State::Refuse);
 
     void Advance();
     void Render(Renderer& renderer, const glm::vec3& campos);
+
     void Plant(PlantDef* plant);
     int Harvest();
     void Water();
     void PullUp();
     void Clear() { if (m_state == State::Refuse) m_state = State::Empty; }
     void Till() { if (m_state == State::Empty) m_state = State::Tilled; }
-
-
+    
     bool IsRipe()   const { return m_state == State::Ripe; }
     bool IsTilled()   const { return m_state == State::Tilled; }
     bool IsGrowing() const { return m_state == State::Growing; }
+    bool IsRefuse() const {return m_state == State::Refuse; }
+    bool IsEmpty() const { return m_state == State::Empty; }
     bool IsWatered() const { return m_watered; }
+
     glm::vec3 Position() const { return m_position; }
     float SoilSurfaceY() const { return m_position.y + (PLOT_SIZE / 2 - SOIL_OFFSET); }
     std::optional<PointLight> RipeLight() const{ if (IsRipe()) return m_ripe_light; else return std::nullopt;};
@@ -61,8 +63,9 @@ private:
     SpriteInstance m_plant_sprite;
 };
 
-inline Tile::Tile(glm::vec3 position, Texture* soil_texture, Texture* refuse_texture, Texture* tilled_texture) :
-m_position(position)
+inline Tile::Tile(glm::vec3 position, Texture* soil_texture, Texture* refuse_texture, Texture* tilled_texture, State state) :
+m_position(position),
+m_state(state)
 {
     glm::vec2 top_size(PLOT_SIZE, PLOT_SIZE);
 

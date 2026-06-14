@@ -21,6 +21,7 @@ private:
 
   bool m_left_click_before = false;
   bool m_interaction_before = false;
+  bool m_interaction_held = false;
 
 public:
   int KeyForward = GLFW_KEY_W;
@@ -35,6 +36,7 @@ public:
   int KeyInteract = GLFW_KEY_E;
   int MouseClick = GLFW_MOUSE_BUTTON_LEFT;
 
+  
 public:
   FPSController(Camera &camera);
   ~FPSController();
@@ -43,6 +45,8 @@ public:
   void ResolveCollisions(const std::vector<Surface> &surfaces);
   void CheckTriggers(GLFWwindow &window, float delta,
                      std::vector<TriggerVolume> &interactables);
+
+  bool InteractionHeld() const { return m_interaction_held; }
 
 private:
   bool RayInBox(const glm::vec3 &sourcePos, const glm::vec3 &sourceDir,
@@ -142,11 +146,11 @@ inline void
 FPSController::CheckTriggers(GLFWwindow &window, float delta,
                              std::vector<TriggerVolume> &interactables) {
 
-  bool interaction_held = glfwGetKey(&window, KeyInteract) == GLFW_PRESS ||
+  m_interaction_held = glfwGetKey(&window, KeyInteract) == GLFW_PRESS ||
                           glfwGetMouseButton(&window, MouseClick) == GLFW_PRESS;
 
   bool interaction_started = false;
-  if (!m_interaction_before && interaction_held) {
+  if (!m_interaction_before && m_interaction_held) {
     interaction_started = true;
   }
 
@@ -172,7 +176,7 @@ FPSController::CheckTriggers(GLFWwindow &window, float delta,
         continue;
       }
 
-      if (!interaction_held) {
+      if (!m_interaction_held) {
         trigger.Reset();
         continue;
       }
@@ -199,7 +203,7 @@ FPSController::CheckTriggers(GLFWwindow &window, float delta,
     }
   }
 
-  m_interaction_before = interaction_held;
+  m_interaction_before = m_interaction_held;
 }
 
 inline bool FPSController::RayInBox(const glm::vec3 &sourcePos,
