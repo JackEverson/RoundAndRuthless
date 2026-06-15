@@ -40,13 +40,18 @@ private:
 
   Texture m_radish_texture;
 
+
+  // enums
+  enum class MenuMode { None, Plant, Tend };
+  enum class Tool { Shovel, Hoe, WateringCan, SeedPacket, None };
+  enum class SleepPhase { Awake, GoingDark, Waking };
+
   // Sprites
   std::vector<SpriteInstance> m_static_sprites;
   SpriteInstance m_sushi_observer;
   SpriteInstance m_house;
 
   // menu
-  enum class MenuMode { None, Plant, Tend };
   MenuMode m_menu_mode = MenuMode::None;
   Tile *m_menu_tile = nullptr;
   float m_font_size = 2.0f;
@@ -65,10 +70,17 @@ private:
   // player
   int m_max_energy = 100;
   int m_energy = m_max_energy;
-  enum class Tool { Shovel, Hoe, WateringCan, SeedPacket, None };
   Tool m_tool = Tool::None;
   int m_selected_seed = 0;
 
+  // animation
+  SleepPhase m_sleep = SleepPhase::Awake;
+  float m_fade = 0.0f;                 // 0 = clear, 1 = black
+  int m_door_index = -1;
+  bool m_door_opening = false;
+  float m_door_open_progress = 0.0f;
+
+  // const
   const int WATER_COST = 1;
   const int CLEAR_COST = 1;
   const int TILL_COST = 1;
@@ -76,11 +88,9 @@ private:
   const float SUSHI_SIZE = 2.0f;
   const float HALF_SUSHI_SIZE = SUSHI_SIZE / 2;
   const float PLAYER_HEIGHT = 1.6f;
+  const float FADE_SPEED = 2.0f;
 
-  // Door animation
-  int m_door_index = -1;
-  bool m_door_opening = false;
-  float m_door_open_progress = 0.0f;
+  
 
 public:
   GardenScene()
@@ -148,7 +158,7 @@ public:
     house_trigger.size = glm::vec3(SUSHI_SIZE, SUSHI_SIZE, 0.25f);
     house_trigger.time_to_trigger = 1.0f;
     house_trigger.type = TriggerType::Interact;
-    house_trigger.on_triggered = [this]() { Sleep(); };
+    house_trigger.on_triggered = [this]() { StartSleep(); };
 
     m_triggers.push_back(house_trigger);
 
@@ -170,6 +180,19 @@ public:
     // glm::vec3 p = campos + (forward * 0.01f);
     // p.y -= (PLAYER_HEIGHT / 2);
     // m_sushi_observer.position = p;
+
+
+    // animate sleep
+    if (m_sleep == SleepPhase::GoingDark){
+      m_fade += FADE_SPEED * delta;
+      if (m_fade >= 1.0f) { 
+        m_fade = 1.0f; AdvanceDay(); m_sleep = SleepPhase::Waking; 
+      }
+    } else if (m_sleep == SleepPhase::Waking) {
+        m_fade -= FADE_SPEED * delta;
+        if (m_fade <= 0.0f) { m_fade = 0.0f; m_sleep = SleepPhase::Awake; }
+      }
+
 
     // Animate door sliding open
     if (m_door_opening && m_door_index >= 0 &&
@@ -242,7 +265,7 @@ public:
 
     bool s = glfwGetKey(&window, GLFW_KEY_K) == GLFW_PRESS;
     if (s && !m_sleep_held)
-      Sleep();
+      DebugAdvanceDay();
     m_sleep_held = s;
   }
 
@@ -329,13 +352,29 @@ public:
       ImGui::End();
     }
 
+    // sleep screen, TODO: probably should replace this with my own rects
+    if (m_fade > 0.0f) {
+        ImU32 col = IM_COL32(0, 0, 0, (int)(m_fade * 255));
+        ImGui::GetForegroundDrawList()->AddRectFilled(ImVec2(0, 0), ImVec2((float)w, (float)h), col);
+    }
+
+
     m_notification_manager.Render(w, h);
   }
 
-  void Sleep() {
+  void DebugAdvanceDay() {
     m_day++;
     m_energy = m_max_energy;
     m_field.Advance();
+  }
+
+  void StartSleep() { if (m_sleep == SleepPhase::Awake) m_sleep = SleepPhase::GoingDark; }
+
+  void AdvanceDay(){
+    m_day++;
+    m_energy = m_max_energy;
+    m_field.Advance();
+    m_camera.SetCamera(m_house.position);
   }
 
   bool Spend(int cost) {
