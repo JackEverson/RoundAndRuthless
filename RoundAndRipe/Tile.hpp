@@ -19,7 +19,7 @@ class Tile {
 public:
     enum class State { Refuse, Empty, Tilled, Growing, Ripe };
     
-    Tile(glm::vec3 position, Texture* soil_texture, Texture* refuse_texture, Texture* tilled_texture, State state = State::Refuse);
+    Tile(glm::vec3 position, Texture* soil_texture, Texture* refuse_texture, Texture* tilled_texture, Texture* seeded_texture, State state = State::Refuse);
 
     void Advance();
     void Render(Renderer& renderer, const glm::vec3& campos);
@@ -54,6 +54,7 @@ private:
 
     SpriteInstance m_soil_sprite;
     SpriteInstance m_till_sprite;
+    SpriteInstance m_seeded_sprite;
     SpriteInstance m_refuse_sprite;
 
     int m_days_growing = 0;
@@ -63,7 +64,7 @@ private:
     SpriteInstance m_plant_sprite;
 };
 
-inline Tile::Tile(glm::vec3 position, Texture* soil_texture, Texture* refuse_texture, Texture* tilled_texture, State state) :
+inline Tile::Tile(glm::vec3 position, Texture* soil_texture, Texture* refuse_texture, Texture* tilled_texture, Texture* seeded_texture, State state) :
 m_position(position),
 m_state(state)
 {
@@ -83,6 +84,11 @@ m_state(state)
     m_till_sprite.position = position + glm::vec3(0.0f, 0.002f, 0.0f);
     m_till_sprite.texture = tilled_texture;
     m_till_sprite.model_mat = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0));
+
+    m_seeded_sprite.size = top_size;
+    m_seeded_sprite.position = position + glm::vec3(0.0f, 0.002f, 0.0f);
+    m_seeded_sprite.texture = seeded_texture;
+    m_seeded_sprite.model_mat = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0));
 
     m_refuse_sprite.position = glm::vec3(m_position) + glm::vec3(0, SOIL_OFFSET, 0);
     m_refuse_sprite.size = glm::vec2(0.8f);
@@ -124,6 +130,9 @@ inline void Tile::Render(Renderer& renderer, const glm::vec3& campos){
         break;
 
         case State::Growing:
+        if ((float)m_days_growing / (float)m_plant->days_to_ripen < 0.1f){
+            renderer.SubmitTransparentSprite(m_seeded_sprite);
+        } 
         case State::Ripe:
         glm::vec3 to_cam = campos - m_plant_sprite.position;
         float yaw = std::atan2(to_cam.x, to_cam.z);          // angle around Y

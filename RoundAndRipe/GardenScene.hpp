@@ -34,6 +34,7 @@ private:
   Texture m_soil_texture;
   Texture m_rock_texture;
   Texture m_till_texture;
+  Texture m_seeded_texture;
 
   Texture m_radish_texture;
   Texture m_carrot_texture;
@@ -108,10 +109,11 @@ public:
         m_soil_texture("./res/textures/gravel_floor.png"),
         m_rock_texture("./res/textures/rock.png"),
         m_till_texture("./res/textures/hole.png"),
+        m_seeded_texture("./res/textures/covered_hole.png"),
         m_radish_texture("./res/textures/radish.png"),
         m_carrot_texture("./res/textures/carrot.png"),
         m_field(glm::vec3(-5.0f, 0.0f, -5.0f), 10, 10, 1.0f, &m_soil_texture,
-                &m_rock_texture, &m_till_texture) {}
+                &m_rock_texture, &m_till_texture, &m_seeded_texture) {}
 
   void onEnter(GLFWwindow &window) override {
     glfwSetInputMode(&window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);

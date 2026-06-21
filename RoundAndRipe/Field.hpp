@@ -11,7 +11,7 @@
 class Field {
 public:
   Field(glm::vec3 origin, int w, int h, float tileSize, Texture *soil,
-        Texture *rock, Texture *till);
+        Texture *rock, Texture *till,Texture *seeded);
   void Advance();
   void Render(Renderer &renderer, const glm::vec3 &campos);
   void CollectLights(std::vector<PointLight> &out) const;
@@ -25,7 +25,7 @@ private:
 };
 
 inline Field::Field(glm::vec3 origin, int w, int h, float tileSize,
-                    Texture *soil, Texture *refuse, Texture *till)
+                    Texture *soil, Texture *refuse, Texture *till, Texture *seeded)
     : m_origin(origin), m_w(w), m_h(h), m_tile_size(tileSize) {
   m_tiles.reserve(m_w * m_h);
 
@@ -33,7 +33,7 @@ inline Field::Field(glm::vec3 origin, int w, int h, float tileSize,
     for (int row = 0; row < m_w; row++) {
       m_tiles.emplace_back(
           origin + glm::vec3((row + 0.5f) * m_tile_size, 0, (col + 0.5f) * m_tile_size), 
-          soil, refuse, till);
+          soil, refuse, till, seeded);
     }
   }
 }
