@@ -25,7 +25,6 @@ private:
   SimpleSoundManager &sound_manager;
 
   // Textures
-  Texture m_ceiling_texture;
   Texture m_wall_texture;
   Texture m_floor_texture;
   
@@ -35,16 +34,20 @@ private:
   Texture m_soil_texture;
   Texture m_rock_texture;
   Texture m_till_texture;
-  Texture m_button_texture;
-  Texture m_door_texture;
 
   Texture m_radish_texture;
+  Texture m_carrot_texture;
 
 
-  // enums
-  enum class MenuMode { None, Plant, Tend };
+  // enums and struct 
+  enum class MenuMode { None, Tend };
   enum class Tool { Shovel, Hoe, WateringCan, SeedPacket, None };
   enum class SleepPhase { Awake, GoingDark, Waking };
+  
+  struct Seed {
+      PlantDef def;     
+      int count = 0;    
+  };
 
   // Sprites
   std::vector<SpriteInstance> m_static_sprites;
@@ -57,9 +60,8 @@ private:
   float m_font_size = 2.0f;
 
   // field
-  std::vector<PlantDef> m_plant_defs;
-  PointLight m_task_light;
-  bool m_show_task_light = false;
+  PointLight m_highlight;
+  bool m_show_highlight = false;
   Field m_field;
 
   // progression
@@ -71,22 +73,26 @@ private:
   int m_max_energy = 100;
   int m_energy = m_max_energy;
   Tool m_tool = Tool::None;
-  int m_selected_seed = 0;
+  int m_selected_seed = -1;
+  std::vector<Seed> m_seeds;
+
 
   // animation
   SleepPhase m_sleep = SleepPhase::Awake;
   float m_fade = 0.0f;                 // 0 = clear, 1 = black
-  int m_door_index = -1;
-  bool m_door_opening = false;
-  float m_door_open_progress = 0.0f;
 
   // const
   const int WATER_COST = 1;
   const int CLEAR_COST = 1;
   const int TILL_COST = 1;
   const float FLOOR_TILE_SIZE = 100.0f;
+
+  const float HOUSE_SIZE = 4.0f;
+  const glm::vec3 HOUSE_POS = glm::vec3(-5.0f, HOUSE_SIZE/ 2.0, -10.0f);
+
   const float SUSHI_SIZE = 2.0f;
   const float HALF_SUSHI_SIZE = SUSHI_SIZE / 2;
+
   const float PLAYER_HEIGHT = 1.6f;
   const float FADE_SPEED = 2.0f;
 
@@ -95,7 +101,6 @@ private:
 public:
   GardenScene()
       : sound_manager(SimpleSoundManager::Instance()),
-        m_ceiling_texture("./res/textures/plaster_ceiling.png"),
         m_wall_texture("./res/textures/concrete_wall.png"),
         m_floor_texture("./res/textures/gravel_floor.png"),
         m_sushi_texture("./res/textures/sushi.png"),
@@ -103,9 +108,8 @@ public:
         m_soil_texture("./res/textures/gravel_floor.png"),
         m_rock_texture("./res/textures/rock.png"),
         m_till_texture("./res/textures/hole.png"),
-        m_button_texture("./res/textures/button_red.png"),
-        m_door_texture("./res/textures/metal_door.png"),
         m_radish_texture("./res/textures/radish.png"),
+        m_carrot_texture("./res/textures/carrot.png"),
         m_field(glm::vec3(-5.0f, 0.0f, -5.0f), 10, 10, 1.0f, &m_soil_texture,
                 &m_rock_texture, &m_till_texture) {}
 
@@ -129,9 +133,9 @@ public:
              light_color);
     AddLight(glm::vec3(0), FLOOR_TILE_SIZE / 2, light_color);
 
-    m_task_light.color = glm::vec3(0.5);
-    m_task_light.position = glm::vec3(sushi_position.x, 1, sushi_position.z);
-    m_task_light.radius = 0.25f;
+    m_highlight.color = glm::vec3(0.5);
+    m_highlight.position = glm::vec3(sushi_position.x, 1, sushi_position.z);
+    m_highlight.radius = 0.25f;
 
     AddFloor(glm::vec3(0.0f), glm::vec2(FLOOR_TILE_SIZE), &m_floor_texture);
     AddWall(glm::vec3(0.0f, 0.0f, FLOOR_TILE_SIZE / 2), glm::vec2(FLOOR_TILE_SIZE, 4.0f), &m_wall_texture);
@@ -141,29 +145,29 @@ public:
 
     // Sushi
     m_sushi_observer.texture = &m_sushi_texture;
-    m_sushi_observer.size = glm::vec2(SUSHI_SIZE, SUSHI_SIZE);
+    m_sushi_observer.size = glm::vec2(SUSHI_SIZE * 1.2f, SUSHI_SIZE);
     m_sushi_observer.color = glm::vec4(1.0f);
     m_sushi_observer.position = sushi_position;
 
     // house 
-    glm::vec3 house_pos = glm::vec3(-5.0f, HALF_SUSHI_SIZE, -10.0f);
-
     m_house.texture = &m_house_texture;
-    m_house.size = glm::vec2(SUSHI_SIZE, SUSHI_SIZE);
+    m_house.size = glm::vec2(HOUSE_SIZE, HOUSE_SIZE);
     m_house.color = glm::vec4(1.0f);
-    m_house.position = house_pos;
+    m_house.position = HOUSE_POS;
+    m_static_sprites.push_back(m_house);
 
     TriggerVolume house_trigger;
-    house_trigger.position = house_pos;
-    house_trigger.size = glm::vec3(SUSHI_SIZE, SUSHI_SIZE, 0.25f);
-    house_trigger.time_to_trigger = 1.0f;
+    house_trigger.position = HOUSE_POS;
+    house_trigger.size = glm::vec3(HOUSE_SIZE, HOUSE_SIZE, 0.10f);
+    house_trigger.time_to_trigger = 2.0f;
     house_trigger.type = TriggerType::Interact;
     house_trigger.on_triggered = [this]() { StartSleep(); };
-
     m_triggers.push_back(house_trigger);
 
-    // plots
-    m_plant_defs.push_back(Radish(&m_radish_texture));
+    // seeds
+    m_seeds.push_back({Radish(&m_radish_texture), 10});
+    m_seeds.push_back({Carrot(&m_carrot_texture), 10});
+
   }
 
   void onExit(GLFWwindow &window) override {
@@ -193,24 +197,6 @@ public:
         if (m_fade <= 0.0f) { m_fade = 0.0f; m_sleep = SleepPhase::Awake; }
       }
 
-
-    // Animate door sliding open
-    if (m_door_opening && m_door_index >= 0 &&
-        m_door_index < (int)m_surfaces.size()) {
-      Surface &door = m_surfaces[m_door_index];
-      float slide_speed = 1.0f;
-
-      glm::vec3 slide_dir = glm::normalize(glm::vec3(door.rotation[1]));
-      door.position += slide_dir * slide_speed * delta;
-      m_door_open_progress += slide_speed * delta;
-
-      if (m_door_open_progress >= door.size.y - (door.size.y * 0.1f)) {
-        // m_surfaces.erase(m_surfaces.begin() + m_door_index);
-        // m_door_index = -1;
-        m_door_opening = false;
-      }
-    }
-
     return nullptr;
   }
 
@@ -222,10 +208,10 @@ public:
     auto tile = m_field.TileAtRay(campos, forward);
 
     if (tile) {
-      m_task_light.position = tile->Position();
-      m_show_task_light = true;
+      m_highlight.position = tile->Position();
+      m_show_highlight = true;
     } else {
-      m_show_task_light = false;
+      m_show_highlight = false;
     }
 
     if (m_controller.InteractionHeld()) {
@@ -236,19 +222,15 @@ public:
     if (m_menu_tile) {
       if (glfwGetKey(&window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         CloseMenu();
-      } else if (m_menu_mode == MenuMode::Plant) {
-        for (size_t n = 0; n < m_plant_defs.size(); n++)
-          if (glfwGetKey(&window, GLFW_KEY_1 + n) == GLFW_PRESS) {
-            m_menu_tile->Plant(&m_plant_defs[n]);
-            CloseMenu();
-            break;
-          } else if (m_menu_mode == MenuMode::Tend) {
-            if (glfwGetKey(&window, GLFW_KEY_1 + n) == GLFW_PRESS) {
+      } 
+      else if (m_menu_mode == MenuMode::Tend){
+        if (glfwGetKey(&window, GLFW_KEY_Y) == GLFW_PRESS) {
               m_menu_tile->PullUp();
               CloseMenu();
-              break;
-            }
-          }
+        }
+        else if (glfwGetKey(&window, GLFW_KEY_N) == GLFW_PRESS){
+          CloseMenu();
+        }
       }
     } else {
       if (glfwGetKey(&window, GLFW_KEY_1) == GLFW_PRESS)
@@ -267,6 +249,12 @@ public:
     if (s && !m_sleep_held)
       DebugAdvanceDay();
     m_sleep_held = s;
+
+    // temp scroll wheel seed selection
+    float wheel = ImGui::GetIO().MouseWheel;   // + up / - down, this frame
+    if (wheel > 0) CycleSeed(+1);
+    else if (wheel < 0) CycleSeed(-1);
+
   }
 
   void render(GLFWwindow &window, Renderer &renderer) override {
@@ -281,8 +269,8 @@ public:
     std::vector<PointLight> lights = m_lights;
     m_field.CollectLights(lights);
 
-    if (m_show_task_light)
-      lights.push_back(m_task_light);
+    if (m_show_highlight)
+      lights.push_back(m_highlight);
 
     renderer.SetLights(lights, 0.15f);
 
@@ -296,8 +284,6 @@ public:
     glm::mat4 billboard = glm::transpose(glm::mat4(glm::mat3(view)));
     m_sushi_observer.model_mat = billboard;
     renderer.SubmitTransparentSprite(m_sushi_observer);
-
-    renderer.SubmitTransparentSprite(m_house);
 
     for (const auto &sprite : m_static_sprites) {
       renderer.SubmitTransparentSprite(sprite);
@@ -321,15 +307,24 @@ public:
     ImGui::SetWindowFontScale(m_font_size);
     ImGui::End();
 
-    ImGui::SetNextWindowPos(ImVec2(w * 0.15f, h - 125.0f), ImGuiCond_Always,
+
+    std::string seed_text; 
+    
+    if (m_selected_seed == -1){
+      seed_text = "none";
+    }else{
+      seed_text = m_seeds[m_selected_seed].def.name + " x" + std::to_string(m_seeds[m_selected_seed].count);
+    }
+
+    ImGui::SetNextWindowPos(ImVec2(w * 0.15f, h - 150.0f), ImGuiCond_Always,
                             ImVec2(0.5f, 0.0f));
     ImGui::SetNextWindowBgAlpha(0.0f);
     ImGui::Begin("##hud", nullptr,
                  ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
                      ImGuiWindowFlags_NoMove |
                      ImGuiWindowFlags_AlwaysAutoResize);
-    ImGui::Text("Tool: %s\nDay: %d\nBiomass: %d g\nEnergy: %d/%d",
-                GetToolName(m_tool), m_day, m_biomass, m_energy, m_max_energy);
+    ImGui::Text("Tool: %s\nSeed: %s\nDay: %d\nBiomass: %d g\nEnergy: %d/%d",
+                GetToolName(m_tool), seed_text.c_str(), m_day, m_biomass, m_energy, m_max_energy);
     ImGui::SetWindowFontScale(m_font_size);
     ImGui::End();
 
@@ -342,12 +337,9 @@ public:
                        ImGuiWindowFlags_AlwaysAutoResize);
       ImGui::SetWindowFontScale(m_font_size);
 
-      if (m_menu_mode == MenuMode::Plant) {
-        ImGui::Text("Plant what?");
-        for (int n = 0; n < (int)m_plant_defs.size(); n++)
-          ImGui::Text("[%d] %s", n + 1, m_plant_defs[n].name.c_str());
-      } else if (m_menu_mode == MenuMode::Tend) {
-        ImGui::Text("[1] Pull up?");
+      if (m_menu_mode == MenuMode::Tend) {
+        ImGui::Text("[Y] Pull up?");
+        ImGui::Text("[N] Cancel");
       }
       ImGui::End();
     }
@@ -374,7 +366,7 @@ public:
     m_day++;
     m_energy = m_max_energy;
     m_field.Advance();
-    m_camera.SetCamera(m_house.position);
+    m_camera.SetCamera(m_sushi_observer.position);
   }
 
   bool Spend(int cost) {
@@ -384,6 +376,16 @@ public:
     }
     m_energy -= cost;
     return true;
+  }
+
+  void CycleSeed(int dir) {
+      int n = (int)m_seeds.size();
+      int start = (m_selected_seed < 0) ? 0 : m_selected_seed;
+      for (int i = 1; i <= n; i++) {
+          int idx = ((start + dir * i) % n + n) % n;   // wrap, handles negatives
+          if (m_seeds[idx].count > 0) { m_selected_seed = idx; return; }
+      }
+      m_selected_seed = -1;   // nothing in stock
   }
 
   void UseToolOn(Tile &t) {
@@ -410,12 +412,11 @@ public:
       }
       break;
     case Tool::SeedPacket:
-      if (t.IsTilled()) {
-        // m_menu_tile = &t;
-        // m_menu_mode = MenuMode::Plant;
-        t.Plant(&m_plant_defs.at(m_selected_seed));
-      }
-      break;
+        if (t.IsTilled() && m_selected_seed >= 0 && m_seeds[m_selected_seed].count > 0) {
+            t.Plant(&m_seeds[m_selected_seed].def);
+            if (--m_seeds[m_selected_seed].count == 0) m_selected_seed = -1; 
+        }
+        break;
     }
   }
 

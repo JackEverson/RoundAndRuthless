@@ -31,3 +31,14 @@ inline PlantDef Radish(Texture* sprite){
     return radish;
 }
 
+inline PlantDef Carrot(Texture* sprite){
+    PlantDef carrot;
+    carrot.name = "carrot";
+    carrot.type = PlantType::Harvestable;
+    carrot.days_to_ripen = 10;
+    carrot.biomass_yield = 5;
+    carrot.texture = sprite;
+    carrot.full_size = glm::vec2(0.8f, 0.8f);
+    return carrot;
+}
+

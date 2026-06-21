@@ -1,6 +1,5 @@
 #pragma once
 
-#include "GLFW/glfw3.h"
 #include "Renderer.hpp"
 
 #include "Audio.hpp"
@@ -17,6 +16,7 @@
 #include "glm/ext/vector_float3.hpp"
 #include "glm/trigonometric.hpp"
 #include "imgui.h"
+#include "GLFW/glfw3.h"
 
 #include <string>
 #include <vector>
