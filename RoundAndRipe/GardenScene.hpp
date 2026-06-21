@@ -2,6 +2,7 @@
 
 #include "Field.hpp"
 #include "GardenRoom.hpp"
+#include "NotificationManager.hpp"
 #include "Plants.hpp"
 #include "PointLight.hpp"
 #include "Renderer.hpp"
@@ -51,14 +52,16 @@ private:
   };
 
   // Sprites
-  std::vector<SpriteInstance> m_static_sprites;
   SpriteInstance m_sushi_observer;
   SpriteInstance m_house;
 
   // menu
+  float m_font_size = 2.0f;
+
+  bool m_shop_open = false;
+
   MenuMode m_menu_mode = MenuMode::None;
   Tile *m_menu_tile = nullptr;
-  float m_font_size = 2.0f;
 
   // field
   PointLight m_highlight;
@@ -76,7 +79,6 @@ private:
   Tool m_tool = Tool::None;
   int m_selected_seed = -1;
   std::vector<Seed> m_seeds;
-
 
   // animation
   SleepPhase m_sleep = SleepPhase::Awake;
@@ -145,11 +147,22 @@ public:
     AddWallRotated(glm::vec3(FLOOR_TILE_SIZE / 2, 0.0f, 0.0f), glm::vec2(FLOOR_TILE_SIZE, 4.0f), 90.0f, &m_wall_texture);
     AddWallRotated(glm::vec3(-FLOOR_TILE_SIZE / 2, 0.0f, 0.0f), glm::vec2(FLOOR_TILE_SIZE, 4.0f), 90.0f, &m_wall_texture);
 
-    // Sushi
+    // Sushi merchant
     m_sushi_observer.texture = &m_sushi_texture;
     m_sushi_observer.size = glm::vec2(SUSHI_SIZE * 1.2f, SUSHI_SIZE);
     m_sushi_observer.color = glm::vec4(1.0f);
     m_sushi_observer.position = sushi_position;
+
+    TriggerVolume merchant_trigger;
+    merchant_trigger.position = sushi_position;
+    merchant_trigger.size = glm::vec3(SUSHI_SIZE, SUSHI_SIZE, SUSHI_SIZE);
+    merchant_trigger.time_to_trigger = 0.1f;
+    merchant_trigger.type = TriggerType::Interact;
+    merchant_trigger.on_triggered = [this]() {
+        if (!IsMerchantDay()) return; 
+        m_shop_open = true;
+      };
+    m_triggers.push_back(merchant_trigger);
 
     // house 
     m_house.texture = &m_house_texture;
@@ -179,15 +192,6 @@ public:
   Scene *update(GLFWwindow &window, float delta) override {
     m_notification_manager.Update(delta);
 
-    // // sushi observer follows the player
-    // glm::vec3 campos = m_camera.GetLocation();
-    // glm::vec3 forward = m_camera.GetForward();
-    // glm::vec3 f = glm::normalize(forward);
-    // glm::vec3 p = campos + (forward * 0.01f);
-    // p.y -= (PLAYER_HEIGHT / 2);
-    // m_sushi_observer.position = p;
-
-
     // animate sleep
     if (m_sleep == SleepPhase::GoingDark){
       m_fade += FADE_SPEED * delta;
@@ -197,13 +201,15 @@ public:
     } else if (m_sleep == SleepPhase::Waking) {
         m_fade -= FADE_SPEED * delta;
         if (m_fade <= 0.0f) { m_fade = 0.0f; m_sleep = SleepPhase::Awake; }
-      }
+    }
 
     return nullptr;
   }
 
   void handleInput(GLFWwindow &window, float delta) override {
     HandleCommonInput(window, delta);
+
+    if (m_controller.InputDisabled()) return;
 
     glm::vec3 campos = m_camera.GetLocation();
     glm::vec3 forward = m_camera.GetForward();
@@ -247,6 +253,7 @@ public:
         m_tool = Tool::None;
     }
 
+    // Skip day debugging
     bool s = glfwGetKey(&window, GLFW_KEY_K) == GLFW_PRESS;
     if (s && !m_sleep_held)
       DebugAdvanceDay();
@@ -266,13 +273,12 @@ public:
       return;
 
     renderer.Clear(0.05f, 0.05f, 0.05f, 1.0f);
-    renderer.BeginBatchDraw(30, 10);
+    renderer.BeginBatchDraw(30, 400);
 
     std::vector<PointLight> lights = m_lights;
     m_field.CollectLights(lights);
 
-    if (m_show_highlight)
-      lights.push_back(m_highlight);
+    if (m_show_highlight) lights.push_back(m_highlight);
 
     renderer.SetLights(lights, 0.15f);
 
@@ -282,20 +288,18 @@ public:
     glm::mat4 view = m_camera.GetViewMat();
     glm::mat4 projection = m_camera.GetProjectionMat(w, h);
 
-    // Sushi observer billboard
+    m_field.Render(renderer, campos);
+
+    // Sushi 'merchant' billboard
+    if (IsMerchantDay()){
     glm::mat4 billboard = glm::transpose(glm::mat4(glm::mat3(view)));
     m_sushi_observer.model_mat = billboard;
     renderer.SubmitTransparentSprite(m_sushi_observer);
-
-    for (const auto &sprite : m_static_sprites) {
-      renderer.SubmitTransparentSprite(sprite);
     }
-
-    m_field.Render(renderer, campos);
 
     renderer.RendBatch(view, projection, campos, 0.05f);
 
-    // HUD: current task instruction
+    // HUD and UI (ImGUI)
     const char *task_text = "Just cooperate and hand over the liver!";
 
     ImGui::SetNextWindowPos(ImVec2(w * 0.75f, h - 40.0f), ImGuiCond_Always,
@@ -308,7 +312,6 @@ public:
     ImGui::Text("%s", task_text);
     ImGui::SetWindowFontScale(m_font_size);
     ImGui::End();
-
 
     std::string seed_text; 
     
@@ -330,7 +333,7 @@ public:
     ImGui::SetWindowFontScale(m_font_size);
     ImGui::End();
 
-    // rendering planting menu
+    // rendering tending menu
     if (m_menu_mode != MenuMode::None) {
       ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f), ImGuiCond_Always,
                               ImVec2(0.5f, 0.5f));
@@ -345,6 +348,48 @@ public:
       }
       ImGui::End();
     }
+
+
+    // rendering shop menu
+    if (m_shop_open && m_cursor_captured){
+      EnterSelectionMode(window);
+    }else if (!m_shop_open && !m_cursor_captured){
+      ExitSelectionMode(window);
+    }
+
+  if (m_shop_open) {
+      ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+      ImGui::SetNextWindowBgAlpha(0.9f);                       // visible panel (your HUD used 0 = invisible)
+      ImGui::Begin("Merchant", nullptr, ImGuiWindowFlags_AlwaysAutoResize);  // NOTE: no NoInputs — it must take clicks
+      ImGui::SetWindowFontScale(m_font_size);
+
+      ImGui::Text("Biomass: %d g", m_biomass);
+      ImGui::Separator();
+
+      for (int n = 0; n < (int)m_seeds.size(); n++) {
+          Seed& seed = m_seeds[n];
+          int   cost = seed.def.biomass_yield / 2;            // placeholder pricing
+
+          ImGui::PushID(n);                                   // (!) unique id per row — see below
+          ImGui::Text("%s  (have %d)  -  %d g", seed.def.name.c_str(), seed.count, cost);
+          ImGui::SameLine();
+          if (ImGui::Button("Buy")) {                         // returns true the frame it's clicked
+              if (m_biomass >= cost) {
+                  m_biomass -= cost;
+                  seed.count++;                               // bumps count on the existing entry — pointer-safe
+              }
+          }
+          ImGui::PopID();
+      }
+
+      ImGui::Separator();
+      if (ImGui::Button("Close")) {
+          m_shop_open = false;                                // your ExitSelectionMode recaptures next frame
+      }
+
+      ImGui::End();
+  }
+
 
     // sleep screen, TODO: probably should replace this with my own rects
     if (m_fade > 0.0f) {
@@ -371,13 +416,26 @@ public:
     m_camera.SetCamera(m_sushi_observer.position);
   }
 
-  bool Spend(int cost) {
+  bool SpendEnergy(int cost) {
     if (m_energy < cost) {
       m_notification_manager.Push("Too tired", 1.5f);
       return false;
     }
     m_energy -= cost;
     return true;
+  }
+
+  bool SpendBiomass(int cost){
+    if (m_biomass < cost){
+        m_notification_manager.Push("Not enough biomass", 1.5f);
+        return false;
+    }
+    m_biomass -= cost;
+    return true;
+  }
+
+  int SeedCost(PlantDef def){
+    return def.biomass_yield / 2;
   }
 
   void CycleSeed(int dir) {
@@ -396,16 +454,16 @@ public:
       if (t.IsGrowing()) {
         m_menu_tile = &t;
         m_menu_mode = MenuMode::Tend;
-      } else if (t.IsRefuse() && Spend(CLEAR_COST))
+      } else if (t.IsRefuse() && SpendEnergy(CLEAR_COST))
         t.Clear();
       break;
 
     case Tool::Hoe:
-      if (t.IsEmpty() && Spend(TILL_COST))
+      if (t.IsEmpty() && SpendEnergy(TILL_COST))
         t.Till();
       break;
     case Tool::WateringCan:
-      if (!t.IsWatered() && Spend(WATER_COST))
+      if (!t.IsWatered() && SpendEnergy(WATER_COST))
         t.Water();
       break;
     case Tool::None:
@@ -442,4 +500,7 @@ public:
     }
     return "?";
   }
+
+  bool IsMerchantDay() const { return m_day % 2 == 1; } // merchant available on odd days
+
 };

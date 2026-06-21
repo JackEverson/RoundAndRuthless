@@ -23,6 +23,8 @@ private:
   bool m_interaction_before = false;
   bool m_interaction_held = false;
 
+  bool m_input_disabled = false;
+
 public:
   int KeyForward = GLFW_KEY_W;
   int KeyBack = GLFW_KEY_S;
@@ -36,7 +38,6 @@ public:
   int KeyInteract = GLFW_KEY_E;
   int MouseClick = GLFW_MOUSE_BUTTON_LEFT;
 
-  
 public:
   FPSController(Camera &camera);
   ~FPSController();
@@ -47,6 +48,11 @@ public:
                      std::vector<TriggerVolume> &interactables);
 
   bool InteractionHeld() const { return m_interaction_held; }
+
+  bool InputDisabled() const { return m_input_disabled; }
+  void EnableInput() { m_input_disabled = false; }
+  void DisableInput() { m_input_disabled = true; }  
+
 
 private:
   bool RayInBox(const glm::vec3 &sourcePos, const glm::vec3 &sourceDir,
@@ -66,6 +72,8 @@ inline void FPSController::Init(GLFWwindow &window) {
 }
 
 inline void FPSController::HandleInput(GLFWwindow &window, float delta) {
+  if (InputDisabled()) return;
+  
   float speed = m_speed;
   if (glfwGetKey(&window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
       glfwGetKey(&window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) {
@@ -145,6 +153,7 @@ FPSController::ResolveCollisions(const std::vector<Surface> &surfaces) {
 inline void
 FPSController::CheckTriggers(GLFWwindow &window, float delta,
                              std::vector<TriggerVolume> &interactables) {
+  if (m_input_disabled) return;
 
   m_interaction_held = glfwGetKey(&window, KeyInteract) == GLFW_PRESS ||
                           glfwGetMouseButton(&window, MouseClick) == GLFW_PRESS;

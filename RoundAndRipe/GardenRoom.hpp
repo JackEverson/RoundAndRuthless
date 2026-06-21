@@ -36,9 +36,9 @@ protected:
   std::vector<Surface> m_surfaces;
   std::vector<Surface> m_tsurfaces;
   std::vector<TriggerVolume> m_triggers;
+  std::vector<SpriteInstance> m_static_sprites;
 
   bool m_cursor_captured = true;
-  bool m_tab_before = false;
 
   GardenRoom()
       : soundManager(SimpleSoundManager::Instance()),
@@ -124,26 +124,29 @@ protected:
   // --- Common input handling (cursor capture toggle) ---
   // Call from handleInput() in each room scene
   void HandleCommonInput(GLFWwindow &window, float delta) {
-    glfwPollEvents();
-
-    if (m_cursor_captured) m_controller.HandleInput(window, delta);
     
-    m_controller.ResolveCollisions(m_surfaces);
-    m_controller.ResolveCollisions(m_tsurfaces);
-    m_controller.CheckTriggers(window, delta, m_triggers);
-
+    glfwPollEvents();
     if (glfwGetKey(&window, GLFW_KEY_MINUS) == GLFW_PRESS)
       glfwSetWindowShouldClose(&window, true);
 
-    bool tab_pressed = glfwGetKey(&window, GLFW_KEY_TAB) == GLFW_PRESS;
-    if (!m_tab_before && tab_pressed) {
-      m_cursor_captured = !m_cursor_captured;
-      glfwSetInputMode(&window, GLFW_CURSOR,
-                       m_cursor_captured ? GLFW_CURSOR_DISABLED
-                                         : GLFW_CURSOR_NORMAL);
-      m_controller.Init(window);
-    }
-    m_tab_before = tab_pressed;
+    m_controller.HandleInput(window, delta);
+    m_controller.CheckTriggers(window, delta, m_triggers);
+    
+    m_controller.ResolveCollisions(m_surfaces);
+    m_controller.ResolveCollisions(m_tsurfaces);
+  }
+
+  void EnterSelectionMode(GLFWwindow &window){
+    m_cursor_captured = false;
+    m_controller.DisableInput();
+    glfwSetInputMode(&window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+  }
+
+  void ExitSelectionMode(GLFWwindow &window){
+    m_cursor_captured = true;
+    m_controller.EnableInput();
+    glfwSetInputMode(&window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    m_controller.Init(window);
   }
 
   // --- Common render setup ---
@@ -158,6 +161,7 @@ protected:
       sprite.model_mat = surface.rotation;
       renderer.SubmitSprite(sprite);
     }
+    
     for (auto &surface : m_tsurfaces) {
       SpriteInstance sprite;
       sprite.position = surface.position;
@@ -165,6 +169,10 @@ protected:
       sprite.color = surface.color;
       sprite.texture = surface.texture;
       sprite.model_mat = surface.rotation;
+      renderer.SubmitTransparentSprite(sprite);
+    }
+
+    for (const auto &sprite : m_static_sprites) {
       renderer.SubmitTransparentSprite(sprite);
     }
   }
