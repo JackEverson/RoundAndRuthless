@@ -1,6 +1,6 @@
 # garden_engine
 
-A small graphics engine backend for use in making simple graphical applications and games. Currently based around OpenGL (glad), GLFW, GLM, ImGUI, OpenAL-soft, and nothings/stb. 
+A small graphics engine backend for use in making simple graphical applications and games. Currently based around OpenGL (glad), GLFW, GLM, ImGUI, OpenAL-soft, nothings/stb, and nlohmann/json. 
 
 ### [SushiJumper](https://github.com/JackEverson/SushiJumper)
 <img width="2544" height="1396" alt="SushiJumper_ScreenShot" src="https://github.com/user-attachments/assets/35cad4ed-041d-4c74-a2dd-b3353f961d9f" />

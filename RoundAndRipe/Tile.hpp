@@ -17,26 +17,31 @@
 
 class Tile {
 public:
-    enum class State { Refuse, Empty, Tilled, Growing, Ripe };
+    enum class TileState { Refuse, Empty, Tilled, Growing, Ripe };
     
-    Tile(glm::vec3 position, Texture* soil_texture, Texture* refuse_texture, Texture* tilled_texture, Texture* seeded_texture, State state = State::Refuse);
+    Tile(glm::vec3 position, Texture* soil_texture, Texture* refuse_texture, Texture* tilled_texture, Texture* seeded_texture, TileState state = TileState::Refuse);
 
     void Advance();
     void Render(Renderer& renderer, const glm::vec3& campos);
 
-    void Plant(PlantDef* plant);
+    void Plant(const PlantDef* plant);
+    void Set(TileState state, bool watered, const PlantDef* plant, int days_growing);
     int Harvest();
     void Water();
     void PullUp();
-    void Clear() { if (m_state == State::Refuse) m_state = State::Empty; }
-    void Till() { if (m_state == State::Empty) m_state = State::Tilled; }
+    void Clear() { if (m_state == TileState::Refuse) m_state = TileState::Empty; }
+    void Till() { if (m_state == TileState::Empty) m_state = TileState::Tilled; }
     
-    bool IsRipe()   const { return m_state == State::Ripe; }
-    bool IsTilled()   const { return m_state == State::Tilled; }
-    bool IsGrowing() const { return m_state == State::Growing; }
-    bool IsRefuse() const {return m_state == State::Refuse; }
-    bool IsEmpty() const { return m_state == State::Empty; }
+    const TileState& GetState() const { return m_state; }
+    int DaysGrowing() { return m_days_growing; }
+
+    bool IsRipe()   const { return m_state == TileState::Ripe; }
+    bool IsTilled()   const { return m_state == TileState::Tilled; }
+    bool IsGrowing() const { return m_state == TileState::Growing; }
+    bool IsRefuse() const {return m_state == TileState::Refuse; }
+    bool IsEmpty() const { return m_state == TileState::Empty; }
     bool IsWatered() const { return m_watered; }
+    bool HasPlant() const { return m_plant != nullptr; }
 
     glm::vec3 Position() const { return m_position; }
 
@@ -49,6 +54,8 @@ private:
     const float PLOT_SIZE = 1.0f;
     const float SOIL_OFFSET = 0.05f;
 
+    void RefreshState();
+
     glm::vec3 m_position;
     PointLight m_ripe_light;
 
@@ -58,13 +65,13 @@ private:
     SpriteInstance m_refuse_sprite;
 
     int m_days_growing = 0;
-    State m_state = State::Empty;
+    TileState m_state = TileState::Empty;
     bool m_watered = false;
     const PlantDef* m_plant = nullptr;
     SpriteInstance m_plant_sprite;
 };
 
-inline Tile::Tile(glm::vec3 position, Texture* soil_texture, Texture* refuse_texture, Texture* tilled_texture, Texture* seeded_texture, State state) :
+inline Tile::Tile(glm::vec3 position, Texture* soil_texture, Texture* refuse_texture, Texture* tilled_texture, Texture* seeded_texture, TileState state) :
 m_position(position),
 m_state(state)
 {
@@ -99,13 +106,10 @@ inline void Tile::Advance(){
     bool was_watered = m_watered;
     m_watered = false; 
     m_soil_sprite.color = SOIL_COLOR;
-    if (m_state != State::Growing) return;
+    if (m_state != TileState::Growing) return;
     if (was_watered) {                       // only grows if it was watered today
         m_days_growing++;
-        float t = std::min((float)m_days_growing / m_plant->days_to_ripen, 1.0f);
-        m_plant_sprite.size = m_plant->full_size * t;
-        m_plant_sprite.position.y = m_position.y + (m_plant_sprite.size.y / 2);
-        if (m_days_growing >= m_plant->days_to_ripen) m_state = State::Ripe;
+        RefreshState();
     }
 }
 
@@ -118,22 +122,22 @@ inline void Tile::Render(Renderer& renderer, const glm::vec3& campos){
 
     switch (m_state) {
 
-        case State::Refuse:
+        case TileState::Refuse:
         renderer.SubmitTransparentSprite(m_refuse_sprite);
         break;
 
-        case State::Empty:
+        case TileState::Empty:
         break;
         
-        case State::Tilled:
+        case TileState::Tilled:
         renderer.SubmitTransparentSprite(m_till_sprite);
         break;
 
-        case State::Growing:
+        case TileState::Growing:
         if ((float)m_days_growing / (float)m_plant->days_to_ripen < 0.1f){
             renderer.SubmitTransparentSprite(m_seeded_sprite);
         } 
-        case State::Ripe:
+        case TileState::Ripe:
         glm::vec3 to_cam = campos - m_plant_sprite.position;
         float yaw = std::atan2(to_cam.x, to_cam.z);          // angle around Y
         m_plant_sprite.model_mat = glm::rotate(glm::mat4(1.0f), yaw, glm::vec3(0,1,0));
@@ -142,16 +146,37 @@ inline void Tile::Render(Renderer& renderer, const glm::vec3& campos){
     }
 }
 
-inline void Tile::Plant(PlantDef* plant){
+inline void Tile::Plant(const PlantDef* plant){
     m_days_growing = 0;
     m_plant = plant;
-    m_state = State::Growing;
+    m_state = TileState::Growing;
 
     SpriteInstance plant_sprite;
     plant_sprite.position = glm::vec3(m_position) + glm::vec3(0, SOIL_OFFSET, 0);
     plant_sprite.size = glm::vec2(0.0f);
     plant_sprite.texture = plant->texture;
     m_plant_sprite = plant_sprite;
+}
+
+inline void Tile::Set(TileState state, bool watered, const PlantDef* plant, int days_growing){
+    if (plant) {
+        Plant(plant);
+        m_days_growing = days_growing;
+        RefreshState();
+    } else{
+        m_plant = nullptr;
+        m_state = (state == TileState::Growing || state == TileState::Ripe)
+            ? TileState::Empty
+            : state;            // refuse / empty / tilled load
+    }
+    m_watered = watered;
+}
+
+inline void Tile::RefreshState(){
+    float t = std::min((float)m_days_growing / m_plant->days_to_ripen, 1.0f);
+    m_plant_sprite.size = m_plant->full_size * t;
+    m_plant_sprite.position.y = m_position.y + (m_plant_sprite.size.y / 2);
+    if (m_days_growing >= m_plant->days_to_ripen) m_state = TileState::Ripe;
 }
 
 inline void Tile::Water(){
@@ -168,7 +193,6 @@ inline int Tile::Harvest(){
 
 inline void Tile::PullUp(){
     m_plant = nullptr;
-    m_state = State::Empty;
+    m_state = TileState::Empty;
     m_days_growing = 0;
 }
-

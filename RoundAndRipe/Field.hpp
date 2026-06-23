@@ -17,6 +17,9 @@ public:
   void CollectLights(std::vector<PointLight> &out) const;
   Tile *TileAtRay(glm::vec3 origin, glm::vec3 dir);
 
+  std::vector<Tile>& Tiles() { return m_tiles; } // for load
+  const std::vector<Tile>& Tiles() const { return m_tiles; } // for save
+
 private:
   std::vector<Tile> m_tiles;
   int m_w = 0, m_h = 0;

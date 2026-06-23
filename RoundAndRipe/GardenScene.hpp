@@ -15,6 +15,7 @@
 #include "glm/ext/vector_float2.hpp"
 #include "glm/ext/vector_float3.hpp"
 #include "glm/geometric.hpp"
+#include <fstream>
 #include <json.hpp>
 
 #include <cstddef>
@@ -29,7 +30,7 @@ private:
   // Textures
   Texture m_wall_texture;
   Texture m_floor_texture;
-  
+
   Texture m_sushi_texture;
   Texture m_house_texture;
 
@@ -41,15 +42,14 @@ private:
   Texture m_radish_texture;
   Texture m_carrot_texture;
 
-
-  // enums and struct 
+  // enums and struct
   enum class MenuMode { None, Tend };
   enum class Tool { Shovel, Hoe, WateringCan, SeedPacket, None };
   enum class SleepPhase { Awake, GoingDark, Waking };
-  
+
   struct Seed {
-      PlantDef def;     
-      int count = 0;    
+    PlantDef def;
+    int count = 0;
   };
 
   // Sprites
@@ -83,7 +83,7 @@ private:
 
   // animation
   SleepPhase m_sleep = SleepPhase::Awake;
-  float m_fade = 0.0f;                 // 0 = clear, 1 = black
+  float m_fade = 0.0f; // 0 = clear, 1 = black
 
   // const
   const int WATER_COST = 1;
@@ -92,15 +92,13 @@ private:
   const float FLOOR_TILE_SIZE = 100.0f;
 
   const float HOUSE_SIZE = 4.0f;
-  const glm::vec3 HOUSE_POS = glm::vec3(-5.0f, HOUSE_SIZE/ 2.0, -10.0f);
+  const glm::vec3 HOUSE_POS = glm::vec3(-5.0f, HOUSE_SIZE / 2.0, -10.0f);
 
   const float SUSHI_SIZE = 2.0f;
   const float HALF_SUSHI_SIZE = SUSHI_SIZE / 2;
 
   const float PLAYER_HEIGHT = 1.6f;
   const float FADE_SPEED = 2.0f;
-
-  
 
 public:
   GardenScene()
@@ -122,19 +120,14 @@ public:
     glfwSetInputMode(&window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     m_controller.Init(window);
 
-    nlohmann::json j;
-    j["hello"] = "hi";
-
-    std::string test = j["hello"];
-
     sound_manager.Initialize();
     sound_manager.LoadSound("background_noise",
                             "./res/sounds/ambient-noise.ogg");
 
     sound_manager.PlayBackgroundMusic("background_noise");
 
-    glm::vec3 sushi_position =
-        glm::vec3(0.0f, HALF_SUSHI_SIZE, -10.0f);
+
+    glm::vec3 sushi_position = glm::vec3(0.0f, HALF_SUSHI_SIZE, -10.0f);
     m_camera.SetCamera(glm::vec3(0.0f, PLAYER_HEIGHT, 0.0f));
 
     // lights
@@ -148,10 +141,14 @@ public:
     m_highlight.radius = 0.25f;
 
     AddFloor(glm::vec3(0.0f), glm::vec2(FLOOR_TILE_SIZE), &m_floor_texture);
-    AddWall(glm::vec3(0.0f, 0.0f, FLOOR_TILE_SIZE / 2), glm::vec2(FLOOR_TILE_SIZE, 4.0f), &m_wall_texture);
-    AddWall(glm::vec3(0.0f, 0.0f, -FLOOR_TILE_SIZE / 2), glm::vec2(FLOOR_TILE_SIZE, 4.0f), &m_wall_texture);
-    AddWallRotated(glm::vec3(FLOOR_TILE_SIZE / 2, 0.0f, 0.0f), glm::vec2(FLOOR_TILE_SIZE, 4.0f), 90.0f, &m_wall_texture);
-    AddWallRotated(glm::vec3(-FLOOR_TILE_SIZE / 2, 0.0f, 0.0f), glm::vec2(FLOOR_TILE_SIZE, 4.0f), 90.0f, &m_wall_texture);
+    AddWall(glm::vec3(0.0f, 0.0f, FLOOR_TILE_SIZE / 2),
+            glm::vec2(FLOOR_TILE_SIZE, 4.0f), &m_wall_texture);
+    AddWall(glm::vec3(0.0f, 0.0f, -FLOOR_TILE_SIZE / 2),
+            glm::vec2(FLOOR_TILE_SIZE, 4.0f), &m_wall_texture);
+    AddWallRotated(glm::vec3(FLOOR_TILE_SIZE / 2, 0.0f, 0.0f),
+                   glm::vec2(FLOOR_TILE_SIZE, 4.0f), 90.0f, &m_wall_texture);
+    AddWallRotated(glm::vec3(-FLOOR_TILE_SIZE / 2, 0.0f, 0.0f),
+                   glm::vec2(FLOOR_TILE_SIZE, 4.0f), 90.0f, &m_wall_texture);
 
     // Sushi merchant
     m_sushi_observer.texture = &m_sushi_texture;
@@ -165,12 +162,13 @@ public:
     merchant_trigger.time_to_trigger = 0.1f;
     merchant_trigger.type = TriggerType::Interact;
     merchant_trigger.on_triggered = [this]() {
-        if (!IsMerchantDay()) return; 
-        m_shop_open = true;
-      };
+      if (!IsMerchantDay())
+        return;
+      m_shop_open = true;
+    };
     m_triggers.push_back(merchant_trigger);
 
-    // house 
+    // house
     m_house.texture = &m_house_texture;
     m_house.size = glm::vec2(HOUSE_SIZE, HOUSE_SIZE);
     m_house.color = glm::vec4(1.0f);
@@ -189,6 +187,7 @@ public:
     m_seeds.push_back({Radish(&m_radish_texture), 10});
     m_seeds.push_back({Carrot(&m_carrot_texture), 10});
 
+    Load();
   }
 
   void onExit(GLFWwindow &window) override {
@@ -199,14 +198,19 @@ public:
     m_notification_manager.Update(delta);
 
     // animate sleep
-    if (m_sleep == SleepPhase::GoingDark){
+    if (m_sleep == SleepPhase::GoingDark) {
       m_fade += FADE_SPEED * delta;
-      if (m_fade >= 1.0f) { 
-        m_fade = 1.0f; AdvanceDay(); m_sleep = SleepPhase::Waking; 
+      if (m_fade >= 1.0f) {
+        m_fade = 1.0f;
+        AdvanceDay();
+        m_sleep = SleepPhase::Waking;
       }
     } else if (m_sleep == SleepPhase::Waking) {
-        m_fade -= FADE_SPEED * delta;
-        if (m_fade <= 0.0f) { m_fade = 0.0f; m_sleep = SleepPhase::Awake; }
+      m_fade -= FADE_SPEED * delta;
+      if (m_fade <= 0.0f) {
+        m_fade = 0.0f;
+        m_sleep = SleepPhase::Awake;
+      }
     }
 
     return nullptr;
@@ -215,7 +219,8 @@ public:
   void handleInput(GLFWwindow &window, float delta) override {
     HandleCommonInput(window, delta);
 
-    if (m_controller.InputDisabled()) return;
+    if (m_controller.InputDisabled())
+      return;
 
     glm::vec3 campos = m_camera.GetLocation();
     glm::vec3 forward = m_camera.GetForward();
@@ -236,13 +241,11 @@ public:
     if (m_menu_tile) {
       if (glfwGetKey(&window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         CloseMenu();
-      } 
-      else if (m_menu_mode == MenuMode::Tend){
+      } else if (m_menu_mode == MenuMode::Tend) {
         if (glfwGetKey(&window, GLFW_KEY_Y) == GLFW_PRESS) {
-              m_menu_tile->PullUp();
-              CloseMenu();
-        }
-        else if (glfwGetKey(&window, GLFW_KEY_N) == GLFW_PRESS){
+          m_menu_tile->PullUp();
+          CloseMenu();
+        } else if (glfwGetKey(&window, GLFW_KEY_N) == GLFW_PRESS) {
           CloseMenu();
         }
       }
@@ -266,10 +269,11 @@ public:
     m_sleep_held = s;
 
     // temp scroll wheel seed selection
-    float wheel = ImGui::GetIO().MouseWheel;   // + up / - down, this frame
-    if (wheel > 0) CycleSeed(+1);
-    else if (wheel < 0) CycleSeed(-1);
-
+    float wheel = ImGui::GetIO().MouseWheel; // + up / - down, this frame
+    if (wheel > 0)
+      CycleSeed(+1);
+    else if (wheel < 0)
+      CycleSeed(-1);
   }
 
   void render(GLFWwindow &window, Renderer &renderer) override {
@@ -284,7 +288,8 @@ public:
     std::vector<PointLight> lights = m_lights;
     m_field.CollectLights(lights);
 
-    if (m_show_highlight) lights.push_back(m_highlight);
+    if (m_show_highlight)
+      lights.push_back(m_highlight);
 
     renderer.SetLights(lights, 0.15f);
 
@@ -297,10 +302,10 @@ public:
     m_field.Render(renderer, campos);
 
     // Sushi 'merchant' billboard
-    if (IsMerchantDay()){
-    glm::mat4 billboard = glm::transpose(glm::mat4(glm::mat3(view)));
-    m_sushi_observer.model_mat = billboard;
-    renderer.SubmitTransparentSprite(m_sushi_observer);
+    if (IsMerchantDay()) {
+      glm::mat4 billboard = glm::transpose(glm::mat4(glm::mat3(view)));
+      m_sushi_observer.model_mat = billboard;
+      renderer.SubmitTransparentSprite(m_sushi_observer);
     }
 
     renderer.RendBatch(view, projection, campos, 0.05f);
@@ -319,12 +324,13 @@ public:
     ImGui::SetWindowFontScale(m_font_size);
     ImGui::End();
 
-    std::string seed_text; 
-    
-    if (m_selected_seed == -1){
+    std::string seed_text;
+
+    if (m_selected_seed == -1) {
       seed_text = "none";
-    }else{
-      seed_text = m_seeds[m_selected_seed].def.name + " x" + std::to_string(m_seeds[m_selected_seed].count);
+    } else {
+      seed_text = m_seeds[m_selected_seed].def.name + " x" +
+                  std::to_string(m_seeds[m_selected_seed].count);
     }
 
     ImGui::SetNextWindowPos(ImVec2(w * 0.15f, h - 150.0f), ImGuiCond_Always,
@@ -335,7 +341,8 @@ public:
                      ImGuiWindowFlags_NoMove |
                      ImGuiWindowFlags_AlwaysAutoResize);
     ImGui::Text("Tool: %s\nSeed: %s\nDay: %d\nBiomass: %d g\nEnergy: %d/%d",
-                GetToolName(m_tool), seed_text.c_str(), m_day, m_biomass, m_energy, m_max_energy);
+                GetToolName(m_tool), seed_text.c_str(), m_day, m_biomass,
+                m_energy, m_max_energy);
     ImGui::SetWindowFontScale(m_font_size);
     ImGui::End();
 
@@ -355,54 +362,57 @@ public:
       ImGui::End();
     }
 
-
     // rendering shop menu
-    if (m_shop_open && m_cursor_captured){
+    if (m_shop_open && m_cursor_captured) {
       EnterSelectionMode(window);
-    }else if (!m_shop_open && !m_cursor_captured){
+    } else if (!m_shop_open && !m_cursor_captured) {
       ExitSelectionMode(window);
     }
 
-  if (m_shop_open) {
-      ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-      ImGui::SetNextWindowBgAlpha(0.9f);                       // visible panel (your HUD used 0 = invisible)
-      ImGui::Begin("Merchant", nullptr, ImGuiWindowFlags_AlwaysAutoResize);  // NOTE: no NoInputs — it must take clicks
+    if (m_shop_open) {
+      ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f), ImGuiCond_Always,
+                              ImVec2(0.5f, 0.5f));
+      ImGui::SetNextWindowBgAlpha(
+          0.9f); // visible panel (your HUD used 0 = invisible)
+      ImGui::Begin("Merchant", nullptr,
+                   ImGuiWindowFlags_AlwaysAutoResize); // NOTE: no NoInputs — it
+                                                       // must take clicks
       ImGui::SetWindowFontScale(m_font_size);
 
       ImGui::Text("Biomass: %d g", m_biomass);
       ImGui::Separator();
 
       for (int n = 0; n < (int)m_seeds.size(); n++) {
-          Seed& seed = m_seeds[n];
-          int   cost = seed.def.biomass_yield / 2;            // placeholder pricing
+        Seed &seed = m_seeds[n];
+        int cost = seed.def.biomass_yield / 2; // placeholder pricing
 
-          ImGui::PushID(n);                                   // (!) unique id per row — see below
-          ImGui::Text("%s  (have %d)  -  %d g", seed.def.name.c_str(), seed.count, cost);
-          ImGui::SameLine();
-          if (ImGui::Button("Buy")) {                         // returns true the frame it's clicked
-              if (m_biomass >= cost) {
-                  m_biomass -= cost;
-                  seed.count++;                               // bumps count on the existing entry — pointer-safe
-              }
+        ImGui::PushID(n); // (!) unique id per row — see below
+        ImGui::Text("%s  (have %d)  -  %d g", seed.def.name.c_str(), seed.count,
+                    cost);
+        ImGui::SameLine();
+        if (ImGui::Button("Buy")) { // returns true the frame it's clicked
+          if (m_biomass >= cost) {
+            m_biomass -= cost;
+            seed.count++; // bumps count on the existing entry — pointer-safe
           }
-          ImGui::PopID();
+        }
+        ImGui::PopID();
       }
 
       ImGui::Separator();
       if (ImGui::Button("Close")) {
-          m_shop_open = false;                                // your ExitSelectionMode recaptures next frame
+        m_shop_open = false; // your ExitSelectionMode recaptures next frame
       }
 
       ImGui::End();
-  }
-
+    }
 
     // sleep screen, TODO: probably should replace this with my own rects
     if (m_fade > 0.0f) {
-        ImU32 col = IM_COL32(0, 0, 0, (int)(m_fade * 255));
-        ImGui::GetForegroundDrawList()->AddRectFilled(ImVec2(0, 0), ImVec2((float)w, (float)h), col);
+      ImU32 col = IM_COL32(0, 0, 0, (int)(m_fade * 255));
+      ImGui::GetForegroundDrawList()->AddRectFilled(
+          ImVec2(0, 0), ImVec2((float)w, (float)h), col);
     }
-
 
     m_notification_manager.Render(w, h);
   }
@@ -411,15 +421,20 @@ public:
     m_day++;
     m_energy = m_max_energy;
     m_field.Advance();
+    Save();
   }
 
-  void StartSleep() { if (m_sleep == SleepPhase::Awake) m_sleep = SleepPhase::GoingDark; }
+  void StartSleep() {
+    if (m_sleep == SleepPhase::Awake)
+      m_sleep = SleepPhase::GoingDark;
+  }
 
-  void AdvanceDay(){
+  void AdvanceDay() {
     m_day++;
     m_energy = m_max_energy;
     m_field.Advance();
     m_camera.SetCamera(m_sushi_observer.position);
+    Save();
   }
 
   bool SpendEnergy(int cost) {
@@ -431,27 +446,28 @@ public:
     return true;
   }
 
-  bool SpendBiomass(int cost){
-    if (m_biomass < cost){
-        m_notification_manager.Push("Not enough biomass", 1.5f);
-        return false;
+  bool SpendBiomass(int cost) {
+    if (m_biomass < cost) {
+      m_notification_manager.Push("Not enough biomass", 1.5f);
+      return false;
     }
     m_biomass -= cost;
     return true;
   }
 
-  int SeedCost(PlantDef def){
-    return def.biomass_yield / 2;
-  }
+  int SeedCost(PlantDef def) { return def.biomass_yield / 2; }
 
   void CycleSeed(int dir) {
-      int n = (int)m_seeds.size();
-      int start = (m_selected_seed < 0) ? 0 : m_selected_seed;
-      for (int i = 1; i <= n; i++) {
-          int idx = ((start + dir * i) % n + n) % n;   // wrap, handles negatives
-          if (m_seeds[idx].count > 0) { m_selected_seed = idx; return; }
+    int n = (int)m_seeds.size();
+    int start = (m_selected_seed < 0) ? 0 : m_selected_seed;
+    for (int i = 1; i <= n; i++) {
+      int idx = ((start + dir * i) % n + n) % n; // wrap, handles negatives
+      if (m_seeds[idx].count > 0) {
+        m_selected_seed = idx;
+        return;
       }
-      m_selected_seed = -1;   // nothing in stock
+    }
+    m_selected_seed = -1; // nothing in stock
   }
 
   void UseToolOn(Tile &t) {
@@ -478,11 +494,13 @@ public:
       }
       break;
     case Tool::SeedPacket:
-        if (t.IsTilled() && m_selected_seed >= 0 && m_seeds[m_selected_seed].count > 0) {
-            t.Plant(&m_seeds[m_selected_seed].def);
-            if (--m_seeds[m_selected_seed].count == 0) m_selected_seed = -1; 
-        }
-        break;
+      if (t.IsTilled() && m_selected_seed >= 0 &&
+          m_seeds[m_selected_seed].count > 0) {
+        t.Plant(&m_seeds[m_selected_seed].def);
+        if (--m_seeds[m_selected_seed].count == 0)
+          m_selected_seed = -1;
+      }
+      break;
     }
   }
 
@@ -507,6 +525,72 @@ public:
     return "?";
   }
 
-  bool IsMerchantDay() const { return m_day % 2 == 1; } // merchant available on odd days
+  bool IsMerchantDay() const {
+    return m_day % 2 == 1;
+  } 
 
+const PlantDef* FindDef(const std::string& name) {
+    for (auto& s : m_seeds) if (s.def.name == name) return &s.def;
+    return nullptr;
+}
+
+int SeedIndex(const std::string& name) {
+    for (int i = 0; i < (int)m_seeds.size(); i++)
+        if (m_seeds[i].def.name == name) return i;
+    return -1;   // not found / "" → none
+}
+
+  // TODO: move save system to own module
+  const int SAVE_VERSION = 1;
+  const std::string SAVE_PATH = "./save.json";
+
+  void Save() {
+
+    nlohmann::json j;
+    j["version"] = SAVE_VERSION;
+    j["day"] = m_day;
+    j["energy"] = m_energy;
+    j["biomass"] = m_biomass;
+    j["selected_seed"] =
+        (m_selected_seed >= 0) ? m_seeds[m_selected_seed].def.name : "";
+    for (auto &s : m_seeds)
+      j["seeds"][s.def.name] = s.count;
+    j["tiles"] = nlohmann::json::array();
+    for (auto &t : m_field.Tiles()) { // you'll need a tiles accessor on Field
+      nlohmann::json tj;
+      tj["state"] = (int)t.GetState(); // cast the enum to int
+      tj["watered"] = t.IsWatered();
+      tj["days"] = t.DaysGrowing();
+      tj["plant"] = t.GetPlantName(); // no plant returns ""
+      j["tiles"].push_back(tj);
+    }
+
+    std::ofstream(SAVE_PATH) << j.dump(2);
+  }
+
+  void Load() {
+    std::ifstream f(SAVE_PATH);
+    if (!f) return;                          // no save → fresh game
+    nlohmann::json j; f >> j;
+    if (j.value("version", 0) != SAVE_VERSION) return;   // no migration; ignore mismatched saves for now
+
+    m_day = j.value("day", 1); 
+    m_energy = j.value("energy", m_max_energy); 
+    m_biomass = j.value("biomass", 0);
+    for (auto& s : m_seeds) 
+    {
+      s.count = j["seeds"].value(s.def.name, 0);   // match by name
+    }
+    m_selected_seed =  SeedIndex(j.value("selected_seed", ""));
+    // selected seed: look up the name → index (or -1)
+
+    auto& tiles = m_field.Tiles();
+    if (j["tiles"].size() == tiles.size()){
+      for (size_t i = 0; i < tiles.size(); i++) {
+          const auto& tj = j["tiles"][i];
+          const PlantDef* def = tj.contains("plant") ? FindDef(tj["plant"]) : nullptr;
+          tiles[i].Set((Tile::TileState)tj["state"], tj.value("watered",false), def, tj.value("days",0));
+      }
+    }
+  }
 };
