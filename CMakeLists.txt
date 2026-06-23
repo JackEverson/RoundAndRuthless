@@ -106,6 +106,8 @@ endif()
 
 #RoundAndRipe executable
 set(RoundAndRipe_files
+  RoundAndRipe/SaveSystem.cpp
+
   RoundAndRipe/GardenScene.hpp
   RoundAndRipe/GardenRoom.hpp
   RoundAndRipe/Tile.hpp

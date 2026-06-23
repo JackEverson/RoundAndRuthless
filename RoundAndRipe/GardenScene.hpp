@@ -6,6 +6,7 @@
 #include "Plants.hpp"
 #include "PointLight.hpp"
 #include "Renderer.hpp"
+#include "SaveSystem.hpp"
 #include "Texture.hpp"
 #include "Tile.hpp"
 
@@ -125,7 +126,6 @@ public:
                             "./res/sounds/ambient-noise.ogg");
 
     sound_manager.PlayBackgroundMusic("background_noise");
-
 
     glm::vec3 sushi_position = glm::vec3(0.0f, HALF_SUSHI_SIZE, -10.0f);
     m_camera.SetCamera(glm::vec3(0.0f, PLAYER_HEIGHT, 0.0f));
@@ -525,72 +525,56 @@ public:
     return "?";
   }
 
-  bool IsMerchantDay() const {
-    return m_day % 2 == 1;
-  } 
+  bool IsMerchantDay() const { return m_day % 2 == 1; }
 
-const PlantDef* FindDef(const std::string& name) {
-    for (auto& s : m_seeds) if (s.def.name == name) return &s.def;
+  const PlantDef *FindDef(const std::string &name) {
+    for (auto &s : m_seeds)
+      if (s.def.name == name)
+        return &s.def;
     return nullptr;
-}
+  }
 
-int SeedIndex(const std::string& name) {
+  int SeedIndex(const std::string &name) {
     for (int i = 0; i < (int)m_seeds.size(); i++)
-        if (m_seeds[i].def.name == name) return i;
-    return -1;   // not found / "" → none
-}
+      if (m_seeds[i].def.name == name)
+        return i;
+    return -1; // not found / "" → none
+  }
 
   // TODO: move save system to own module
   const int SAVE_VERSION = 1;
   const std::string SAVE_PATH = "./save.json";
 
   void Save() {
-
-    nlohmann::json j;
-    j["version"] = SAVE_VERSION;
-    j["day"] = m_day;
-    j["energy"] = m_energy;
-    j["biomass"] = m_biomass;
-    j["selected_seed"] =
+    GameState s;
+    s.version = SAVE_VERSION;
+    s.day = m_day;
+    s.energy = m_energy;
+    s.biomass = m_biomass;
+    s.selected_seed =
         (m_selected_seed >= 0) ? m_seeds[m_selected_seed].def.name : "";
-    for (auto &s : m_seeds)
-      j["seeds"][s.def.name] = s.count;
-    j["tiles"] = nlohmann::json::array();
-    for (auto &t : m_field.Tiles()) { // you'll need a tiles accessor on Field
-      nlohmann::json tj;
-      tj["state"] = (int)t.GetState(); // cast the enum to int
-      tj["watered"] = t.IsWatered();
-      tj["days"] = t.DaysGrowing();
-      tj["plant"] = t.GetPlantName(); // no plant returns ""
-      j["tiles"].push_back(tj);
-    }
-
-    std::ofstream(SAVE_PATH) << j.dump(2);
+    for (auto &sd : m_seeds)
+      s.seeds[sd.def.name] = sd.count;
+    for (auto &t : m_field.Tiles())
+      s.tiles.push_back({(int)t.GetState(), t.IsWatered(), t.DaysGrowing(),
+                         t.GetPlantName()});
+    SaveSystem::Save(SAVE_PATH, s);
   }
 
   void Load() {
-    std::ifstream f(SAVE_PATH);
-    if (!f) return;                          // no save → fresh game
-    nlohmann::json j; f >> j;
-    if (j.value("version", 0) != SAVE_VERSION) return;   // no migration; ignore mismatched saves for now
-
-    m_day = j.value("day", 1); 
-    m_energy = j.value("energy", m_max_energy); 
-    m_biomass = j.value("biomass", 0);
-    for (auto& s : m_seeds) 
-    {
-      s.count = j["seeds"].value(s.def.name, 0);   // match by name
-    }
-    m_selected_seed =  SeedIndex(j.value("selected_seed", ""));
-    // selected seed: look up the name → index (or -1)
-
-    auto& tiles = m_field.Tiles();
-    if (j["tiles"].size() == tiles.size()){
-      for (size_t i = 0; i < tiles.size(); i++) {
-          const auto& tj = j["tiles"][i];
-          const PlantDef* def = tj.contains("plant") ? FindDef(tj["plant"]) : nullptr;
-          tiles[i].Set((Tile::TileState)tj["state"], tj.value("watered",false), def, tj.value("days",0));
-      }
-    }
+    GameState s;
+    if (!SaveSystem::Load(SAVE_PATH, SAVE_VERSION, s))
+      return;
+    m_day = s.day;
+    m_energy = s.energy;
+    m_biomass = s.biomass;
+    for (auto &sd : m_seeds)
+      sd.count = s.seeds.count(sd.def.name) ? s.seeds[sd.def.name] : 0;
+    m_selected_seed = SeedIndex(s.selected_seed);
+    auto &tiles = m_field.Tiles();
+    if (s.tiles.size() == tiles.size())
+      for (size_t i = 0; i < tiles.size(); i++)
+        tiles[i].Set((Tile::TileState)s.tiles[i].state, s.tiles[i].watered,
+                     FindDef(s.tiles[i].plant), s.tiles[i].days);
   }
 };
