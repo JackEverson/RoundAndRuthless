@@ -34,6 +34,7 @@ private:
 
   Texture m_sushi_texture;
   Texture m_house_texture;
+  Texture m_chest_texture;
 
   Texture m_soil_texture;
   Texture m_rock_texture;
@@ -47,7 +48,7 @@ private:
   enum class MenuMode { None, Tend };
   enum class Tool { Shovel, Hoe, WateringCan, SeedPacket, None };
   enum class SleepPhase { Awake, GoingDark, Waking };
-
+enum class Outcome { Playing, Won, Lost };
   struct Seed {
     PlantDef def;
     int count = 0;
@@ -56,6 +57,7 @@ private:
   // Sprites
   SpriteInstance m_sushi_observer;
   SpriteInstance m_house;
+  SpriteInstance m_chest;
 
   // menu
   float m_font_size = 2.0f;
@@ -71,9 +73,11 @@ private:
   Field m_field;
 
   // progression
+  int m_tier = 0;
   int m_day = 1;
   int m_biomass = 0;
   bool m_sleep_held = false;
+  Outcome m_outcome = Outcome::Playing;
 
   // player
   int m_max_energy = 100;
@@ -87,6 +91,8 @@ private:
   float m_fade = 0.0f; // 0 = clear, 1 = black
 
   // const
+  const std::vector<long long> TIER_COST = {100, 1000, 10000, 1000000, 100000000};
+
   const int WATER_COST = 1;
   const int CLEAR_COST = 1;
   const int TILL_COST = 1;
@@ -94,6 +100,9 @@ private:
 
   const float HOUSE_SIZE = 4.0f;
   const glm::vec3 HOUSE_POS = glm::vec3(-5.0f, HOUSE_SIZE / 2.0, -10.0f);
+
+  const float CHEST_SIZE = 1.0f;
+  const glm::vec3 CHEST_POS = glm::vec3(5.0f, HOUSE_SIZE / 2.0, -10.0f);
 
   const float SUSHI_SIZE = 2.0f;
   const float HALF_SUSHI_SIZE = SUSHI_SIZE / 2;
@@ -108,6 +117,7 @@ public:
         m_floor_texture("./res/textures/gravel_floor.png"),
         m_sushi_texture("./res/textures/sushi.png"),
         m_house_texture("./res/textures/house.png"),
+        m_chest_texture("./res/textures/chest.png"),
         m_soil_texture("./res/textures/gravel_floor.png"),
         m_rock_texture("./res/textures/rock.png"),
         m_till_texture("./res/textures/hole.png"),
@@ -168,7 +178,7 @@ public:
     };
     m_triggers.push_back(merchant_trigger);
 
-    // house
+    // house + chest
     m_house.texture = &m_house_texture;
     m_house.size = glm::vec2(HOUSE_SIZE, HOUSE_SIZE);
     m_house.color = glm::vec4(1.0f);
@@ -182,6 +192,35 @@ public:
     house_trigger.type = TriggerType::Interact;
     house_trigger.on_triggered = [this]() { StartSleep(); };
     m_triggers.push_back(house_trigger);
+
+    m_chest.texture = &m_chest_texture;
+    m_chest.size = glm::vec2(CHEST_SIZE, CHEST_SIZE);
+    m_chest.color = glm::vec4(1.0f);
+    m_chest.position = CHEST_POS;
+    m_static_sprites.push_back(m_chest);
+
+    TriggerVolume chest_trigger;
+    chest_trigger.position = CHEST_POS;
+    chest_trigger.size = glm::vec3(CHEST_SIZE, CHEST_SIZE, 0.10f);
+    chest_trigger.time_to_trigger = 2.0f;
+    chest_trigger.type = TriggerType::Interact;
+    chest_trigger.on_triggered = [this]() 
+    { 
+      if (m_outcome != Outcome::Playing) return;
+      if (!SpendBiomass(TIER_COST[m_tier])){
+          std::string message = "Not Enough Biomass for Tier Upgrade! " + std::to_string(m_tier) + "->" + std::to_string(m_tier + 1) + " costs: " + std::to_string(TIER_COST[m_tier]);
+          m_notification_manager.Push(message);
+          return;
+        }
+
+        m_tier++;
+        if (m_tier >= (int)TIER_COST.size()) m_outcome = Outcome::Won;
+        else {
+          std::string message = "Upgrade to Tier " + std::to_string(m_tier) + " successful!";
+          m_notification_manager.Push(message);
+        }
+    };
+    m_triggers.push_back(chest_trigger);
 
     // seeds
     m_seeds.push_back({Radish(&m_radish_texture), 10});
@@ -211,6 +250,16 @@ public:
         m_fade = 0.0f;
         m_sleep = SleepPhase::Awake;
       }
+    }
+
+    
+    if (m_outcome == Outcome::Won){ // victory
+      m_notification_manager.Push("VICTORY PLACEHOLDER!!!! this message should transition you to the next scene (but it won't cause it doesn't exist yet)");
+      m_notification_manager.Push("THANKS FOR PLAYING THIS GAME!!!!");
+    }
+    else if (m_outcome == Outcome::Lost){ // failure
+      m_notification_manager.Push("FAILURE PLACEHOLDER!!!! this message should transition you to the next scene (but it won't cause it doesn't exist yet)");
+      m_notification_manager.Push("THANKS FOR PLAYING THIS GAME!!!!");
     }
 
     return nullptr;
@@ -421,6 +470,7 @@ public:
     m_day++;
     m_energy = m_max_energy;
     m_field.Advance();
+    if (m_day > 100 && m_outcome == Outcome::Playing) m_outcome = Outcome::Lost;
     Save();
   }
 
@@ -434,6 +484,7 @@ public:
     m_energy = m_max_energy;
     m_field.Advance();
     m_camera.SetCamera(m_sushi_observer.position);
+    if (m_day > 100 && m_outcome == Outcome::Playing) m_outcome = Outcome::Lost;
     Save();
   }
 
@@ -455,7 +506,7 @@ public:
     return true;
   }
 
-  int SeedCost(PlantDef def) { return def.biomass_yield / 2; }
+  int SeedCost(PlantDef def) { return (def.biomass_yield / 2) + 1; }
 
   void CycleSeed(int dir) {
     int n = (int)m_seeds.size();
@@ -551,6 +602,7 @@ public:
     s.day = m_day;
     s.energy = m_energy;
     s.biomass = m_biomass;
+    s.tier = m_tier;
     s.selected_seed =
         (m_selected_seed >= 0) ? m_seeds[m_selected_seed].def.name : "";
     for (auto &sd : m_seeds)
@@ -568,6 +620,7 @@ public:
     m_day = s.day;
     m_energy = s.energy;
     m_biomass = s.biomass;
+    m_tier = s.tier;
     for (auto &sd : m_seeds)
       sd.count = s.seeds.count(sd.def.name) ? s.seeds[sd.def.name] : 0;
     m_selected_seed = SeedIndex(s.selected_seed);

@@ -12,6 +12,7 @@ void SaveSystem::Save(const std::string& path, const GameState& s) {
     j["biomass"]       = s.biomass;
     j["selected_seed"] = s.selected_seed;
     j["seeds"]         = s.seeds;                 // std::map<string,int> serializes directly
+    j["tier"]          = s.tier; 
 
     j["tiles"] = nlohmann::json::array();
     for (const auto& t : s.tiles) {
@@ -37,9 +38,9 @@ bool SaveSystem::Load(const std::string& path, int version, GameState& out) {
     out.version       = version;
     out.day           = j.value("day", 1);
     out.energy        = j.value("energy", 0);
-    out.biomass       = j.value("biomass", 0);
-    out.selected_seed = j.value("selected_seed", std::string{});
+    out.biomass       = j.value("biomass", 0);    out.selected_seed = j.value("selected_seed", std::string{});
     out.seeds         = j.value("seeds", std::map<std::string, int>{});
+    out.tier          = j.value("tier", 0);  
 
     out.tiles.clear();
     for (const auto& tj : j.value("tiles", nlohmann::json::array())) {
