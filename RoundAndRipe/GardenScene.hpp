@@ -45,6 +45,7 @@ private:
 
   Texture m_radish_texture;
   Texture m_carrot_texture;
+  Texture m_tomato_texture;
 
   // enums and struct
   enum class MenuMode { None, Tend };
@@ -138,6 +139,7 @@ public:
         m_seeded_texture("./res/textures/covered_hole.png"),
         m_radish_texture("./res/textures/radish.png"),
         m_carrot_texture("./res/textures/carrot.png"),
+        m_tomato_texture("./res/textures/tomato_with_tomato.png"),
         m_field(glm::vec3(-5.0f, 0.0f, -5.0f), 10, 10, 1.0f, &m_soil_texture,
                 &m_rock_texture, &m_till_texture, &m_seeded_texture) {}
 
@@ -239,6 +241,7 @@ public:
     // seeds
     m_seeds.push_back({Radish(&m_radish_texture), 10});
     m_seeds.push_back({Carrot(&m_carrot_texture), 10});
+    m_seeds.push_back({Tomato(&m_tomato_texture), 10});
 
     Load();
   }

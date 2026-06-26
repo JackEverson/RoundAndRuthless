@@ -16,9 +16,8 @@ struct PlantDef {
     int biomass_yield;  
     Texture*    texture;         
     glm::vec2   full_size;     
-    // later: produce_interval, produce_yield (producers); seed/plot cost
+    int regrow_days = 1;
 };
-
 
 inline PlantDef Radish(Texture* sprite){
     PlantDef radish;
@@ -42,3 +41,14 @@ inline PlantDef Carrot(Texture* sprite){
     return carrot;
 }
 
+inline PlantDef Tomato(Texture* sprite){
+    PlantDef tomato;
+    tomato.name = "tomato";
+    tomato.type = PlantType::Producing;
+    tomato.days_to_ripen = 5;
+    tomato.biomass_yield = 1;
+    tomato.texture = sprite;
+    tomato.full_size = glm::vec2(0.8f, 1.4f);
+    tomato.regrow_days = 2;
+    return tomato;
+}

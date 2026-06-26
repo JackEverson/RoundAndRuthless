@@ -184,10 +184,16 @@ inline void Tile::Water(){
     m_soil_sprite.color = SOIL_COLOR * glm::vec4(WET_FACTOR, WET_FACTOR, WET_FACTOR, 1.0f);
 }
 
-
 inline int Tile::Harvest(){
-    int yield = m_plant->biomass_yield;
-    PullUp();
+int yield = m_plant->biomass_yield;
+
+    if (m_plant->type == PlantType::Producing) {
+        m_days_growing = m_plant->days_to_ripen - m_plant->regrow_days; // rewind
+        m_state = TileState::Growing;
+        RefreshState();   // shrinks sprite + drops it out of Ripe
+    } else {
+        PullUp();
+    }
     return yield;
 }
 
