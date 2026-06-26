@@ -1,5 +1,6 @@
 #pragma once
 
+#include "FPSController.hpp"
 #include "Field.hpp"
 #include "GardenRoom.hpp"
 #include "NotificationManager.hpp"
@@ -35,6 +36,7 @@ private:
   Texture m_sushi_texture;
   Texture m_house_texture;
   Texture m_chest_texture;
+  Texture m_human_texture;
 
   Texture m_soil_texture;
   Texture m_rock_texture;
@@ -48,7 +50,8 @@ private:
   enum class MenuMode { None, Tend };
   enum class Tool { Shovel, Hoe, WateringCan, SeedPacket, None };
   enum class SleepPhase { Awake, GoingDark, Waking };
-enum class Outcome { Playing, Won, Lost };
+  enum class Outcome { Playing, Won, Lost };
+
   struct Seed {
     PlantDef def;
     int count = 0;
@@ -102,12 +105,22 @@ enum class Outcome { Playing, Won, Lost };
   const glm::vec3 HOUSE_POS = glm::vec3(-5.0f, HOUSE_SIZE / 2.0, -10.0f);
 
   const float CHEST_SIZE = 1.0f;
-  const glm::vec3 CHEST_POS = glm::vec3(5.0f, HOUSE_SIZE / 2.0, -10.0f);
+  const glm::vec3 CHEST_POS = glm::vec3(5.0f, CHEST_SIZE / 2.0, -10.0f);
 
   const float SUSHI_SIZE = 2.0f;
   const float HALF_SUSHI_SIZE = SUSHI_SIZE / 2;
 
+  const float EMBED_SUSHI_DROP = 0.35f;
+  const float EMBED_SUSHI_FORWARD = -0.25f;
+  const float EMBED_SUSHI_SIDE = 0.15f;
+  const glm::vec2 EMBED_SUSHI_SIZE = glm::vec2(0.35f, 0.35f);
+
   const float PLAYER_HEIGHT = 1.6f;
+  const float BODY_DROP = PLAYER_HEIGHT / 2;
+  const float BODY_FORWARD = -0.25f;
+  const glm::vec2 BODY_SIZE = glm::vec2(BODY_DROP, PLAYER_HEIGHT);
+
+
   const float FADE_SPEED = 2.0f;
 
 public:
@@ -118,6 +131,7 @@ public:
         m_sushi_texture("./res/textures/sushi.png"),
         m_house_texture("./res/textures/house.png"),
         m_chest_texture("./res/textures/chest.png"),
+        m_human_texture("./res/textures/human_hazsuit.png"),
         m_soil_texture("./res/textures/gravel_floor.png"),
         m_rock_texture("./res/textures/rock.png"),
         m_till_texture("./res/textures/hole.png"),
@@ -160,7 +174,7 @@ public:
     AddWallRotated(glm::vec3(-FLOOR_TILE_SIZE / 2, 0.0f, 0.0f),
                    glm::vec2(FLOOR_TILE_SIZE, 4.0f), 90.0f, &m_wall_texture);
 
-    // Sushi merchant
+    // Sushi's 
     m_sushi_observer.texture = &m_sushi_texture;
     m_sushi_observer.size = glm::vec2(SUSHI_SIZE * 1.2f, SUSHI_SIZE);
     m_sushi_observer.color = glm::vec4(1.0f);
@@ -252,16 +266,6 @@ public:
       }
     }
 
-    
-    if (m_outcome == Outcome::Won){ // victory
-      m_notification_manager.Push("VICTORY PLACEHOLDER!!!! this message should transition you to the next scene (but it won't cause it doesn't exist yet)");
-      m_notification_manager.Push("THANKS FOR PLAYING THIS GAME!!!!");
-    }
-    else if (m_outcome == Outcome::Lost){ // failure
-      m_notification_manager.Push("FAILURE PLACEHOLDER!!!! this message should transition you to the next scene (but it won't cause it doesn't exist yet)");
-      m_notification_manager.Push("THANKS FOR PLAYING THIS GAME!!!!");
-    }
-
     return nullptr;
   }
 
@@ -347,6 +351,9 @@ public:
     glm::vec3 campos = m_camera.GetLocation();
     glm::mat4 view = m_camera.GetViewMat();
     glm::mat4 projection = m_camera.GetProjectionMat(w, h);
+    glm::vec3 forward = m_camera.GetForward();
+    glm::vec3 right = m_camera.GetRight();
+    right = glm::normalize(right);
 
     m_field.Render(renderer, campos);
 
@@ -355,6 +362,41 @@ public:
       glm::mat4 billboard = glm::transpose(glm::mat4(glm::mat3(view)));
       m_sushi_observer.model_mat = billboard;
       renderer.SubmitTransparentSprite(m_sushi_observer);
+    }
+
+
+    //// WORKING HERE!!!!!!
+    {
+      auto yaw_billboard = [&](const glm::vec3 &pos) {
+        glm::vec3 to_cam = campos - pos;
+        float yaw = std::atan2(to_cam.x, to_cam.z); // angle around Y only
+        return glm::rotate(glm::mat4(1.0f), yaw, glm::vec3(0, 1, 0));
+      };
+      glm::vec3 forward_horiz = glm::normalize(glm::vec3(forward.x, -0.0f, forward.z));
+
+      SpriteInstance body;
+      body.texture = &m_human_texture;
+      body.size = BODY_SIZE;
+      body.color = glm::vec4(1.0f);
+      body.position = campos + glm::vec3(0.0f, -BODY_DROP, 0.0f) +
+                      forward_horiz * BODY_FORWARD;
+      body.model_mat = yaw_billboard(body.position);
+
+      renderer.SubmitTransparentSprite(body);
+
+      float yaw = std::atan2(forward.x, forward.z);                       
+      glm::mat4 m = glm::rotate(glm::mat4(1.0f), yaw, glm::vec3(0, 1, 0)); 
+      m = glm::rotate(m, glm::radians(90.0f), glm::vec3(1, 0, 0));        
+
+      SpriteInstance sushi;
+      sushi.texture = &m_sushi_texture;
+      sushi.size = EMBED_SUSHI_SIZE;
+      sushi.color = glm::vec4(1.0f);
+      sushi.position = campos + glm::vec3(0.0f, -EMBED_SUSHI_DROP, 0.0f)
+        + forward_horiz * EMBED_SUSHI_FORWARD + right * EMBED_SUSHI_SIDE;
+
+      sushi.model_mat = m;
+      renderer.SubmitTransparentSprite(sushi);
     }
 
     renderer.RendBatch(view, projection, campos, 0.05f);
@@ -452,8 +494,17 @@ public:
       if (ImGui::Button("Close")) {
         m_shop_open = false; // your ExitSelectionMode recaptures next frame
       }
-
       ImGui::End();
+    }
+
+    if (m_outcome != Outcome::Playing) {
+        ImGui::GetForegroundDrawList()->AddRectFilled(ImVec2(0,0), ImVec2((float)w,(float)h), IM_COL32(0,0,0,200));
+        const char* msg = (m_outcome == Outcome::Won) ? "Sentence served." : "You have been recycled.";
+        ImGui::SetNextWindowPos(ImVec2(w*0.5f, h*0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+        ImGui::Begin("##end", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_AlwaysAutoResize);
+        ImGui::SetWindowFontScale(m_font_size * 1.5f);
+        ImGui::Text("%s", msg);
+        ImGui::End();
     }
 
     // sleep screen, TODO: probably should replace this with my own rects
@@ -464,6 +515,12 @@ public:
     }
 
     m_notification_manager.Render(w, h);
+  }
+
+
+  void AdvanceDay() {
+    m_camera.SetCamera(m_sushi_observer.position);
+    DebugAdvanceDay();
   }
 
   void DebugAdvanceDay() {
@@ -477,15 +534,6 @@ public:
   void StartSleep() {
     if (m_sleep == SleepPhase::Awake)
       m_sleep = SleepPhase::GoingDark;
-  }
-
-  void AdvanceDay() {
-    m_day++;
-    m_energy = m_max_energy;
-    m_field.Advance();
-    m_camera.SetCamera(m_sushi_observer.position);
-    if (m_day > 100 && m_outcome == Outcome::Playing) m_outcome = Outcome::Lost;
-    Save();
   }
 
   bool SpendEnergy(int cost) {
