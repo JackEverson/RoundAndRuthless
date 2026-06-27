@@ -1,11 +1,10 @@
 #pragma once
 
-#include "Renderer.hpp"
 #include "Texture.hpp"
 #include "Tile.hpp"
+#include "Renderer.hpp"
 
 #include "glm/ext/vector_float3.hpp"
-#include <cstddef>
 
 
 class Field {

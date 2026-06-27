@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Renderer.hpp"
-
 #include "Audio.hpp"
 #include "FPSController.hpp"
 #include "NotificationManager.hpp"
@@ -10,15 +8,14 @@
 #include "Surface.hpp"
 #include "Texture.hpp"
 #include "TriggerVolume.hpp"
+#include "Renderer.hpp"
 
 #include "glm/ext/matrix_float4x4.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/vector_float3.hpp"
 #include "glm/trigonometric.hpp"
-#include "imgui.h"
 #include "GLFW/glfw3.h"
 
-#include <string>
 #include <vector>
 
 // Game-specific base scene. Inherits from Scene and provides shared state

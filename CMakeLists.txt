@@ -80,6 +80,7 @@ set(garden_engine_src_files
 add_library(garden_engine STATIC ${garden_engine_src_files})
 target_include_directories(garden_engine PUBLIC garden_engine)
 target_compile_features(garden_engine PUBLIC cxx_std_23)
+target_compile_definitions(garden_engine PUBLIC GLFW_INCLUDE_NONE)
 target_link_libraries(garden_engine PUBLIC
   glad
   glfw
@@ -106,8 +107,10 @@ endif()
 
 #RoundAndRipe executable
 set(RoundAndRipe_files
+  RoundAndRipe/GardenScene.cpp
   RoundAndRipe/SaveSystem.cpp
 
+  RoundAndRipe/Event.hpp
   RoundAndRipe/GardenScene.hpp
   RoundAndRipe/GardenRoom.hpp
   RoundAndRipe/Tile.hpp

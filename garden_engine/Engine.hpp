@@ -5,7 +5,6 @@
 #include <memory>
 
 #include "Audio.hpp"
-#include "Camera.hpp"
 #include "Renderer.hpp"
 #include "Scene.hpp"
 
