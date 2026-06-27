@@ -53,14 +53,6 @@ inline void Field::Render(Renderer &renderer, const glm::vec3 &campos) {
   }
 }
 
-inline void Field::CollectLights(std::vector<PointLight> &out) const {
-  for (auto &tile : m_tiles) {
-    if (auto light = tile.RipeLight()) {
-      out.push_back(*light);
-    }
-  }
-}
-
 inline Tile *Field::TileAtRay(glm::vec3 origin, glm::vec3 dir) {
   if (std::abs(dir.y) < 1e-6f)
     return nullptr; // ray parallel to ground → never meets it
