@@ -90,6 +90,21 @@ target_link_libraries(garden_engine PUBLIC
   OpenAL
 )
 
+# Precompiled header: parse these heavy, rarely-changing headers ONCE and reuse
+# across every translation unit. PUBLIC so targets linking garden_engine reuse it.
+# NOTE: keep json.hpp OUT — it's only used in SaveSystem.cpp; adding it here would
+# re-impose its cost on every TU.
+target_precompile_headers(garden_engine PUBLIC
+  <vector>
+  <string>
+  <memory>
+  <map>
+  <functional>
+  <algorithm>
+  <glm/glm.hpp>
+  <imgui.h>
+)
+
 #Copy Resources
 add_custom_target(copy_resources
 COMMENT "Copying Resources"

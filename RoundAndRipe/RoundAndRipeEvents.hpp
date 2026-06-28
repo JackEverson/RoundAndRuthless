@@ -1,9 +1,6 @@
 #pragma once
 
-// RoundAndRipeEvents.hpp — concrete Event subclasses + the per-day schedule.
-// Included ONLY in GardenScene.cpp (never in a header) so it can pull in the
-// full GardenScene without forming a cycle.
-#include "GardenScene.hpp" // full definition — concrete events call scene verbs
+#include "GardenScene.hpp" 
 #include "Event.hpp"
 
 #include "imgui.h"
