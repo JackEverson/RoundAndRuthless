@@ -80,6 +80,24 @@ void GardenScene::onEnter(GLFWwindow &window) {
     };
     m_triggers.push_back(merchant_trigger);
 
+    // Apple
+    float apple_size = 0.25f;
+    m_apple.texture = &m_radish_texture;
+    m_apple.size = glm::vec2(apple_size, apple_size);
+    m_apple.color = glm::vec4(1.0f);
+
+    m_apple_trigger.time_to_trigger = 0.1f;
+    m_apple_trigger.type = TriggerType::Interact;
+    m_apple_trigger.size = glm::vec3(apple_size, apple_size, apple_size);
+    m_apple_trigger.on_triggered = [this]() {
+      if (m_apple_collected) return;
+      m_apple_collected = true;
+      m_biomass += 5;
+    };
+    m_apple_trigger_index = m_triggers.size();
+    m_triggers.push_back(m_apple_trigger);
+    PlaceApple();
+
     // house + chest
     m_house.texture = &m_house_texture;
     m_house.size = glm::vec2(HOUSE_SIZE, HOUSE_SIZE);
@@ -259,11 +277,18 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
 
     m_field.Render(renderer, campos);
 
+    glm::mat4 billboard = glm::transpose(glm::mat4(glm::mat3(view)));
+
     // Sushi 'merchant' billboard
     if (IsMerchantDay()) {
-      glm::mat4 billboard = glm::transpose(glm::mat4(glm::mat3(view)));
       m_sushi_observer.model_mat = billboard;
       renderer.SubmitTransparentSprite(m_sushi_observer);
+    }
+
+    // apple
+    if (m_apple_collected == false) {
+      m_apple.model_mat = billboard;
+      renderer.SubmitTransparentSprite(m_apple);
     }
 
     {
@@ -419,6 +444,7 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
 
 void GardenScene::AdvanceDay() {
   m_day++;
+  PlaceApple();
   m_energy = m_max_energy;
   m_field.Advance();
   if (m_day > 100 && m_outcome == Outcome::Playing) m_outcome = Outcome::Lost;

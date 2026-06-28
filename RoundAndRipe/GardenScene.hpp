@@ -19,6 +19,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <random>
 #include <string>
 #include <utility>
 #include <vector>
@@ -66,6 +67,11 @@ private:
   SpriteInstance m_sushi_observer;
   SpriteInstance m_house;
   SpriteInstance m_chest;
+
+  SpriteInstance m_apple;
+  TriggerVolume m_apple_trigger;
+  bool m_apple_collected = false;
+  size_t m_apple_trigger_index = 0; // where the apple's trigger lives in m_triggers
 
   // menu
   float m_font_size = 2.0f;
@@ -261,6 +267,22 @@ public:
       if (m_seeds[i].def.name == name)
         return i;
     return -1; // not found / "" → none
+  }
+  
+  void PlaceApple() {
+    // Floor spans ~[-FLOOR_TILE_SIZE/2, +FLOOR_TILE_SIZE/2] in x/z; the farm field
+    // sits in x,z ∈ [-5, 5]. Roll a spot, reject any that land on the farm.
+    static std::mt19937 rng(std::random_device{}());
+    std::uniform_real_distribution<float> coord(-FLOOR_TILE_SIZE / 2 + 2.0f,
+                                                 FLOOR_TILE_SIZE / 2 - 2.0f);
+    glm::vec3 pos;
+    do {
+      pos = glm::vec3(coord(rng), m_apple.size.y / 2.0f, coord(rng));
+    } while (pos.x > -5.0f && pos.x < 5.0f && pos.z > -5.0f && pos.z < 5.0f);
+
+    m_apple.position = pos;
+    m_triggers[m_apple_trigger_index].position = pos; // move the *registered* trigger
+    m_apple_collected = false;
   }
 
   const int SAVE_VERSION = 1;
