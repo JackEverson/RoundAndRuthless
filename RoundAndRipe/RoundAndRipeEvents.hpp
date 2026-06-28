@@ -68,6 +68,40 @@ public:
 };
 
 
+// ── TutorialEvent: reactive, polls world state and walks its own steps. ─
+// Stays alive (never completes early) so Update() runs every frame until done.
+class TutorialEvent : public Event {
+  enum class Step { WaitForPlant, WaitForLookDown, Done };
+  Step m_step = Step::WaitForPlant;
+
+public:
+  using Event::Event;
+
+  void OnStart() override {
+    m_scene.PushNotification("Equip the seed packet and plant a seed.");
+  }
+
+  void Update(float /*delta*/) override {
+    switch (m_step) {
+    case Step::WaitForPlant:
+      if (m_scene.HasPlantedTile()) {
+        m_scene.PushNotification("Good. Now look down — say hi to Sushi.");
+        m_step = Step::WaitForLookDown;
+      }
+      break;
+    case Step::WaitForLookDown:
+      if (m_scene.IsLookingDown()) {
+        m_scene.PushNotification("There I am. Now get to work.");
+        m_step = Step::Done;
+        m_complete = true; // finished → swept from m_events next sweep
+      }
+      break;
+    case Step::Done:
+      break;
+    }
+  }
+};
+
 namespace RoundAndRipeEvents {
 
 inline std::vector<std::unique_ptr<Event>> GetDaysEvents(GardenScene &scene,
@@ -76,17 +110,25 @@ inline std::vector<std::unique_ptr<Event>> GetDaysEvents(GardenScene &scene,
 
   switch (day) {
   case 0:
+    events.push_back(std::make_unique<TutorialEvent>(scene));
+    break;
   case 1:
+    events.push_back(std::make_unique<DialogueEvent>(
+    scene, std::vector<std::string>{
+                "Wakey wakey, inmate.",
+                "That ache in your side? That's me. Say hi.",
+                "100 days to make quota, or I keep the liver. Dig."}));
+                break;
   case 2:
   case 3:
   case 4:
   case 5:
     events.push_back(std::make_unique<DialogueEvent>(
-        scene, std::vector<std::string>{
-                   "Wakey wakey, inmate.",
-                   "That ache in your side? That's me. Say hi.",
-                   "100 days to make quota, or I keep the liver. Dig."}));
-    break;
+    scene, std::vector<std::string>{
+                "Wakey wakey.", 
+                "Your liver is mine now.", 
+                "Get to work."}));
+                break;
 
   // Example of an instant effect on a scheduled day (needs a WaterAll verb):
   // case 7:

@@ -140,6 +140,15 @@ public:
 
   void PushNotification(const std::string &msg) { m_notification_manager.Push(msg); }
 
+  // Query verbs — read-only conditions that reactive events poll each frame.
+  bool HasPlantedTile() const {
+    for (const auto &t : m_field.Tiles())
+      if (t.HasPlant())
+        return true;
+    return false;
+  }
+  bool IsLookingDown() const { return m_camera.GetForward().y < -0.9f; }
+
   // Fire an event's start hook now, then keep it in the active list until it completes.
   void StartEvent(std::unique_ptr<Event> e) {
     e->OnStart();
