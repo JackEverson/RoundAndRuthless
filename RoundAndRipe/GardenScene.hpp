@@ -19,7 +19,9 @@
 #include <json.hpp>
 
 #include <cstddef>
+#include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 class GardenScene : public GardenRoom {
@@ -46,8 +48,6 @@ private:
   Texture m_tomato_growing_texture;
   Texture m_tomato_ripe_texture;
 
-  Event m_test_event;
-
 
   // enums and struct
   enum class MenuMode { None, Tend };
@@ -59,6 +59,9 @@ private:
     PlantDef def;
     int count = 0;
   };
+
+  // events
+  std::vector<std::unique_ptr<Event>> m_events;
 
   // Sprites
   SpriteInstance m_sushi_observer;
@@ -80,7 +83,7 @@ private:
 
   // progression
   int m_tier = 0;
-  int m_day = 1;
+  int m_day = 0;
   int m_biomass = 0;
   bool m_sleep_held = false;
   Outcome m_outcome = Outcome::Playing;
@@ -133,13 +136,14 @@ public:
   Scene *update(GLFWwindow &window, float delta) override;
   void handleInput(GLFWwindow &window, float delta) override;
   void render(GLFWwindow &window, Renderer &renderer) override;
+  void AdvanceDay(); 
 
-  void AdvanceDay() {
-    m_day++;
-    m_energy = m_max_energy;
-    m_field.Advance();
-    if (m_day > 100 && m_outcome == Outcome::Playing) m_outcome = Outcome::Lost;
-    Save();
+  void PushNotification(const std::string &msg) { m_notification_manager.Push(msg); }
+
+  // Fire an event's start hook now, then keep it in the active list until it completes.
+  void StartEvent(std::unique_ptr<Event> e) {
+    e->OnStart();
+    m_events.push_back(std::move(e));
   }
 
   void StartSleep() {

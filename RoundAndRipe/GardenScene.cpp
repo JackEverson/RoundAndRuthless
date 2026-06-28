@@ -1,5 +1,6 @@
 
 #include "GardenScene.hpp"
+#include "RoundAndRipeEvents.hpp"   
 
 #include "FPSController.hpp"
 #include "TriggerVolume.hpp"
@@ -25,7 +26,6 @@ GardenScene::GardenScene()
         m_carrot_texture("./res/textures/carrot.png"),
         m_tomato_growing_texture("./res/textures/tomato.png"),
         m_tomato_ripe_texture("./res/textures/tomato_with_tomato.png"),
-        m_test_event(*this),
         m_field(glm::vec3(-5.0f, 0.0f, -5.0f), 10, 10, 1.0f, &m_soil_texture,
                 &m_rock_texture, &m_till_texture, &m_seeded_texture) {};
 
@@ -131,6 +131,9 @@ void GardenScene::onEnter(GLFWwindow &window) {
     m_seeds.push_back({Tomato(&m_tomato_growing_texture, &m_tomato_ripe_texture), 10});
 
     Load();
+
+    for (auto& e : RoundAndRipeEvents::GetDaysEvents(*this, m_day))
+        StartEvent(std::move(e));
 }
 
 void GardenScene::onExit(GLFWwindow &window) {
@@ -139,6 +142,11 @@ void GardenScene::onExit(GLFWwindow &window) {
 
 Scene *GardenScene::update(GLFWwindow &window, float delta) {
     m_notification_manager.Update(delta);
+    
+    // event updates
+    for (auto& e : m_events) e->Update(delta);
+    for (auto& e : m_events) if (e->IsComplete()) e->OnComplete();
+    std::erase_if(m_events, [](auto& e){ return e->IsComplete(); });
 
     // animate sleep
     if (m_sleep == SleepPhase::GoingDark) {
@@ -161,10 +169,13 @@ Scene *GardenScene::update(GLFWwindow &window, float delta) {
 
 
 void GardenScene::handleInput(GLFWwindow &window, float delta) {
-    HandleCommonInput(window, delta);
 
     if (m_controller.InputDisabled())
       return;
+
+    HandleCommonInput(window, delta);
+
+    for (auto& e : m_events) e->HandleInput(window, delta);
 
     glm::vec3 campos = m_camera.GetLocation();
     glm::vec3 forward = m_camera.GetForward();
@@ -237,6 +248,8 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
     renderer.SetLights(lights, 0.15f);
 
     SetupRenderingObjects(renderer);
+
+    for (auto& e : m_events) e->Render(renderer);
 
     glm::vec3 campos = m_camera.GetLocation();
     glm::mat4 view = m_camera.GetViewMat();
@@ -404,3 +417,14 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
 
     m_notification_manager.Render(w, h);
   }
+
+void GardenScene::AdvanceDay() {
+  m_day++;
+  m_energy = m_max_energy;
+  m_field.Advance();
+  if (m_day > 100 && m_outcome == Outcome::Playing) m_outcome = Outcome::Lost;
+  Save();
+  
+  for (auto& e : RoundAndRipeEvents::GetDaysEvents(*this, m_day))
+    StartEvent(std::move(e));
+}
