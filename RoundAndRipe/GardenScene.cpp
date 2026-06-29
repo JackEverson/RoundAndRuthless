@@ -3,9 +3,9 @@
 #include "FPSController.hpp"
 #include "TriggerVolume.hpp"
 
-#include <json.hpp>
 #include "glm/geometric.hpp"
 #include "glm/ext/matrix_float4x4.hpp"
+#include <json.hpp>
 
 
 
@@ -17,10 +17,13 @@ GardenScene::GardenScene()
         m_house_texture("./res/textures/house.png"),
         m_chest_texture("./res/textures/chest.png"),
         m_human_texture("./res/textures/human_hazsuit.png"),
+        m_seed_maker_texture("./res/textures/seed_maker.png"),
         m_soil_texture("./res/textures/gravel_floor.png"),
         m_rock_texture("./res/textures/rock.png"),
         m_till_texture("./res/textures/hole.png"),
         m_seeded_texture("./res/textures/covered_hole.png"),
+        m_veg_top_texture("./res/textures/veg_top.png"),
+        m_apple_texture("./res/textures/apple.png"),
         m_radish_texture("./res/textures/radish.png"),
         m_carrot_texture("./res/textures/carrot.png"),
         m_tomato_growing_texture("./res/textures/tomato.png"),
@@ -39,17 +42,17 @@ void GardenScene::onEnter(GLFWwindow &window) {
 
     sound_manager.PlayBackgroundMusic("background_noise");
 
-    glm::vec3 sushi_position = glm::vec3(0.0f, HALF_SUSHI_SIZE, -10.0f);
+    glm::vec3 seed_maker_position = glm::vec3(0.0f, HALF_SUSHI_SIZE, -10.0f);
     m_camera.SetCamera(glm::vec3(0.0f, PLAYER_HEIGHT, 0.0f));
 
     // lights
     glm::vec3 light_color = glm::vec3(0.85f, 0.92f, 1.0f) / 3.0f;
-    AddLight(glm::vec3(sushi_position.x, 0, sushi_position.z), HALF_SUSHI_SIZE,
+    AddLight(glm::vec3(seed_maker_position.x, 0, seed_maker_position.z), HALF_SUSHI_SIZE,
              light_color);
     AddLight(glm::vec3(0), FLOOR_TILE_SIZE / 2, light_color);
 
     m_highlight.color = glm::vec3(0.5);
-    m_highlight.position = glm::vec3(sushi_position.x, 1, sushi_position.z);
+    m_highlight.position = glm::vec3(seed_maker_position.x, 1, seed_maker_position.z);
     m_highlight.radius = 0.25f;
 
     AddFloor(glm::vec3(0.0f), glm::vec2(FLOOR_TILE_SIZE), &m_floor_texture);
@@ -62,27 +65,24 @@ void GardenScene::onEnter(GLFWwindow &window) {
     AddWallRotated(glm::vec3(-FLOOR_TILE_SIZE / 2, 0.0f, 0.0f),
                    glm::vec2(FLOOR_TILE_SIZE, 4.0f), 90.0f, &m_wall_texture);
 
-    // Sushi's 
-    m_sushi_observer.texture = &m_sushi_texture;
-    m_sushi_observer.size = glm::vec2(SUSHI_SIZE * 1.2f, SUSHI_SIZE);
-    m_sushi_observer.color = glm::vec4(1.0f);
-    m_sushi_observer.position = sushi_position;
+    // Seed maker
+    m_seed_maker.texture = &m_seed_maker_texture;
+    m_seed_maker.size = glm::vec2(SUSHI_SIZE, SUSHI_SIZE);
+    m_seed_maker.color = glm::vec4(1.0f);
+    m_seed_maker.position = seed_maker_position;
+    m_static_sprites.push_back(m_seed_maker);
 
-    TriggerVolume merchant_trigger;
-    merchant_trigger.position = sushi_position;
-    merchant_trigger.size = glm::vec3(SUSHI_SIZE, SUSHI_SIZE, SUSHI_SIZE);
-    merchant_trigger.time_to_trigger = 0.1f;
-    merchant_trigger.type = TriggerType::Interact;
-    merchant_trigger.on_triggered = [this]() {
-      if (!IsMerchantDay())
-        return;
-      m_shop_open = true;
-    };
-    m_triggers.push_back(merchant_trigger);
+    TriggerVolume seed_maker_trigger;
+    seed_maker_trigger.position = seed_maker_position;
+    seed_maker_trigger.size = glm::vec3(SUSHI_SIZE, SUSHI_SIZE, SUSHI_SIZE);
+    seed_maker_trigger.time_to_trigger = 0.1f;
+    seed_maker_trigger.type = TriggerType::Interact;
+    seed_maker_trigger.on_triggered = [this]() { m_shop_open = true; };
+    m_triggers.push_back(seed_maker_trigger);
 
     // Apple
     float apple_size = 0.25f;
-    m_apple.texture = &m_radish_texture;
+    m_apple.texture = &m_apple_texture;
     m_apple.size = glm::vec2(apple_size, apple_size);
     m_apple.color = glm::vec4(1.0f);
 
@@ -143,8 +143,8 @@ void GardenScene::onEnter(GLFWwindow &window) {
     m_triggers.push_back(chest_trigger);
 
     // seeds
-    m_seeds.push_back({Radish(&m_radish_texture), 10});
-    m_seeds.push_back({Carrot(&m_carrot_texture), 10});
+    m_seeds.push_back({Radish(&m_veg_top_texture, &m_radish_texture), 10});
+    m_seeds.push_back({Carrot(&m_veg_top_texture,&m_carrot_texture), 10});
     m_seeds.push_back({Tomato(&m_tomato_growing_texture, &m_tomato_ripe_texture), 10});
 
     Load();
@@ -186,11 +186,10 @@ Scene *GardenScene::update(GLFWwindow &window, float delta) {
 
 
 void GardenScene::handleInput(GLFWwindow &window, float delta) {
+    HandleCommonInput(window, delta);
 
     if (m_controller.InputDisabled())
       return;
-
-    HandleCommonInput(window, delta);
 
     for (auto& e : m_events) e->HandleInput(window, delta);
 
@@ -280,10 +279,10 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
     glm::mat4 billboard = glm::transpose(glm::mat4(glm::mat3(view)));
 
     // Sushi 'merchant' billboard
-    if (IsMerchantDay()) {
-      m_sushi_observer.model_mat = billboard;
-      renderer.SubmitTransparentSprite(m_sushi_observer);
-    }
+    // if (IsMerchantDay()) {
+    //   m_sushi_observer.model_mat = billboard;
+    //   renderer.SubmitTransparentSprite(m_sushi_observer);
+    // }
 
     // apple
     if (m_apple_collected == false) {

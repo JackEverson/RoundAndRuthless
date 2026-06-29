@@ -38,11 +38,14 @@ private:
   Texture m_chest_texture;
   Texture m_human_texture;
 
+  Texture m_seed_maker_texture;
   Texture m_soil_texture;
   Texture m_rock_texture;
   Texture m_till_texture;
   Texture m_seeded_texture;
 
+  Texture m_veg_top_texture;
+  Texture m_apple_texture;
   Texture m_radish_texture;
   Texture m_carrot_texture;
   Texture m_tomato_growing_texture;
@@ -64,7 +67,7 @@ private:
   std::vector<std::unique_ptr<Event>> m_events;
 
   // Sprites
-  SpriteInstance m_sushi_observer;
+  SpriteInstance m_seed_maker;
   SpriteInstance m_house;
   SpriteInstance m_chest;
 
@@ -252,8 +255,6 @@ public:
     }
     return "?";
   }
-
-  bool IsMerchantDay() const { return m_day % 2 == 1; }
 
   const PlantDef *FindDef(const std::string &name) {
     for (auto &s : m_seeds)

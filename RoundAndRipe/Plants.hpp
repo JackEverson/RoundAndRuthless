@@ -20,26 +20,26 @@ struct PlantDef {
     glm::vec2   full_size;     
 };
 
-inline PlantDef Radish(Texture* sprite){
+inline PlantDef Radish(Texture* growing, Texture* ripe){
     PlantDef radish;
     radish.name = "radish";
     radish.type = PlantType::Harvestable;
     radish.days_to_grow = 3;
     radish.biomass_yield = 1;
-    radish.growing_texture = sprite;
-    radish.ripe_texture = sprite;
+    radish.growing_texture = growing;
+    radish.ripe_texture = ripe;
     radish.full_size = glm::vec2(0.8f, 0.8f);
     return radish;
 }
 
-inline PlantDef Carrot(Texture* sprite){
+inline PlantDef Carrot(Texture* growing, Texture* ripe){
     PlantDef carrot;
     carrot.name = "carrot";
     carrot.type = PlantType::Harvestable;
     carrot.days_to_grow = 10;
     carrot.biomass_yield = 5;
-    carrot.growing_texture = sprite;
-    carrot.ripe_texture = sprite;
+    carrot.growing_texture = growing;
+    carrot.ripe_texture = ripe;
     carrot.full_size = glm::vec2(0.8f, 0.8f);
     return carrot;
 }
