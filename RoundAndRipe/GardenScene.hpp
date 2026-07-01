@@ -50,9 +50,12 @@ private:
   Texture m_veg_top_texture;
   Texture m_apple_texture;
   Texture m_radish_texture;
-  Texture m_carrot_texture;
-  Texture m_tomato_growing_texture;
-  Texture m_tomato_ripe_texture;
+  Texture m_turnip_texture;
+  Texture m_bush_texture;
+  Texture m_tomato_texture;
+  Texture m_blueberry_texture;
+  Texture m_staring_cabbage_growing_texture;
+  Texture m_staring_cabbage_ripe_texture;
 
 
   // enums and struct

@@ -29,9 +29,12 @@ GardenScene::GardenScene()
         m_veg_top_texture("./res/textures/veg_top.png"),
         m_apple_texture("./res/textures/apple.png"),
         m_radish_texture("./res/textures/radish.png"),
-        m_carrot_texture("./res/textures/carrot.png"),
-        m_tomato_growing_texture("./res/textures/tomato.png"),
-        m_tomato_ripe_texture("./res/textures/tomato_with_tomato.png"),
+        m_turnip_texture("./res/textures/turnip.png"),
+        m_bush_texture("./res/textures/bush.png"),
+        m_tomato_texture("./res/textures/tomato_bush.png"),
+        m_blueberry_texture("./res/textures/blueberry_bush.png"),
+        m_staring_cabbage_growing_texture("./res/textures/staring_cabbage_growing.png"),
+        m_staring_cabbage_ripe_texture("./res/textures/staring_cabbage_ripe.png"),
         m_field(glm::vec3(-5.0f, 0.0f, -5.0f), 10, 10, 1.0f, &m_soil_texture,
                 &m_rock_texture, &m_till_texture, &m_seeded_texture) {};
 
@@ -126,15 +129,19 @@ void GardenScene::onEnter(GLFWwindow &window) {
     TriggerVolume chest_trigger;
     chest_trigger.position = CHEST_POS;
     chest_trigger.size = glm::vec3(CHEST_SIZE, CHEST_SIZE, 0.10f);
-    chest_trigger.time_to_trigger = 0.01f;;
+    chest_trigger.time_to_trigger = 0.01f;
     chest_trigger.type = TriggerType::Interact;
     chest_trigger.on_triggered = [this]() { m_menu_mode = MenuMode::UpgradeShop; };
     m_triggers.push_back(chest_trigger);
 
     // seeds
-    m_seeds.push_back({Radish(&m_veg_top_texture, &m_radish_texture), 10});
-    m_seeds.push_back({Carrot(&m_veg_top_texture,&m_carrot_texture), 10});
-    m_seeds.push_back({Tomato(&m_tomato_growing_texture, &m_tomato_ripe_texture), 10});
+    m_seeds.push_back({Radish(&m_veg_top_texture, &m_radish_texture), 5});
+    m_seeds.push_back({Blueberry(&m_bush_texture, &m_blueberry_texture), 0});
+    
+    m_seeds.push_back({Turnip(&m_veg_top_texture,&m_turnip_texture), 0});
+    m_seeds.push_back({Tomato(&m_bush_texture, &m_tomato_texture), 0});
+
+    m_seeds.push_back({StaringCabbage(&m_staring_cabbage_growing_texture, &m_staring_cabbage_ripe_texture), 0});
 
     Load();
 

@@ -36,32 +36,60 @@ inline PlantDef Radish(Texture* growing, Texture* ripe){
     return radish;
 }
 
+inline PlantDef Blueberry(Texture* growing, Texture* ripe){
+    PlantDef blueberry;
+    blueberry.name = "blueberry";
+    blueberry.type = PlantType::Producing;
+    blueberry.seconds_to_grow = 60;
+    blueberry.seconds_to_ripen = 30;
+    blueberry.biomass_yield = 1;
+    blueberry.biomass_cost = 5;
+    blueberry.growing_texture = growing;
+    blueberry.ripe_texture = ripe;
+    blueberry.full_size = glm::vec2(0.8f, 1.4f);
+    blueberry.tier = 0;
+    return blueberry;
+}
+
+inline PlantDef Turnip(Texture* growing, Texture* ripe){
+    PlantDef turnip;
+    turnip.name = "turnip";
+    turnip.type = PlantType::Harvestable;
+    turnip.seconds_to_grow = 40;
+    turnip.biomass_yield = 10;
+    turnip.biomass_cost = 5;
+    turnip.growing_texture = growing;
+    turnip.ripe_texture = ripe;
+    turnip.full_size = glm::vec2(0.8f, 0.8f);
+    turnip.tier = 1;
+    return turnip;
+}
+
 inline PlantDef Tomato(Texture* growing, Texture* ripe){
     PlantDef tomato;
     tomato.name = "tomato";
     tomato.type = PlantType::Producing;
-    tomato.seconds_to_grow = 60;
-    tomato.seconds_to_ripen = 30;
-    tomato.biomass_yield = 1;
-    tomato.biomass_cost = 5;
+    tomato.seconds_to_grow = 90;
+    tomato.seconds_to_ripen = 20;
+    tomato.biomass_yield = 5;
+    tomato.biomass_cost = 20;
     tomato.growing_texture = growing;
     tomato.ripe_texture = ripe;
     tomato.full_size = glm::vec2(0.8f, 1.4f);
-    tomato.tier = 0;
+    tomato.tier = 1;
     return tomato;
 }
 
-inline PlantDef Carrot(Texture* growing, Texture* ripe){
-    PlantDef carrot;
-    carrot.name = "carrot";
-    carrot.type = PlantType::Harvestable;
-    carrot.seconds_to_grow = 60;
-    carrot.biomass_yield = 10;
-    carrot.biomass_cost = 3;
-    carrot.growing_texture = growing;
-    carrot.ripe_texture = ripe;
-    carrot.full_size = glm::vec2(0.8f, 0.8f);
-    carrot.tier = 1;
-    return carrot;
+inline PlantDef StaringCabbage(Texture* growing, Texture* ripe){
+    PlantDef cabbage;
+    cabbage.name = "staring cabbage";
+    cabbage.type = PlantType::Harvestable;
+    cabbage.seconds_to_grow = 60;
+    cabbage.biomass_yield = 100;
+    cabbage.biomass_cost = 50;
+    cabbage.growing_texture = growing;
+    cabbage.ripe_texture = ripe;
+    cabbage.full_size = glm::vec2(0.9f, 0.9f);
+    cabbage.tier = 2;
+    return cabbage;
 }
-
