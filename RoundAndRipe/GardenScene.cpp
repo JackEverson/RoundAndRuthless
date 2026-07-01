@@ -22,6 +22,10 @@ GardenScene::GardenScene()
         m_rock_texture("./res/textures/rock.png"),
         m_till_texture("./res/textures/hole.png"),
         m_seeded_texture("./res/textures/covered_hole.png"),
+        m_shovel_texture("./res/textures/shovel.png"),
+        m_hoe_texture("./res/textures/hoe.png"),
+        m_can_texture("./res/textures/watering_can.png"),
+        m_packet_texture("./res/textures/seed_packet.png"),
         m_veg_top_texture("./res/textures/veg_top.png"),
         m_apple_texture("./res/textures/apple.png"),
         m_radish_texture("./res/textures/radish.png"),
@@ -257,12 +261,6 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
 
     glm::mat4 billboard = glm::transpose(glm::mat4(glm::mat3(view)));
 
-    // Sushi 'merchant' billboard
-    // if (IsMerchantDay()) {
-    //   m_sushi_observer.model_mat = billboard;
-    //   renderer.SubmitTransparentSprite(m_sushi_observer);
-    // }
-
     // apple
     if (m_apple_collected == false) {
       m_apple.model_mat = billboard;
@@ -284,7 +282,6 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
       body.position = campos + glm::vec3(0.0f, -BODY_DROP, 0.0f) +
                       forward_horiz * BODY_FORWARD;
       body.model_mat = yaw_billboard(body.position);
-
       renderer.SubmitTransparentSprite(body);
 
       float yaw = std::atan2(forward.x, forward.z);                       
@@ -301,6 +298,25 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
       sushi.model_mat = m;
       renderer.SubmitTransparentSprite(sushi);
     }
+
+    if (Texture* tex = ToolTexture(m_tool)) {
+    glm::vec3 up = glm::normalize(glm::cross(right, forward));
+
+    // full billboard (faces camera), then a 45° in-plane roll for the "held" tilt
+    glm::mat4 billboard = glm::transpose(glm::mat4(glm::mat3(view)));
+    billboard = billboard * glm::rotate(glm::mat4(1.0f), glm::radians(-45.0f), glm::vec3(0, 0, 1));
+
+    SpriteInstance toolspr;
+    toolspr.texture = tex;
+    toolspr.size = TOOL_SIZE;
+    toolspr.color = glm::vec4(1.0f);
+    toolspr.position = campos + forward * TOOL_FWD + right * TOOL_SIDE - up * TOOL_DROP;
+    toolspr.model_mat = billboard;
+    renderer.SubmitTransparentSprite(toolspr);
+    }
+
+
+
 
     renderer.RendBatch(view, projection, campos, 0.05f);
 

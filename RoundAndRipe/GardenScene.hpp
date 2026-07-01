@@ -42,6 +42,11 @@ private:
   Texture m_till_texture;
   Texture m_seeded_texture;
 
+  Texture m_shovel_texture;
+  Texture m_hoe_texture;
+  Texture m_can_texture;
+  Texture m_packet_texture;
+
   Texture m_veg_top_texture;
   Texture m_apple_texture;
   Texture m_radish_texture;
@@ -97,6 +102,12 @@ private:
   Tool m_tool = Tool::None;
   int m_selected_seed = -1;
   std::vector<Seed> m_seeds;
+
+  const glm::vec2 TOOL_SIZE = glm::vec2(0.35f);
+  const float TOOL_FWD = 0.6f;   
+  const float TOOL_SIDE = 0.30f; 
+  const float TOOL_DROP = 0.30f; 
+
 
   // animation
 
@@ -227,6 +238,18 @@ public:
     }
     return "?";
   }
+
+  Texture* ToolTexture(Tool t) {
+    switch (t) {
+      case Tool::Shovel:      return &m_shovel_texture;
+      case Tool::Hoe:         return &m_hoe_texture;
+      case Tool::WateringCan: return &m_can_texture;
+      case Tool::SeedPacket:  return &m_packet_texture;
+      case Tool::None:        return nullptr;   // hands = nothing
+    }
+    return nullptr;
+  }
+
 
   const PlantDef *FindDef(const std::string &name) {
     for (auto &s : m_seeds)
