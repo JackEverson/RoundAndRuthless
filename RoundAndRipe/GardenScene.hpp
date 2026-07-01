@@ -51,7 +51,7 @@ private:
 
 
   // enums and struct
-  enum class MenuMode { None, Tend };
+  enum class MenuMode { None, SeedShop, UpgradeShop };
   enum class Tool { Shovel, Hoe, WateringCan, SeedPacket, None };
   enum class Outcome { Playing, Won, Lost };
 
@@ -76,9 +76,8 @@ private:
 
   // menu
   float m_font_size = 2.0f;
-  bool m_shop_open = false;
+  
   MenuMode m_menu_mode = MenuMode::None;
-  Tile *m_menu_tile = nullptr;
 
   // field
   PointLight m_highlight;
@@ -102,7 +101,7 @@ private:
   // animation
 
   // const
-  const std::vector<long long> TIER_COST = {100, 1000, 10000, 1000000, 100000000};
+  const std::vector<long long> TIER_COST = {100, 1000, 10000};//, 1000000, 100000000};
 
   const float TIME_LIMIT = 1000000000.0f; 
 
@@ -183,10 +182,9 @@ public:
   void UseToolOn(Tile &t) {
     switch (m_tool) {
     case Tool::Shovel:
-      if (t.IsGrowing()) {
-        m_menu_tile = &t;
-        m_menu_mode = MenuMode::Tend;
-      } else if (t.IsRefuse())
+      if (t.HasPlant())
+        t.PullUp();        // real-time: no confirm — careless shovelling costs you the crop
+      else if (t.IsRefuse())
         t.Clear();
       break;
 
@@ -212,11 +210,6 @@ public:
       }
       break;
     }
-  }
-
-  void CloseMenu() {
-    m_menu_tile = nullptr;
-    m_menu_mode = MenuMode::None;
   }
 
   const char *GetToolName(Tool t) {

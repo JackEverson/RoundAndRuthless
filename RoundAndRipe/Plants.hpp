@@ -16,6 +16,7 @@ struct PlantDef {
     int seconds_to_ripen = 60;
     int biomass_yield = 1;  
     int biomass_cost = 1;
+    int tier = 0;
     Texture*    growing_texture;         
     Texture*    ripe_texture;         
     glm::vec2   full_size;     
@@ -31,20 +32,8 @@ inline PlantDef Radish(Texture* growing, Texture* ripe){
     radish.growing_texture = growing;
     radish.ripe_texture = ripe;
     radish.full_size = glm::vec2(0.8f, 0.8f);
+    radish.tier = 0;
     return radish;
-}
-
-inline PlantDef Carrot(Texture* growing, Texture* ripe){
-    PlantDef carrot;
-    carrot.name = "carrot";
-    carrot.type = PlantType::Harvestable;
-    carrot.seconds_to_grow = 60;
-    carrot.biomass_yield = 10;
-    carrot.biomass_cost = 3;
-    carrot.growing_texture = growing;
-    carrot.ripe_texture = ripe;
-    carrot.full_size = glm::vec2(0.8f, 0.8f);
-    return carrot;
 }
 
 inline PlantDef Tomato(Texture* growing, Texture* ripe){
@@ -58,5 +47,21 @@ inline PlantDef Tomato(Texture* growing, Texture* ripe){
     tomato.growing_texture = growing;
     tomato.ripe_texture = ripe;
     tomato.full_size = glm::vec2(0.8f, 1.4f);
+    tomato.tier = 0;
     return tomato;
 }
+
+inline PlantDef Carrot(Texture* growing, Texture* ripe){
+    PlantDef carrot;
+    carrot.name = "carrot";
+    carrot.type = PlantType::Harvestable;
+    carrot.seconds_to_grow = 60;
+    carrot.biomass_yield = 10;
+    carrot.biomass_cost = 3;
+    carrot.growing_texture = growing;
+    carrot.ripe_texture = ripe;
+    carrot.full_size = glm::vec2(0.8f, 0.8f);
+    carrot.tier = 1;
+    return carrot;
+}
+

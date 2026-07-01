@@ -75,9 +75,9 @@ void GardenScene::onEnter(GLFWwindow &window) {
     TriggerVolume seed_maker_trigger;
     seed_maker_trigger.position = seed_maker_position;
     seed_maker_trigger.size = glm::vec3(SUSHI_SIZE, SUSHI_SIZE, SUSHI_SIZE);
-    seed_maker_trigger.time_to_trigger = 0.1f;
+    seed_maker_trigger.time_to_trigger = 0.01f;
     seed_maker_trigger.type = TriggerType::Interact;
-    seed_maker_trigger.on_triggered = [this]() { m_shop_open = true; };
+    seed_maker_trigger.on_triggered = [this]() { m_menu_mode = MenuMode::SeedShop; };
     m_triggers.push_back(seed_maker_trigger);
 
     // Apple
@@ -122,24 +122,9 @@ void GardenScene::onEnter(GLFWwindow &window) {
     TriggerVolume chest_trigger;
     chest_trigger.position = CHEST_POS;
     chest_trigger.size = glm::vec3(CHEST_SIZE, CHEST_SIZE, 0.10f);
-    chest_trigger.time_to_trigger = 2.0f;
+    chest_trigger.time_to_trigger = 0.01f;;
     chest_trigger.type = TriggerType::Interact;
-    chest_trigger.on_triggered = [this]() 
-    { 
-      if (m_outcome != Outcome::Playing) return;
-      if (!SpendBiomass(TIER_COST[m_tier])){
-          std::string message = "Not Enough Biomass for Tier Upgrade! " + std::to_string(m_tier) + "->" + std::to_string(m_tier + 1) + " costs: " + std::to_string(TIER_COST[m_tier]);
-          m_notification_manager.Push(message);
-          return;
-        }
-
-        m_tier++;
-        if (m_tier >= (int)TIER_COST.size()) m_outcome = Outcome::Won;
-        else {
-          std::string message = "Upgrade to Tier " + std::to_string(m_tier) + " successful!";
-          m_notification_manager.Push(message);
-        }
-    };
+    chest_trigger.on_triggered = [this]() { m_menu_mode = MenuMode::UpgradeShop; };
     m_triggers.push_back(chest_trigger);
 
     // seeds
@@ -154,7 +139,8 @@ void GardenScene::onEnter(GLFWwindow &window) {
 }
 
 void GardenScene::onExit(GLFWwindow &window) {
-  Save();
+  if (m_outcome == Outcome::Playing) Save(); 
+
   glfwSetInputMode(&window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
 
@@ -185,6 +171,14 @@ Scene *GardenScene::update(GLFWwindow &window, float delta) {
       }
     }
 
+
+    // TODO: Theses scenes
+    // if (m_outcome == Outcome::Won) {
+    //     return new WinScene();
+    // } else if (m_outcome == Outcome::Lost) {
+    //     return new LoseScene();
+    // }
+
     return nullptr;
 }
 
@@ -213,29 +207,16 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
         UseToolOn(*tile);
     }
 
-    if (m_menu_tile) {
-      if (glfwGetKey(&window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-        CloseMenu();
-      } else if (m_menu_mode == MenuMode::Tend) {
-        if (glfwGetKey(&window, GLFW_KEY_Y) == GLFW_PRESS) {
-          m_menu_tile->PullUp();
-          CloseMenu();
-        } else if (glfwGetKey(&window, GLFW_KEY_N) == GLFW_PRESS) {
-          CloseMenu();
-        }
-      }
-    } else {
-      if (glfwGetKey(&window, GLFW_KEY_1) == GLFW_PRESS)
-        m_tool = Tool::Shovel;
-      if (glfwGetKey(&window, GLFW_KEY_2) == GLFW_PRESS)
-        m_tool = Tool::Hoe;
-      if (glfwGetKey(&window, GLFW_KEY_3) == GLFW_PRESS)
-        m_tool = Tool::WateringCan;
-      if (glfwGetKey(&window, GLFW_KEY_4) == GLFW_PRESS)
-        m_tool = Tool::SeedPacket;
-      if (glfwGetKey(&window, GLFW_KEY_5) == GLFW_PRESS)
-        m_tool = Tool::None;
-    }
+    if (glfwGetKey(&window, GLFW_KEY_1) == GLFW_PRESS)
+      m_tool = Tool::Shovel;
+    if (glfwGetKey(&window, GLFW_KEY_2) == GLFW_PRESS)
+      m_tool = Tool::Hoe;
+    if (glfwGetKey(&window, GLFW_KEY_3) == GLFW_PRESS)
+      m_tool = Tool::WateringCan;
+    if (glfwGetKey(&window, GLFW_KEY_4) == GLFW_PRESS)
+      m_tool = Tool::SeedPacket;
+    if (glfwGetKey(&window, GLFW_KEY_5) == GLFW_PRESS)
+      m_tool = Tool::None;
 
     // temp scroll wheel seed selection
     float wheel = ImGui::GetIO().MouseWheel; // + up / - down, this frame
@@ -353,40 +334,25 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
                  ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
                      ImGuiWindowFlags_NoMove |
                      ImGuiWindowFlags_AlwaysAutoResize);
-    ImGui::Text("Tool: %s\nSeed: %s\nTime: %d\nBiomass: %d g",
-                GetToolName(m_tool), seed_text.c_str(), (int)m_elapsed, m_biomass);
+    ImGui::Text("Tool: %s\nSeed: %s\nTime: %d\nBiomass: %d g\nTier: %d",
+                GetToolName(m_tool), seed_text.c_str(), (int)m_elapsed, m_biomass, m_tier);
     ImGui::SetWindowFontScale(m_font_size);
     ImGui::End();
 
-    // rendering tending menu
-    if (m_menu_mode != MenuMode::None) {
-      ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f), ImGuiCond_Always,
-                              ImVec2(0.5f, 0.5f));
-      ImGui::Begin("##plant", nullptr,
-                   ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
-                       ImGuiWindowFlags_AlwaysAutoResize);
-      ImGui::SetWindowFontScale(m_font_size);
-
-      if (m_menu_mode == MenuMode::Tend) {
-        ImGui::Text("[Y] Pull up?");
-        ImGui::Text("[N] Cancel");
-      }
-      ImGui::End();
-    }
-
     // rendering shop menu
-    if (m_shop_open && m_cursor_captured) {
+    bool panel_open = (m_menu_mode != MenuMode::None);
+    if (panel_open && m_cursor_captured) {
       EnterSelectionMode(window);
-    } else if (!m_shop_open && !m_cursor_captured) {
+    } else if (!panel_open && !m_cursor_captured) {
       ExitSelectionMode(window);
     }
 
-    if (m_shop_open) {
+    if (m_menu_mode == MenuMode::SeedShop) {
       ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f), ImGuiCond_Always,
                               ImVec2(0.5f, 0.5f));
       ImGui::SetNextWindowBgAlpha(
           0.9f); // visible panel (your HUD used 0 = invisible)
-      ImGui::Begin("Merchant", nullptr,
+      ImGui::Begin("Seed Store", nullptr,
                    ImGuiWindowFlags_AlwaysAutoResize); // NOTE: no NoInputs — it
                                                        // must take clicks
       ImGui::SetWindowFontScale(m_font_size);
@@ -397,23 +363,51 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
       for (int n = 0; n < (int)m_seeds.size(); n++) {
         Seed &seed = m_seeds[n];
 
-        ImGui::PushID(n); // (!) unique id per row — see below
-        ImGui::Text("%s  (have %d)  -  %d g", seed.def.name.c_str(), seed.count,
-                    seed.def.biomass_cost);
+        ImGui::PushID(n);
+        if (seed.def.tier > m_tier) {
+            ImGui::Text("%s  (locked, tier %d)", seed.def.name.c_str(), seed.def.tier);
+            ImGui::PopID();
+            continue;
+        }
+        ImGui::Text("%s  (have %d)  -  %d g", seed.def.name.c_str(), seed.count, seed.def.biomass_cost);
         ImGui::SameLine();
-        if (ImGui::Button("Buy")) { // returns true the frame it's clicked
-          if (m_biomass >= seed.def.biomass_cost) {
-            m_biomass -= seed.def.biomass_cost;
-            seed.count++; // bumps count on the existing entry — pointer-safe
-          }
+        if (ImGui::Button("Buy")) {
+            if (m_biomass >= seed.def.biomass_cost) { m_biomass -= seed.def.biomass_cost; seed.count++; }
+            else m_notification_manager.Push("Not enough biomass", 1.5f);
         }
         ImGui::PopID();
       }
-
       ImGui::Separator();
       if (ImGui::Button("Close")) {
-        m_shop_open = false; // your ExitSelectionMode recaptures next frame
+        m_menu_mode = MenuMode::None; 
       }
+      ImGui::End();
+    }
+    else if (m_menu_mode == MenuMode::UpgradeShop) {
+      ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f), ImGuiCond_Always,
+                              ImVec2(0.5f, 0.5f));
+      ImGui::SetNextWindowBgAlpha(
+          0.9f); // visible panel (your HUD used 0 = invisible)
+      ImGui::Begin("Upgrade Store", nullptr,
+                   ImGuiWindowFlags_AlwaysAutoResize); // NOTE: no NoInputs — it
+                                                       // must take clicks
+      ImGui::SetWindowFontScale(m_font_size);
+
+      ImGui::Text("Biomass: %d g", m_biomass);
+      ImGui::Separator();
+      if (m_tier >= (int)TIER_COST.size()) {
+          ImGui::Text("Max tier reached.");
+      } else {
+          ImGui::Text("Tier %d -> Tier %d - %d g", m_tier, m_tier + 1, (int)TIER_COST[m_tier]);
+          if (ImGui::Button("Upgrade")) {
+              if (m_biomass >= TIER_COST[m_tier]) {
+                  m_biomass -= TIER_COST[m_tier];
+                  m_tier++;
+                  if (m_tier >= (int)TIER_COST.size()) m_outcome = Outcome::Won;
+              } else m_notification_manager.Push("Not enough biomass", 1.5f);
+          }
+      }
+      if (ImGui::Button("Close")) m_menu_mode = MenuMode::None;
       ImGui::End();
     }
 
