@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "Event.hpp"
 #include "GardenRoom.hpp"
 #include "NotificationManager.hpp"
@@ -11,7 +10,6 @@
 #include "Tile.hpp"
 #include "Field.hpp"
 #include "Renderer.hpp" 
-
 
 #include "GLFW/glfw3.h"
 #include "glm/ext/vector_float2.hpp"
@@ -55,7 +53,6 @@ private:
   // enums and struct
   enum class MenuMode { None, Tend };
   enum class Tool { Shovel, Hoe, WateringCan, SeedPacket, None };
-  enum class SleepPhase { Awake, GoingDark, Waking };
   enum class Outcome { Playing, Won, Lost };
 
   struct Seed {
@@ -74,13 +71,12 @@ private:
   SpriteInstance m_apple;
   TriggerVolume m_apple_trigger;
   bool m_apple_collected = false;
+  float m_apple_timer = 0.0f;
   size_t m_apple_trigger_index = 0; // where the apple's trigger lives in m_triggers
 
   // menu
   float m_font_size = 2.0f;
-
   bool m_shop_open = false;
-
   MenuMode m_menu_mode = MenuMode::None;
   Tile *m_menu_tile = nullptr;
 
@@ -91,28 +87,25 @@ private:
 
   // progression
   int m_tier = 0;
-  int m_day = 0;
   int m_biomass = 0;
-  bool m_sleep_held = false;
+  double m_elapsed = 0.0;
   Outcome m_outcome = Outcome::Playing;
 
+  const float SAVE_INTERVAL = 30.0f;
+  float m_save_timer = 0.0f;
+
   // player
-  int m_max_energy = 100;
-  int m_energy = m_max_energy;
   Tool m_tool = Tool::None;
   int m_selected_seed = -1;
   std::vector<Seed> m_seeds;
 
   // animation
-  SleepPhase m_sleep = SleepPhase::Awake;
-  float m_fade = 0.0f; // 0 = clear, 1 = black
 
   // const
   const std::vector<long long> TIER_COST = {100, 1000, 10000, 1000000, 100000000};
 
-  const int WATER_COST = 1;
-  const int CLEAR_COST = 1;
-  const int TILL_COST = 1;
+  const float TIME_LIMIT = 1000000000.0f; 
+
   const float FLOOR_TILE_SIZE = 100.0f;
 
   const float HOUSE_SIZE = 4.0f;
@@ -134,8 +127,8 @@ private:
   const float BODY_FORWARD = -0.25f;
   const glm::vec2 BODY_SIZE = glm::vec2(BODY_DROP, PLAYER_HEIGHT);
 
-
   const float FADE_SPEED = 2.0f;
+  const float APPLE_RESPAWN_TIME = 120.0f;
 
 public:
   GardenScene();
@@ -161,20 +154,6 @@ public:
   void StartEvent(std::unique_ptr<Event> e) {
     e->OnStart();
     m_events.push_back(std::move(e));
-  }
-
-  void StartSleep() {
-    if (m_sleep == SleepPhase::Awake)
-      m_sleep = SleepPhase::GoingDark;
-  }
-
-  bool SpendEnergy(int cost) {
-    if (m_energy < cost) {
-      m_notification_manager.Push("Too tired", 1.5f);
-      return false;
-    }
-    m_energy -= cost;
-    return true;
   }
 
   bool SpendBiomass(int cost) {
@@ -207,16 +186,16 @@ public:
       if (t.IsGrowing()) {
         m_menu_tile = &t;
         m_menu_mode = MenuMode::Tend;
-      } else if (t.IsRefuse() && SpendEnergy(CLEAR_COST))
+      } else if (t.IsRefuse())
         t.Clear();
       break;
 
     case Tool::Hoe:
-      if (t.IsEmpty() && SpendEnergy(TILL_COST))
+      if (t.IsEmpty())
         t.Till();
       break;
     case Tool::WateringCan:
-      if (!t.IsWatered() && SpendEnergy(WATER_COST))
+      if (!t.IsWatered())
         t.Water();
       break;
     case Tool::None:
@@ -286,14 +265,13 @@ public:
     m_apple_collected = false;
   }
 
-  const int SAVE_VERSION = 1;
+  const int SAVE_VERSION = 2;
   const std::string SAVE_PATH = "./save.json";
 
   void Save() {
     GameState s;
     s.version = SAVE_VERSION;
-    s.day = m_day;
-    s.energy = m_energy;
+    s.elapsed = m_elapsed;
     s.biomass = m_biomass;
     s.tier = m_tier;
     s.selected_seed =
@@ -301,7 +279,7 @@ public:
     for (auto &sd : m_seeds)
       s.seeds[sd.def.name] = sd.count;
     for (auto &t : m_field.Tiles())
-      s.tiles.push_back({(int)t.GetState(), t.IsWatered(), t.DaysGrowing(),
+      s.tiles.push_back({(int)t.GetState(), t.IsWatered(), t.SecondsGrowing(),
                          t.GetPlantName()});
     SaveSystem::Save(SAVE_PATH, s);
   }
@@ -310,8 +288,7 @@ public:
     GameState s;
     if (!SaveSystem::Load(SAVE_PATH, SAVE_VERSION, s))
       return;
-    m_day = s.day;
-    m_energy = s.energy;
+    m_elapsed = s.elapsed;
     m_biomass = s.biomass;
     m_tier = s.tier;
     for (auto &sd : m_seeds)
@@ -321,6 +298,6 @@ public:
     if (s.tiles.size() == tiles.size())
       for (size_t i = 0; i < tiles.size(); i++)
         tiles[i].Set((Tile::TileState)s.tiles[i].state, s.tiles[i].watered,
-                     FindDef(s.tiles[i].plant), s.tiles[i].days);
+                     FindDef(s.tiles[i].plant), s.tiles[i].seconds_growing);
   }
 };

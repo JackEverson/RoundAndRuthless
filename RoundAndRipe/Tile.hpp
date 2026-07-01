@@ -10,10 +10,7 @@
 #include "glm/ext/vector_float4.hpp"
 
 #include <algorithm>
-#include <cstddef>
-#include <optional>
 #include <string>
-#include <vector>
 
 class Tile {
 public:
@@ -22,6 +19,7 @@ public:
     Tile(glm::vec3 position, Texture* soil_texture, Texture* refuse_texture, Texture* tilled_texture, Texture* seeded_texture, TileState state = TileState::Refuse);
 
     void Advance();
+    void Grow(float dt); // real-time growth tick (replaces day-based Advance)
     void Render(Renderer& renderer, const glm::vec3& campos);
 
     void Plant(const PlantDef* plant);
@@ -33,7 +31,7 @@ public:
     void Till() { if (m_state == TileState::Empty) m_state = TileState::Tilled; }
     
     const TileState& GetState() const { return m_state; }
-    int DaysGrowing() { return m_days_growing; }
+    int DaysGrowing() { return m_seconds_growing; }
 
     bool IsHarvestable()   const;
     bool IsTilled()   const { return m_state == TileState::Tilled; }
@@ -44,7 +42,7 @@ public:
     bool HasPlant() const { return m_plant != nullptr; }
 
     glm::vec3 Position() const { return m_position; }
-
+    float SecondsGrowing() const { return m_seconds_growing; }
     std::string GetPlantName() const { return m_plant ? m_plant->name : ""; } 
 
 private:
@@ -62,7 +60,7 @@ private:
     SpriteInstance m_seeded_sprite;
     SpriteInstance m_refuse_sprite;
 
-    int m_days_growing = 0;
+    float m_seconds_growing = 0.0f; 
     TileState m_state = TileState::Empty;
     bool m_watered = false;
     const PlantDef* m_plant = nullptr;
@@ -98,20 +96,14 @@ m_state(state)
     m_refuse_sprite.texture = refuse_texture;
 }
 
-inline void Tile::Advance(){
-    bool was_watered = m_watered;
-    m_watered = false; 
-    m_soil_sprite.color = SOIL_COLOR;
-
+inline void Tile::Grow(float dt){
+    //TODO: Watering checks, etc. (for now, just grow regardless of state)
+    
     if (!m_plant) return;
-
     if (m_plant->type == PlantType::Harvestable && m_state != TileState::Growing) return;
     if (m_plant->type == PlantType::Producing && m_state == TileState::Ripe) return;
-
-    if (was_watered) { 
-        m_days_growing++;
-        RefreshState();
-    }
+    m_seconds_growing += dt;   // dt is seconds; seconds_to_grow/ripen now read as seconds
+    RefreshState();
 }
 
 inline void Tile::Render(Renderer& renderer, const glm::vec3& campos){
@@ -135,7 +127,7 @@ inline void Tile::Render(Renderer& renderer, const glm::vec3& campos){
         break;
 
         case TileState::Growing:
-        if ((float)m_days_growing / (float)m_plant->days_to_grow < 0.1f){
+        if ((float)m_seconds_growing / (float)m_plant->seconds_to_grow < 0.1f){
             renderer.SubmitTransparentSprite(m_seeded_sprite);
         } 
         case TileState::Grown:
@@ -143,8 +135,8 @@ inline void Tile::Render(Renderer& renderer, const glm::vec3& campos){
         glm::vec3 to_cam = campos - m_growing_sprite.position;
         float yaw = std::atan2(to_cam.x, to_cam.z);          // angle around Y
         
-        if ((m_plant->type == PlantType::Harvestable && m_days_growing < m_plant->days_to_grow) || // harvestable
-            (m_plant->type == PlantType::Producing && m_days_growing < m_plant->days_to_grow + m_plant->days_to_ripen)) // producing
+        if ((m_plant->type == PlantType::Harvestable && m_seconds_growing < m_plant->seconds_to_grow) || // harvestable
+            (m_plant->type == PlantType::Producing && m_seconds_growing < m_plant->seconds_to_grow + m_plant->seconds_to_ripen)) // producing
         {   
             m_growing_sprite.model_mat = glm::rotate(glm::mat4(1.0f), yaw, glm::vec3(0,1,0));
             renderer.SubmitTransparentSprite(m_growing_sprite);
@@ -158,7 +150,7 @@ inline void Tile::Render(Renderer& renderer, const glm::vec3& campos){
 }
 
 inline void Tile::Plant(const PlantDef* plant){
-    m_days_growing = 0;
+    m_seconds_growing = 0;
     m_plant = plant;
     m_state = TileState::Growing;
 
@@ -178,7 +170,7 @@ inline void Tile::Plant(const PlantDef* plant){
 inline void Tile::Set(TileState state, bool watered, const PlantDef* plant, int days_growing){
     if (plant) {
         Plant(plant);
-        m_days_growing = days_growing;
+        m_seconds_growing = days_growing;
         RefreshState();
     } else{
         m_plant = nullptr;
@@ -190,15 +182,15 @@ inline void Tile::Set(TileState state, bool watered, const PlantDef* plant, int 
 }
 
 inline void Tile::RefreshState(){
-    float t = std::min((float)m_days_growing / m_plant->days_to_grow, 1.0f);
+    float t = std::min((float)m_seconds_growing / m_plant->seconds_to_grow, 1.0f);
     m_growing_sprite.size = m_plant->full_size * t;
     m_growing_sprite.position.y = m_position.y + (m_growing_sprite.size.y / 2);
 
     m_ripe_sprite.size = m_plant->full_size;
     m_ripe_sprite.position = glm::vec3(m_position) + glm::vec3(0, SOIL_OFFSET + (m_plant->full_size.y / 2), 0);
 
-    if (m_days_growing >= m_plant->days_to_grow) m_state = TileState::Grown;
-    if (m_days_growing >= m_plant->days_to_grow + m_plant->days_to_ripen) m_state = TileState::Ripe;
+    if (m_seconds_growing >= m_plant->seconds_to_grow) m_state = TileState::Grown;
+    if (m_seconds_growing >= m_plant->seconds_to_grow + m_plant->seconds_to_ripen) m_state = TileState::Ripe;
 }
 
 inline void Tile::Water(){
@@ -210,7 +202,7 @@ inline int Tile::Harvest(){
     int yield = m_plant->biomass_yield;
 
     if (m_plant->type == PlantType::Producing) {
-        m_days_growing = m_plant->days_to_grow; 
+        m_seconds_growing = m_plant->seconds_to_grow; 
         m_state = TileState::Grown;
         RefreshState();   
     } else {
@@ -222,7 +214,7 @@ inline int Tile::Harvest(){
 inline void Tile::PullUp(){
     m_plant = nullptr;
     m_state = TileState::Empty;
-    m_days_growing = 0;
+    m_seconds_growing = 0;
 }
 
 inline bool Tile::IsHarvestable() const{

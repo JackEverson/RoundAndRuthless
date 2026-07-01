@@ -8,13 +8,14 @@
 struct TileSave { 
     int state = 0; 
     bool watered = false; 
-    int days = 0; 
+    float seconds_growing = 0; 
     std::string plant; 
 };
 
 struct GameState {
-    int version = 1;
-    int day = 1, energy = 0, biomass = 0, tier = 0;
+    int version = 2;
+    double elapsed = 0.0;
+    int biomass = 0, tier = 0;
     std::string selected_seed;
     std::map<std::string, int> seeds;   // name -> count
     std::vector<TileSave> tiles;

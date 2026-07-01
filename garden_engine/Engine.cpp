@@ -88,6 +88,9 @@ int GardenEngine::Start(std::unique_ptr<Scene> scene, float fps) {
       std::this_thread::sleep_for(std::chrono::milliseconds(waittime));
   }
 
+  m_currentScene->onExit(*m_window);
+  m_currentScene.reset();
+  
   // glfwTerminate();
   printf("GardenEngine Exited Successfully!\n");
   return 0;

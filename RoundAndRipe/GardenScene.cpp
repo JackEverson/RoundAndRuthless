@@ -105,13 +105,13 @@ void GardenScene::onEnter(GLFWwindow &window) {
     m_house.position = HOUSE_POS;
     m_static_sprites.push_back(m_house);
 
-    TriggerVolume house_trigger;
-    house_trigger.position = HOUSE_POS;
-    house_trigger.size = glm::vec3(HOUSE_SIZE, HOUSE_SIZE, 0.10f);
-    house_trigger.time_to_trigger = 2.0f;
-    house_trigger.type = TriggerType::Interact;
-    house_trigger.on_triggered = [this]() { StartSleep(); };
-    m_triggers.push_back(house_trigger);
+    // TriggerVolume house_trigger;
+    // house_trigger.position = HOUSE_POS;
+    // house_trigger.size = glm::vec3(HOUSE_SIZE, HOUSE_SIZE, 0.10f);
+    // house_trigger.time_to_trigger = 2.0f;
+    // house_trigger.type = TriggerType::Interact;
+    // house_trigger.on_triggered = [this]() { StartSleep(); };
+    // m_triggers.push_back(house_trigger);
 
     m_chest.texture = &m_chest_texture;
     m_chest.size = glm::vec2(CHEST_SIZE, CHEST_SIZE);
@@ -149,35 +149,39 @@ void GardenScene::onEnter(GLFWwindow &window) {
 
     Load();
 
-    for (auto& e : RoundAndRipeEvents::GetDaysEvents(*this, m_day))
-        StartEvent(std::move(e));
+    // for (auto& e : RoundAndRipeEvents::GetDaysEvents(*this, m_day))
+    //     StartEvent(std::move(e));
 }
 
 void GardenScene::onExit(GLFWwindow &window) {
-    glfwSetInputMode(&window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-  }
+  Save();
+  glfwSetInputMode(&window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+}
 
 Scene *GardenScene::update(GLFWwindow &window, float delta) {
     m_notification_manager.Update(delta);
+
+    m_elapsed += delta;
+    if (m_elapsed >= TIME_LIMIT && m_outcome == Outcome::Playing) m_outcome = Outcome::Lost;
     
+    m_save_timer += delta;
+    if (m_save_timer >= SAVE_INTERVAL) {
+        Save();
+        m_save_timer = 0.0f;
+    }
+
+    for (auto& t : m_field.Tiles()) t.Grow(delta);
+
     // event updates
     for (auto& e : m_events) e->Update(delta);
     for (auto& e : m_events) if (e->IsComplete()) e->OnComplete();
     std::erase_if(m_events, [](auto& e){ return e->IsComplete(); });
 
-    // animate sleep
-    if (m_sleep == SleepPhase::GoingDark) {
-      m_fade += FADE_SPEED * delta;
-      if (m_fade >= 1.0f) {
-        m_fade = 1.0f;
-        AdvanceDay();
-        m_sleep = SleepPhase::Waking;
-      }
-    } else if (m_sleep == SleepPhase::Waking) {
-      m_fade -= FADE_SPEED * delta;
-      if (m_fade <= 0.0f) {
-        m_fade = 0.0f;
-        m_sleep = SleepPhase::Awake;
+    if (m_apple_collected) {
+      m_apple_timer += delta;
+      if (m_apple_timer >= APPLE_RESPAWN_TIME) {
+        PlaceApple();
+        m_apple_timer = 0.0f;
       }
     }
 
@@ -232,12 +236,6 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
       if (glfwGetKey(&window, GLFW_KEY_5) == GLFW_PRESS)
         m_tool = Tool::None;
     }
-
-    // Skip day debugging
-    bool s = glfwGetKey(&window, GLFW_KEY_K) == GLFW_PRESS;
-    if (s && !m_sleep_held)
-      AdvanceDay();
-    m_sleep_held = s;
 
     // temp scroll wheel seed selection
     float wheel = ImGui::GetIO().MouseWheel; // + up / - down, this frame
@@ -355,9 +353,8 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
                  ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
                      ImGuiWindowFlags_NoMove |
                      ImGuiWindowFlags_AlwaysAutoResize);
-    ImGui::Text("Tool: %s\nSeed: %s\nDay: %d\nBiomass: %d g\nEnergy: %d/%d",
-                GetToolName(m_tool), seed_text.c_str(), m_day, m_biomass,
-                m_energy, m_max_energy);
+    ImGui::Text("Tool: %s\nSeed: %s\nTime: %d\nBiomass: %d g",
+                GetToolName(m_tool), seed_text.c_str(), (int)m_elapsed, m_biomass);
     ImGui::SetWindowFontScale(m_font_size);
     ImGui::End();
 
@@ -399,15 +396,14 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
 
       for (int n = 0; n < (int)m_seeds.size(); n++) {
         Seed &seed = m_seeds[n];
-        int cost = seed.def.biomass_yield / 2; // placeholder pricing
 
         ImGui::PushID(n); // (!) unique id per row — see below
         ImGui::Text("%s  (have %d)  -  %d g", seed.def.name.c_str(), seed.count,
-                    cost);
+                    seed.def.biomass_cost);
         ImGui::SameLine();
         if (ImGui::Button("Buy")) { // returns true the frame it's clicked
-          if (m_biomass >= cost) {
-            m_biomass -= cost;
+          if (m_biomass >= seed.def.biomass_cost) {
+            m_biomass -= seed.def.biomass_cost;
             seed.count++; // bumps count on the existing entry — pointer-safe
           }
         }
@@ -431,24 +427,6 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
         ImGui::End();
     }
 
-    // sleep screen, TODO: probably should replace this with my own rects
-    if (m_fade > 0.0f) {
-      ImU32 col = IM_COL32(0, 0, 0, (int)(m_fade * 255));
-      ImGui::GetForegroundDrawList()->AddRectFilled(
-          ImVec2(0, 0), ImVec2((float)w, (float)h), col);
-    }
-
     m_notification_manager.Render(w, h);
   }
 
-void GardenScene::AdvanceDay() {
-  m_day++;
-  PlaceApple();
-  m_energy = m_max_energy;
-  m_field.Advance();
-  if (m_day > 100 && m_outcome == Outcome::Playing) m_outcome = Outcome::Lost;
-  Save();
-  
-  for (auto& e : RoundAndRipeEvents::GetDaysEvents(*this, m_day))
-    StartEvent(std::move(e));
-}
