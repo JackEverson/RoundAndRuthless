@@ -65,6 +65,8 @@ public:
 };
 
 
+namespace RoundAndRipeEvents {
+
 // ── TutorialEvent: reactive, polls world state and walks its own steps. ─
 // Stays alive (never completes early) so Update() runs every frame until done.
 class TutorialEvent : public Event {
@@ -99,7 +101,6 @@ public:
   }
 };
 
-namespace RoundAndRipeEvents {
 
 inline std::vector<std::unique_ptr<Event>> GetDaysEvents(GardenScene &scene,
                                                          int day) {

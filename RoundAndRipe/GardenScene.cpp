@@ -143,7 +143,9 @@ void GardenScene::onEnter(GLFWwindow &window) {
 
     m_seeds.push_back({StaringCabbage(&m_staring_cabbage_growing_texture, &m_staring_cabbage_ripe_texture), 0});
 
-    Load();
+    if (!Load()) {
+      StartEvent(std::make_unique<RoundAndRipeEvents::TutorialEvent>(*this));
+    }
 
     // for (auto& e : RoundAndRipeEvents::GetDaysEvents(*this, m_day))
     //     StartEvent(std::move(e));

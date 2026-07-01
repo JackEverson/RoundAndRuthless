@@ -303,10 +303,10 @@ public:
     SaveSystem::Save(SAVE_PATH, s);
   }
 
-  void Load() {
+  bool Load() {
     GameState s;
     if (!SaveSystem::Load(SAVE_PATH, SAVE_VERSION, s))
-      return;
+      return false;
     m_elapsed = s.elapsed;
     m_biomass = s.biomass;
     m_tier = s.tier;
@@ -318,5 +318,6 @@ public:
       for (size_t i = 0; i < tiles.size(); i++)
         tiles[i].Set((Tile::TileState)s.tiles[i].state, s.tiles[i].watered,
                      FindDef(s.tiles[i].plant), s.tiles[i].seconds_growing);
+    return true;
   }
 };
