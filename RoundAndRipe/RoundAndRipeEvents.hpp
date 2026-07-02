@@ -12,6 +12,8 @@
 #include <utility>
 #include <vector>
 
+namespace RoundAndRipeEvents {
+
 class ActionEvent : public Event {
   std::function<void(GardenScene &)> m_fn;
 
@@ -65,39 +67,99 @@ public:
 };
 
 
-namespace RoundAndRipeEvents {
 
 // ── TutorialEvent: reactive, polls world state and walks its own steps. ─
 // Stays alive (never completes early) so Update() runs every frame until done.
 class TutorialEvent : public Event {
-  enum class Step { WaitForPlant, WaitForLookDown, Done };
-  Step m_step = Step::WaitForPlant;
+  static constexpr float LINE_TIME = 6.0f;
+
+  float m_timer = 0.0f;
+  size_t m_line = 0;
+
+  enum class Step { 
+    Intro, 
+    WaitForLookDown, 
+    GreetSushi,
+    WaitForNoRocks,
+    WaitForHoedSpot,
+    WaitForPlantedTile,
+    Done };
+  Step m_step = Step::Intro;
+
 
 public:
   using Event::Event;
 
-  void OnStart() override {
-    m_scene.PushNotification("Equip the seed packet and plant a seed.");
-  }
+  // void OnStart() override {}
 
-  void Update(float /*delta*/) override {
+  void Update(float delta) override {
     switch (m_step) {
-    case Step::WaitForPlant:
-      if (m_scene.HasPlantedTile()) {
-        m_scene.PushNotification("Good. Now look down — say hi to Sushi.");
+    case Step::Intro:
+      if (PlayLines({"Hey. You. Look down here!!!"}, delta)) {
         m_step = Step::WaitForLookDown;
-      }
+        m_scene.SetTaskText("Look down");
+      }  
       break;
     case Step::WaitForLookDown:
       if (m_scene.IsLookingDown()) {
-        m_scene.PushNotification("There I am. Now get to work.");
+        m_scene.ClearTaskText();
+        m_step = Step::GreetSushi;
+      }
+      break;
+    case Step::GreetSushi:
+      if (PlayLines({
+        "Hi",
+        "Welcome to Yield 3. An agricultural prison world. Most people just call this Planet 'The Garden'.",
+        "You are now a prisoner here. The crime you committed? doesn't matter......",
+        "ALL THE MATTERS IS THAT YOU BLASPHEMED AGAINST THE FOUR GODS OF ROUND!",
+        "I'm a Monitor Sushi and your designated parole officer....",
+        "Following protocol, I have therefore been surgically attached to your liver.",
+        "I now offer you a choice: MAKE QUOTA OR I KEEP THE LIVER.",
+        "Lets get you started. This field has been left a mess... pull out your shovel and clear out these rocks",
+        },delta)) {
+        m_scene.SetTaskText("Select shovel [1] and clear the rocks from the field [LMB] or [E]");
+        m_step = Step::WaitForNoRocks;
+      }
+      break;
+    case Step::WaitForNoRocks:
+      if (m_scene.HasNoRocks()) {
+        if (PlayLines({"Good. Nice and clear. Now hoe a spot for planting."}, delta)) {
+          m_scene.SetTaskText("Select hoe [2] and hoe a spot for planting [LMB] or [E]");
+          m_step = Step::WaitForHoedSpot;
+        }
+      }
+      break;
+    case Step::WaitForHoedSpot:
+      if (m_scene.HasHoedTile()) {
+        if (PlayLines({
+          "Excellent",
+          "Now I put a few radish seeds in your pocket, I like radishes, they are round and are quick to ripen",
+          "Pull them out now and plant one in the hoed spot you just made."
+          }, delta)) {
+            m_scene.SetTaskText("Select seed packet [4] and plant a seed in the hoed spot [LMB] or [E]");
+            m_step = Step::WaitForPlantedTile;
+        }
+      }
+      break;
+    case Step::WaitForPlantedTile:
+      if (m_scene.HasPlantedTile()) {
         m_step = Step::Done;
-        m_complete = true; // finished → swept from m_events next sweep
       }
       break;
     case Step::Done:
+      
       break;
     }
+  }
+
+   bool PlayLines(const std::vector<std::string>& lines, float dt, float line_time = LINE_TIME) {
+    m_timer -= dt;
+    if (m_timer <= 0.0f) {
+      if (m_line >= lines.size()) { m_line = 0; m_timer = 0; return true; }
+      m_scene.PushNotification(lines[m_line++], line_time);
+      m_timer = line_time;
+    }
+    return false;
   }
 };
 

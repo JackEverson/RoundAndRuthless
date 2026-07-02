@@ -59,9 +59,10 @@ private:
 
 
   // enums and struct
-  enum class MenuMode { None, SeedShop, UpgradeShop };
-  enum class Tool { Shovel, Hoe, WateringCan, SeedPacket, None };
   enum class Outcome { Playing, Won, Lost };
+  enum class Tool { Shovel, Hoe, WateringCan, SeedPacket, None };
+
+  enum class MenuMode { None, SeedShop, UpgradeShop, SeedSelection };
 
   struct Seed {
     PlantDef def;
@@ -93,6 +94,7 @@ private:
   Field m_field;
 
   // progression
+  std::string m_task_text = "";
   int m_tier = 0;
   int m_biomass = 0;
   double m_elapsed = 0.0;
@@ -152,7 +154,7 @@ public:
   void render(GLFWwindow &window, Renderer &renderer) override;
   void AdvanceDay(); 
 
-  void PushNotification(const std::string &msg) { m_notification_manager.Push(msg); }
+  void PushNotification(const std::string &msg, float duration = 1.5f) { m_notification_manager.Push(msg, duration); }
 
   // Query verbs — read-only conditions that reactive events poll each frame.
   bool HasPlantedTile() const {
@@ -161,7 +163,22 @@ public:
         return true;
     return false;
   }
-  bool IsLookingDown() const { return m_camera.GetForward().y < -0.9f; }
+  bool HasNoRocks() const {
+    for (const auto &t : m_field.Tiles())
+      if (t.IsRefuse())
+        return false;
+    return true;
+  }
+  bool HasHoedTile() const {
+    for (const auto &t : m_field.Tiles())
+      if (t.IsTilled())
+        return true;
+    return false;
+  }
+  bool IsLookingDown() const { return m_camera.GetForward().y < -0.98f; }
+  void SetTaskText(const std::string &text) { m_task_text = text; }
+  void ClearTaskText() { m_task_text = ""; }
+
 
   // Fire an event's start hook now, then keep it in the active list until it completes.
   void StartEvent(std::unique_ptr<Event> e) {

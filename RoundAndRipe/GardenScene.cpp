@@ -324,24 +324,24 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
     renderer.SubmitTransparentSprite(toolspr);
     }
 
-
-
-
     renderer.RendBatch(view, projection, campos, 0.05f);
 
     // HUD and UI (ImGUI)
-    const char *task_text = "Just cooperate and hand over the liver!";
+    if (!m_task_text.empty()){
+      const char *task_text = m_task_text.c_str();
 
-    ImGui::SetNextWindowPos(ImVec2(w * 0.75f, h - 40.0f), ImGuiCond_Always,
-                            ImVec2(0.5f, 0.0f));
-    ImGui::SetNextWindowBgAlpha(0.0f);
-    ImGui::Begin("##task", nullptr,
-                 ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
-                     ImGuiWindowFlags_NoMove |
-                     ImGuiWindowFlags_AlwaysAutoResize);
-    ImGui::Text("%s", task_text);
-    ImGui::SetWindowFontScale(m_font_size);
-    ImGui::End();
+      ImGui::SetNextWindowPos(ImVec2(w * 0.75f, h - 40.0f), ImGuiCond_Always,
+                              ImVec2(0.5f, 0.0f));
+      ImGui::SetNextWindowBgAlpha(0.0f);
+      ImGui::Begin("##task", nullptr,
+                  ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
+                      ImGuiWindowFlags_NoMove |
+                      ImGuiWindowFlags_AlwaysAutoResize);
+      ImGui::Text("Task: %s", task_text);
+      ImGui::SetWindowFontScale(m_font_size);
+      ImGui::End();
+    }
+
 
     std::string seed_text;
 
