@@ -47,6 +47,8 @@ private:
   Texture m_can_texture;
   Texture m_packet_texture;
 
+  Texture m_sprinkler_texture;
+
   Texture m_veg_top_texture;
   Texture m_apple_texture;
   Texture m_radish_texture;
@@ -108,6 +110,8 @@ private:
 
   const float SAVE_INTERVAL = 30.0f;
   float m_save_timer = 0.0f;
+  bool m_new_game = false; 
+  bool m_confirm_new = false;
 
   // player
   Tool m_tool = Tool::None;
@@ -207,8 +211,7 @@ public:
   void SetTaskText(const std::string &text) { m_task_text = text; }
   void ClearTaskText() { m_task_text = ""; }
 
-
-  // Fire an event's start hook now, then keep it in the active list until it completes.
+  void PlaySound(const std::string &name) { sound_manager.PlaySound(name); }
   void StartEvent(std::unique_ptr<Event> e) {
     e->OnStart();
     m_events.push_back(std::move(e));

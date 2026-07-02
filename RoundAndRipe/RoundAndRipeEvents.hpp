@@ -14,6 +14,14 @@
 
 namespace RoundAndRipeEvents {
 
+struct VoiceLine {
+  std::string text;
+  std::string voice = "meow_talk";
+  VoiceLine(const char* t) : text(t) {}                    // plain strings still work
+  VoiceLine(std::string t, std::string v) : text(std::move(t)), voice(std::move(v)) {}
+};
+
+
 class ActionEvent : public Event {
   std::function<void(GardenScene &)> m_fn;
 
@@ -110,10 +118,10 @@ public:
   void Update(float delta) override {
     switch (m_step) {
     case Step::Intro:
-      if (PlayLines({"Hey. You. Down here!!!"}, delta)) {
-        m_step = Step::WaitForLookDown;
-        m_scene.SetTaskText("Look down");
-      }  
+      m_scene.PushNotification("Hey. You. Down here!!!", LINE_TIME);
+      m_scene.PlaySound("meow_talk");
+      m_step = Step::WaitForLookDown;
+      m_scene.SetTaskText("Look down");
       break;
     case Step::WaitForLookDown:
       if (m_scene.IsLookingDown()) {
@@ -123,13 +131,13 @@ public:
       break;
     case Step::GreetSushi:
       if (PlayLines({
-        "Hi",
+        VoiceLine{"HI!", "meow_talk"},
         "Welcome to Yield 3. An agricultural prison world. Most people just call this Planet 'The Garden'.",
         "You are now a prisoner here. The crime you committed? doesn't matter......",
-        "ALL THAT MATTERS IS THAT YOU BLASPHEMED AGAINST THE FOUR GODS OF ROUND!",
+        VoiceLine{"ALL THAT MATTERS IS THAT YOU BLASPHEMED AGAINST THE FOUR GODS OF ROUND!", "meow_angry"},
         "I'm a Monitor Sushi and your designated parole officer....",
         "Following protocol, I have therefore been surgically attached to your liver.",
-        "I now offer you a choice: MAKE QUOTA OR I KEEP THE LIVER.",
+        VoiceLine{"I now offer you a choice: MAKE QUOTA OR I KEEP THE LIVER.", "meow_angry"},
         "Lets get you started. This field has been left a mess... pull out your shovel and clear out these rocks",
         },delta)) {
         m_scene.SetTaskText("Select shovel [5] and clear the rocks from the field [LMB] or [E]");
@@ -148,7 +156,7 @@ public:
       if (m_scene.HasHoedTile()) {
         if (PlayLines({
           "Excellent. Now you need some seeds. Convert some of your biomass into seeds at the seed maker.",
-          "Oh..... you don't have biomass yet? Apples fall around the field every now and then. Go find one!",
+          VoiceLine{"Oh..... you don't have biomass yet? Apples fall around the field every now and then. Go find one!", "meow_sad"},
           }, delta)) {
             m_scene.SetTaskText("Find the apple and collect it [LMB] or [E]");
             m_step = Step::WaitForPlayerToHaveBiomass;
@@ -157,6 +165,7 @@ public:
       break;
     case Step::WaitForPlayerToHaveBiomass:
       if (m_scene.PlayerHasBiomass()) {
+        m_scene.PlaySound("meow_talk");
         m_scene.PushNotification("Now you have biomass! Go to the seed maker to convert it into seeds.", LINE_TIME);
         m_scene.SetTaskText("Interact with the seed maker using [LMB] or [E]");
         m_step = Step::WaitForPlayerToHaveSeed;
@@ -164,6 +173,7 @@ public:
       break;
     case Step::WaitForPlayerToHaveSeed:
       if (m_scene.PlayerHasSeed()) {
+        m_scene.PlaySound("meow_talk");
         m_scene.PushNotification("You have seeds! pull out your seed packet and plant them in the hoed spot.", LINE_TIME);
         m_scene.SetTaskText("Select seed packet [4] and Select seed with [RMB] Use [LMB] or [E] to plant");
         m_step = Step::WaitForPlantedTile;
@@ -171,6 +181,7 @@ public:
       break;
     case Step::WaitForPlantedTile:
       if (m_scene.HasPlantedTile()) {
+            m_scene.PlaySound("meow_angry");
             m_scene.PushNotification("Don't just stare at it. Water it!", LINE_TIME);
             m_scene.SetTaskText("Select watering can [3] and water the plants [LMB] or [E]");
         m_step = Step::WaitForWateredTile;
@@ -178,6 +189,7 @@ public:
       break;
     case Step::WaitForWateredTile:
       if (m_scene.HasWateredTile()) {
+        m_scene.PlaySound("meow_sad");
         m_scene.PushNotification("Now we wait......", LINE_TIME);
         m_scene.SetTaskText("Wait for the plants to grow and ripen. Make sure it stays watered.");
         m_step = Step::WaitForRipeTile;
@@ -185,6 +197,7 @@ public:
       break;
     case Step::WaitForRipeTile:
       if (m_scene.HasRipeTile()) {
+        m_scene.PlaySound("meow_talk");
         m_scene.PushNotification("The plants are ripe, Harvest Time! Make sure to use your hands and not your shovel or you will destroy the plants.", LINE_TIME);
         m_scene.SetTaskText("Select hands [1] and harvest the ripe plants [LMB] or [E]");
         m_step = Step::Done;
@@ -205,53 +218,44 @@ public:
     }
   }
 
-   bool PlayLines(const std::vector<std::string>& lines, float dt, float line_time = LINE_TIME) {
-    m_timer -= dt;
-    if (m_timer <= 0.0f) {
-      if (m_line >= lines.size()) { m_line = 0; m_timer = 0; return true; }
-      m_scene.PushNotification(lines[m_line++], line_time);
-      m_timer = line_time;
-    }
-    return false;
+   bool PlayLines(const std::vector<VoiceLine>& lines, float dt, float line_time = LINE_TIME) {
+      m_timer -= dt;
+        if (m_timer <= 0.0f) {
+          if (m_line >= lines.size()) { m_line = 0; m_timer = 0; return true; }
+          m_scene.PushNotification(lines[m_line].text, line_time);
+          m_scene.PlaySound(lines[m_line].voice);
+          m_line++;
+          m_timer = line_time;
+        }
+        return false;
   }
 };
 
 
-inline std::vector<std::unique_ptr<Event>> GetDaysEvents(GardenScene &scene, int day) {
+inline std::unique_ptr<Event> GetRandomBackgroundEvent(GardenScene &scene) {
   std::vector<std::unique_ptr<Event>> events;
 
-  switch (day) {
-  case 0:
-    events.push_back(std::make_unique<TutorialEvent>(scene));
-    break;
-  case 1:
-    events.push_back(std::make_unique<DialogueEvent>(
-    scene, std::vector<std::string>{
-                "Wakey wakey, inmate.",
-                "That ache in your side? That's me. Say hi.",
-                "100 days to make quota, or I keep the liver. Dig."}));
-                break;
-  case 2:
-  case 3:
-  case 4:
-  case 5:
-    events.push_back(std::make_unique<DialogueEvent>(
-    scene, std::vector<std::string>{
-                "Wakey wakey.", 
-                "Your liver is mine now.", 
-                "Get to work."}));
-                break;
+  int event_number = rand() % 3;
 
-  // Example of an instant effect on a scheduled day (needs a WaterAll verb):
-  // case 7:
-  //   events.push_back(std::make_unique<ActionEvent>(scene,
-  //       [](GardenScene &s) { s.PushNotification("It rained overnight."); }));
-  //   break;
-
-  default:
-    break;
+  switch (event_number) {
+    case 0:
+      return std::make_unique<TutorialEvent>(scene);
+    case 1:
+      return std::make_unique<DialogueEvent>(scene, std::vector<VoiceLine>{
+        {"Wakey wakey, inmate.", "meow_talk"},
+        {"That ache in your side? That's me. Say hi.", "meow_talk"},
+        {"100 days to make quota, or I keep the liver. Dig.", "meow_talk"}
+      });
+    case 2:
+      return std::make_unique<DialogueEvent>(scene, std::vector<VoiceLine>{
+        {"Wakey wakey.", "meow_talk"},
+        {"Your liver is mine now.", "meow_talk"},
+        {"Get to work.", "meow_talk"}
+      });
+    default:
+      return nullptr;
   }
-  return events;
 }
+
 
 } // namespace RoundAndRipeEvents
