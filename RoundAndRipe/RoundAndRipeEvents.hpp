@@ -182,7 +182,6 @@ public:
       break;
     case Step::Done:
     if (m_scene.HarvestCount() >= 1) {
-        m_scene.ClearTaskText();
       if (PlayLines({
             "Good. Once you have harvested enough biomass, you can upgrade what tier of plants you can get at the Chest.",
             "The last tier represents your quota, hit that and you can go home.",

@@ -55,10 +55,10 @@ inline PlantDef Blueberry(Texture* growing, Texture* ripe){
     PlantDef blueberry;
     blueberry.name = "blueberry";
     blueberry.type = PlantType::Producing;
-    blueberry.seconds_to_grow = 60;
-    blueberry.seconds_to_ripen = 30;
+    blueberry.seconds_to_grow = 40;
+    blueberry.seconds_to_ripen = 20;
     blueberry.biomass_yield = 1;
-    blueberry.biomass_cost = 5;
+    blueberry.biomass_cost = 6;
     blueberry.growing_texture = growing;
     blueberry.ripe_texture = ripe;
     blueberry.full_size = glm::vec2(0.8f, 1.4f);
