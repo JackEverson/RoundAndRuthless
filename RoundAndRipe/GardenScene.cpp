@@ -9,8 +9,6 @@
 #include "glm/ext/matrix_float4x4.hpp"
 #include <json.hpp>
 
-
-
 GardenScene::GardenScene()
       : sound_manager(SimpleSoundManager::Instance()),
         m_wall_texture("./res/textures/concrete_wall.png"),
@@ -150,7 +148,7 @@ void GardenScene::onEnter(GLFWwindow &window) {
     m_triggers.push_back(chest_trigger);
 
     // seeds
-    m_seeds.push_back({Radish(&m_veg_top_texture, &m_radish_texture), 5});
+    m_seeds.push_back({Radish(&m_veg_top_texture, &m_radish_texture), 0});
     m_seeds.push_back({Blueberry(&m_bush_texture, &m_blueberry_texture), 0});
     
     m_seeds.push_back({Turnip(&m_veg_top_texture,&m_turnip_texture), 0});

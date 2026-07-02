@@ -113,6 +113,7 @@ private:
   Tool m_tool = Tool::None;
   int m_selected_seed = -1;
   std::vector<Seed> m_seeds;
+  int m_harvest_count = 0;
 
   const glm::vec2 TOOL_SIZE = glm::vec2(0.35f);
   const float TOOL_FWD = 0.6f;   
@@ -181,7 +182,28 @@ public:
         return true;
     return false;
   }
+  bool HasWateredTile() const {
+    for (const auto &t : m_field.Tiles())
+      if (t.IsWatered())
+        return true;
+    return false;
+  }
+  bool HasRipeTile() const {
+    for (const auto &t : m_field.Tiles())
+      if (t.IsHarvestable())
+        return true;
+    return false;
+  }
+  bool PlayerHasBiomass() const { return m_biomass > 0; }
+  bool PlayerHasSeed() const {
+    for (const auto &s : m_seeds)
+      if (s.count > 0)
+        return true;
+    return false;
+  }
+
   bool IsLookingDown() const { return m_camera.GetForward().y < -0.98f; }
+  int HarvestCount() const { return m_harvest_count; }
   void SetTaskText(const std::string &text) { m_task_text = text; }
   void ClearTaskText() { m_task_text = ""; }
 
@@ -226,6 +248,7 @@ public:
     case Tool::None:
       if (t.IsHarvestable()) {
         m_biomass += t.Harvest();
+        m_harvest_count++;
       }
       break;
     case Tool::SeedPacket:
@@ -307,6 +330,7 @@ public:
     s.elapsed = m_elapsed;
     s.biomass = m_biomass;
     s.tier = m_tier;
+    s.harvest_count = m_harvest_count;
     s.selected_seed =
         (m_selected_seed >= 0) ? m_seeds[m_selected_seed].def.name : "";
     for (auto &sd : m_seeds)
@@ -324,6 +348,7 @@ public:
     m_elapsed = s.elapsed;
     m_biomass = s.biomass;
     m_tier = s.tier;
+    m_harvest_count = s.harvest_count;
     for (auto &sd : m_seeds)
       sd.count = s.seeds.count(sd.def.name) ? s.seeds[sd.def.name] : 0;
     m_selected_seed = SeedIndex(s.selected_seed);

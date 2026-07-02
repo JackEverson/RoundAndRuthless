@@ -15,7 +15,9 @@ struct TileSave {
 struct GameState {
     int version = 2;
     double elapsed = 0.0;
-    int biomass = 0, tier = 0;
+    int biomass = 0;
+    int tier = 0;
+    int harvest_count = 0;
     std::string selected_seed;
     std::map<std::string, int> seeds;   // name -> count
     std::vector<TileSave> tiles;

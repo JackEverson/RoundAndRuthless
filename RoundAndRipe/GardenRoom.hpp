@@ -18,8 +18,6 @@
 
 #include <vector>
 
-// Game-specific base scene. Inherits from Scene and provides shared state
-// and geometry helpers for all RoundAndRuthless room scenes.
 class GardenRoom : public Scene {
 
 protected:

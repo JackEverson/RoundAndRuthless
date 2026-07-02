@@ -82,8 +82,13 @@ class TutorialEvent : public Event {
     GreetSushi,
     WaitForNoRocks,
     WaitForHoedSpot,
+    WaitForPlayerToHaveBiomass,
+    WaitForPlayerToHaveSeed,
     WaitForPlantedTile,
-    Done };
+    WaitForWateredTile,
+    WaitForRipeTile,
+    Done 
+  };
   Step m_step = Step::Intro;
 
 
@@ -95,7 +100,7 @@ public:
   void Update(float delta) override {
     switch (m_step) {
     case Step::Intro:
-      if (PlayLines({"Hey. You. Look down here!!!"}, delta)) {
+      if (PlayLines({"Hey. You. Down here!!!"}, delta)) {
         m_step = Step::WaitForLookDown;
         m_scene.SetTaskText("Look down");
       }  
@@ -111,7 +116,7 @@ public:
         "Hi",
         "Welcome to Yield 3. An agricultural prison world. Most people just call this Planet 'The Garden'.",
         "You are now a prisoner here. The crime you committed? doesn't matter......",
-        "ALL THE MATTERS IS THAT YOU BLASPHEMED AGAINST THE FOUR GODS OF ROUND!",
+        "ALL THAT MATTERS IS THAT YOU BLASPHEMED AGAINST THE FOUR GODS OF ROUND!",
         "I'm a Monitor Sushi and your designated parole officer....",
         "Following protocol, I have therefore been surgically attached to your liver.",
         "I now offer you a choice: MAKE QUOTA OR I KEEP THE LIVER.",
@@ -132,22 +137,61 @@ public:
     case Step::WaitForHoedSpot:
       if (m_scene.HasHoedTile()) {
         if (PlayLines({
-          "Excellent",
-          "Now I put a few radish seeds in your pocket, I like radishes, they are round and are quick to ripen",
-          "Pull them out now and plant one in the hoed spot you just made."
+          "Excellent. Now you need some seeds. Convert some of your biomass into seeds at the seed maker.",
+          "Oh..... you don't have biomass yet? Apples fall around the field every now and then. Go find one!",
           }, delta)) {
-            m_scene.SetTaskText("Select seed packet [4] and plant a seed in the hoed spot [LMB] or [E]");
-            m_step = Step::WaitForPlantedTile;
+            m_scene.SetTaskText("Find the apple and collect it [LMB] or [E]");
+            m_step = Step::WaitForPlayerToHaveBiomass;
         }
+      }
+      break;
+    case Step::WaitForPlayerToHaveBiomass:
+      if (m_scene.PlayerHasBiomass()) {
+        m_scene.PushNotification("Now you have biomass! Go to the seed maker to convert it into seeds.", LINE_TIME);
+        m_scene.SetTaskText("Interact with the seed maker using [LMB] or [E]");
+        m_step = Step::WaitForPlayerToHaveSeed;
+      }
+      break;
+    case Step::WaitForPlayerToHaveSeed:
+      if (m_scene.PlayerHasSeed()) {
+        m_scene.PushNotification("You have seeds! pull out your seed packet and plant them in the hoed spot.", LINE_TIME);
+        m_scene.SetTaskText("Select seed packet [4] and Select seed with [RMB] Use [LMB] or [E] to plant");
+        m_step = Step::WaitForPlantedTile;
       }
       break;
     case Step::WaitForPlantedTile:
       if (m_scene.HasPlantedTile()) {
+            m_scene.PushNotification("Don't just stare at it. Water it!", LINE_TIME);
+            m_scene.SetTaskText("Select watering can [3] and water the plants [LMB] or [E]");
+        m_step = Step::WaitForWateredTile;
+      }
+      break;
+    case Step::WaitForWateredTile:
+      if (m_scene.HasWateredTile()) {
+        m_scene.PushNotification("Now we wait......", LINE_TIME);
+        m_scene.SetTaskText("Wait for the plants to grow and ripen. Make sure it stays watered.");
+        m_step = Step::WaitForRipeTile;
+      }
+      break;
+    case Step::WaitForRipeTile:
+      if (m_scene.HasRipeTile()) {
+        m_scene.PushNotification("The plants are ripe, Harvest Time! Make sure to use your hands and not your shovel or you will destroy the plants.", LINE_TIME);
+        m_scene.SetTaskText("Select hands [1] and harvest the ripe plants [LMB] or [E]");
         m_step = Step::Done;
       }
       break;
     case Step::Done:
-      
+    if (m_scene.HarvestCount() >= 1) {
+        m_scene.ClearTaskText();
+      if (PlayLines({
+            "Good. Once you have harvested enough biomass, you can upgrade what tier of plants you can get at the Chest.",
+            "The last tier represents your quota, hit that and you can go home.",
+            "Have fun! If you need me I'll be nuzzling further into your liver.",
+            }, delta)) {
+              m_complete = true;
+              m_scene.ClearTaskText();
+            }
+      }
       break;
     }
   }
