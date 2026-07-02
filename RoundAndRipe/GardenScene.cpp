@@ -72,6 +72,7 @@ void GardenScene::onEnter(GLFWwindow &window) {
   sound_manager.LoadSound("water", "./res/sounds/water.ogg");
   sound_manager.LoadSound("dig", "./res/sounds/dig.wav");
   sound_manager.LoadSound("bell", "./res/sounds/fire_truck_bell-clean.wav");
+  sound_manager.LoadSound("boom", "./res/sounds/big_dynamite_explode.wav");
 
   glm::vec3 seed_maker_position = glm::vec3(0.0f, HALF_SUSHI_SIZE, -10.0f);
   m_camera.SetCamera(glm::vec3(0.0f, PLAYER_HEIGHT, 0.0f));
@@ -209,6 +210,7 @@ Scene *GardenScene::update(GLFWwindow &window, float delta) {
   m_notification_manager.Update(delta);
 
   m_elapsed += delta;
+  m_random_event_timer += delta;
   if (m_elapsed >= TIME_LIMIT && m_outcome == Outcome::Playing)
     m_outcome = Outcome::Lost;
 
@@ -239,12 +241,23 @@ Scene *GardenScene::update(GLFWwindow &window, float delta) {
 
   m_field.RunSprinklers();
 
+  if (m_random_event_timer >= RANDOM_EVENT_INTERVAL && m_events.empty()) {
+    auto e = RoundAndRipeEvents::GetRandomBackgroundEvent(*this);
+    if (e)
+      StartEvent(std::move(e));
+    m_random_event_timer = 0.0f;
+  }
+
+
   // TODO: Theses scenes
   // if (m_outcome == Outcome::Won) {
   //     return new WinScene();
   // } else if (m_outcome == Outcome::Lost) {
   //     return new LoseScene();
   // }
+  if (m_outcome != Outcome::Playing) {
+    m_controller.DisableInput();
+  }
 
   return nullptr;
 }
@@ -434,7 +447,7 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
                 std::to_string(m_seeds[m_selected_seed].count);
   }
 
-  ImGui::SetNextWindowPos(ImVec2(w * 0.15f, h - 150.0f), ImGuiCond_Always,
+  ImGui::SetNextWindowPos(ImVec2(w * 0.15f, h - 250.0f), ImGuiCond_Always,
                           ImVec2(0.5f, 0.0f));
   ImGui::SetNextWindowBgAlpha(0.0f);
   ImGui::Begin("##hud", nullptr,
@@ -516,7 +529,7 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
           if (m_tier >= (int)TIER_COST.size()) {
             m_outcome = Outcome::Won;
           } else {
-            StartEvent(std::make_unique<RoundAndRipeEvents::DialogueEvent>(
+            StartEvent(std::make_unique<RoundAndRipeEvents::NotificationEvent>(
                 *this, RoundAndRipeEvents::TierUpLines(m_tier)));
             PlaySound("meow_talk");
             m_menu_mode = MenuMode::None;

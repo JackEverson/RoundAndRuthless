@@ -36,7 +36,7 @@ public:
   }
 };
 
-inline std::vector<std::string> TierUpLines(int tier) {
+inline std::vector<VoiceLine> TierUpLines(int tier) {
   switch (tier) {
   case 1: return {"Tier 1. The Gods of Round acknowledge your existence.",
                   "Barely."};
@@ -47,12 +47,12 @@ inline std::vector<std::string> TierUpLines(int tier) {
 }
 
 class DialogueEvent : public Event {
-  std::vector<std::string> m_lines;
+  std::vector<VoiceLine> m_lines;
   int m_line = 0;
   bool m_advance_held = false; // edge-detect so one tap = one line
 
 public:
-  DialogueEvent(GardenScene &scene, std::vector<std::string> lines)
+  DialogueEvent(GardenScene &scene, std::vector<VoiceLine> lines)
       : Event(scene), m_lines(std::move(lines)) {}
 
   void Render(Renderer &) override {
@@ -68,7 +68,7 @@ public:
                  ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
                      ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize);
     ImGui::SetWindowFontScale(2.0f);
-    ImGui::TextWrapped("%s", m_lines[m_line].c_str());
+    ImGui::TextWrapped("%s", m_lines[m_line].text.c_str());
     ImGui::Text("[E] continue");
     ImGui::End();
   }
@@ -84,7 +84,28 @@ public:
   }
 };
 
+// ── NotificationEvent: timed VoiceLines as notifications; no input, non-modal ─
+class NotificationEvent : public Event {
+  std::vector<VoiceLine> m_lines;
+  float m_line_time;
+  float m_timer = 0.0f;
+  size_t m_line = 0;
 
+public:
+  NotificationEvent(GardenScene &scene, std::vector<VoiceLine> lines,
+                    float line_time = 6.0f)
+      : Event(scene), m_lines(std::move(lines)), m_line_time(line_time) {}
+
+  void Update(float dt) override {
+    m_timer -= dt;
+    if (m_timer > 0.0f) return;
+    if (m_line >= m_lines.size()) { m_complete = true; return; }
+    m_scene.PushNotification(m_lines[m_line].text, m_line_time);
+    m_scene.PlaySound(m_lines[m_line].voice);
+    m_line++;
+    m_timer = m_line_time;
+  }
+};
 
 // ── TutorialEvent: reactive, polls world state and walks its own steps. ─
 // Stays alive (never completes early) so Update() runs every frame until done.
@@ -233,25 +254,32 @@ public:
 
 
 inline std::unique_ptr<Event> GetRandomBackgroundEvent(GardenScene &scene) {
-  std::vector<std::unique_ptr<Event>> events;
-
-  int event_number = rand() % 3;
+  int event_number = rand() % 4;
 
   switch (event_number) {
-    case 0:
-      return std::make_unique<TutorialEvent>(scene);
-    case 1:
-      return std::make_unique<DialogueEvent>(scene, std::vector<VoiceLine>{
-        {"Wakey wakey, inmate.", "meow_talk"},
-        {"That ache in your side? That's me. Say hi.", "meow_talk"},
-        {"100 days to make quota, or I keep the liver. Dig.", "meow_talk"}
+    case 0: // a distant, unexplained detonation. Not your business, inmate.
+      return std::make_unique<ActionEvent>(scene, [](GardenScene &s) {
+        s.PlaySound("boom", 0.8f);
       });
-    case 2:
-      return std::make_unique<DialogueEvent>(scene, std::vector<VoiceLine>{
-        {"Wakey wakey.", "meow_talk"},
-        {"Your liver is mine now.", "meow_talk"},
-        {"Get to work.", "meow_talk"}
+
+    case 1: // Sushi small talk
+      return std::make_unique<ActionEvent>(scene, [](GardenScene &s) {
+        s.PlaySound("meow_talk");
+        s.PushNotification("Your liver is very warm. Cozy.", 4.0f);
       });
+
+    case 2: // Sushi passive-aggression
+      return std::make_unique<ActionEvent>(scene, [](GardenScene &s) {
+        s.PlaySound("meow_sad");
+        s.PushNotification("The quota isn't going to fill itself.", 4.0f);
+      });
+
+    case 3: // Sushi hears the booms too. Probably fine.
+      return std::make_unique<ActionEvent>(scene, [](GardenScene &s) {
+        s.PlaySound("meow_talk");
+        s.PushNotification("Did you hear that? ......No? Good.", 4.0f);
+      });
+
     default:
       return nullptr;
   }

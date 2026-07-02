@@ -106,6 +106,8 @@ private:
   int m_tier = 0;
   int m_biomass = 0;
   double m_elapsed = 0.0;
+  float m_random_event_timer = 0.0f;
+  const float RANDOM_EVENT_INTERVAL = 30.0f;
   Outcome m_outcome = Outcome::Playing;
 
   const float SAVE_INTERVAL = 30.0f;
@@ -211,7 +213,11 @@ public:
   void SetTaskText(const std::string &text) { m_task_text = text; }
   void ClearTaskText() { m_task_text = ""; }
 
-  void PlaySound(const std::string &name) { sound_manager.PlaySound(name); }
+  void PlaySound(const std::string &name, float volume = 1.0f) 
+  { 
+    sound_manager.PlaySound(name); 
+    sound_manager.SetSoundVolume(name, volume );
+  }
   void StartEvent(std::unique_ptr<Event> e) {
     e->OnStart();
     m_events.push_back(std::move(e));
@@ -292,7 +298,6 @@ public:
     }
     return nullptr;
   }
-
 
   const PlantDef *FindDef(const std::string &name) {
     for (auto &s : m_seeds)
