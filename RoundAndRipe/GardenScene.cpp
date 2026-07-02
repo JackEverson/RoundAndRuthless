@@ -1,4 +1,5 @@
 #include "GardenScene.hpp"
+#include "GLFW/glfw3.h"
 #include "RoundAndRipeEvents.hpp"   
 #include "FPSController.hpp"
 #include "TriggerVolume.hpp"
@@ -169,7 +170,7 @@ Scene *GardenScene::update(GLFWwindow &window, float delta) {
         m_save_timer = 0.0f;
     }
 
-    for (auto& t : m_field.Tiles()) t.Grow(delta);
+    for (auto& t : m_field.Tiles()) t.Update(delta);
 
     // event updates
     for (auto& e : m_events) e->Update(delta);
@@ -198,6 +199,8 @@ Scene *GardenScene::update(GLFWwindow &window, float delta) {
 
 void GardenScene::handleInput(GLFWwindow &window, float delta) {
     HandleCommonInput(window, delta);
+    
+    if (glfwGetKey(&window, GLFW_KEY_ESCAPE) == GLFW_PRESS) m_menu_mode = MenuMode::None;
 
     if (m_controller.InputDisabled())
       return;
@@ -220,23 +223,25 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
         UseToolOn(*tile);
     }
 
-    if (glfwGetKey(&window, GLFW_KEY_1) == GLFW_PRESS)
-      m_tool = Tool::Shovel;
-    if (glfwGetKey(&window, GLFW_KEY_2) == GLFW_PRESS)
-      m_tool = Tool::Hoe;
-    if (glfwGetKey(&window, GLFW_KEY_3) == GLFW_PRESS)
-      m_tool = Tool::WateringCan;
-    if (glfwGetKey(&window, GLFW_KEY_4) == GLFW_PRESS)
-      m_tool = Tool::SeedPacket;
-    if (glfwGetKey(&window, GLFW_KEY_5) == GLFW_PRESS)
-      m_tool = Tool::None;
+    if (glfwGetKey(&window, GLFW_KEY_1) == GLFW_PRESS)m_tool = Tool::None;
+    if (glfwGetKey(&window, GLFW_KEY_2) == GLFW_PRESS)m_tool = Tool::Hoe;
+    if (glfwGetKey(&window, GLFW_KEY_3) == GLFW_PRESS)m_tool = Tool::WateringCan;
+    if (glfwGetKey(&window, GLFW_KEY_4) == GLFW_PRESS)m_tool = Tool::SeedPacket;
+    if (glfwGetKey(&window, GLFW_KEY_5) == GLFW_PRESS)m_tool = Tool::Shovel;
+
 
     // temp scroll wheel seed selection
     float wheel = ImGui::GetIO().MouseWheel; // + up / - down, this frame
     if (wheel > 0)
-      CycleSeed(+1);
+      CycleTool(+1);
     else if (wheel < 0)
-      CycleSeed(-1);
+      CycleTool(-1);
+
+    if (m_tool == Tool::SeedPacket && glfwGetMouseButton(&window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+      m_menu_mode = MenuMode::SeedSelection;
+    }
+
+
   }
 
   void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
@@ -432,6 +437,36 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
               } else m_notification_manager.Push("Not enough biomass", 1.5f);
           }
       }
+      if (ImGui::Button("Close")) m_menu_mode = MenuMode::None;
+      ImGui::End();
+    }
+    else if (m_menu_mode == MenuMode::SeedSelection) {
+      ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f), ImGuiCond_Always,
+                              ImVec2(0.5f, 0.5f));
+      ImGui::SetNextWindowBgAlpha(0.9f);
+      ImGui::Begin("Seeds", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+      ImGui::SetWindowFontScale(m_font_size);
+
+      bool any_in_stock = false;
+      for (int n = 0; n < (int)m_seeds.size(); n++) {
+        Seed &seed = m_seeds[n];
+        if (seed.count <= 0) continue; // only seeds the player actually has
+        any_in_stock = true;
+
+        ImGui::PushID(n);
+        ImGui::Text("%s%s  x%d", (m_selected_seed == n) ? "> " : "",
+                    seed.def.name.c_str(), seed.count);
+        ImGui::SameLine();
+        if (ImGui::Button("Select")) {
+          m_selected_seed = n;
+          m_menu_mode = MenuMode::None; // pick -> close, straight back to planting
+        }
+        ImGui::PopID();
+      }
+      if (!any_in_stock)
+        ImGui::Text("No seeds. Buy some at the seed maker.");
+
+      ImGui::Separator();
       if (ImGui::Button("Close")) m_menu_mode = MenuMode::None;
       ImGui::End();
     }

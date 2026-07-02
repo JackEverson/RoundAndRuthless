@@ -60,7 +60,7 @@ private:
 
   // enums and struct
   enum class Outcome { Playing, Won, Lost };
-  enum class Tool { Shovel, Hoe, WateringCan, SeedPacket, None };
+  enum class Tool { None, Shovel, Hoe, WateringCan, SeedPacket };
 
   enum class MenuMode { None, SeedShop, UpgradeShop, SeedSelection };
 
@@ -197,17 +197,8 @@ public:
 
   int SeedCost(PlantDef def) { return (def.biomass_yield / 2) + 1; }
 
-  void CycleSeed(int dir) {
-    int n = (int)m_seeds.size();
-    int start = (m_selected_seed < 0) ? 0 : m_selected_seed;
-    for (int i = 1; i <= n; i++) {
-      int idx = ((start + dir * i) % n + n) % n; // wrap, handles negatives
-      if (m_seeds[idx].count > 0) {
-        m_selected_seed = idx;
-        return;
-      }
-    }
-    m_selected_seed = -1; // nothing in stock
+  void CycleTool(int dir) {
+    m_tool = static_cast<Tool>((static_cast<int>(m_tool) + dir + 5) % 5);
   }
 
   void UseToolOn(Tile &t) {
@@ -333,8 +324,7 @@ public:
     auto &tiles = m_field.Tiles();
     if (s.tiles.size() == tiles.size())
       for (size_t i = 0; i < tiles.size(); i++)
-        tiles[i].Set((Tile::TileState)s.tiles[i].state, s.tiles[i].watered,
-                     FindDef(s.tiles[i].plant), s.tiles[i].seconds_growing);
+        tiles[i].Set((Tile::TileState)s.tiles[i].state, FindDef(s.tiles[i].plant), s.tiles[i].seconds_growing);
     return true;
   }
 };

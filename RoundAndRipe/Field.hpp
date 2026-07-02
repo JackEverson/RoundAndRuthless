@@ -40,12 +40,6 @@ inline Field::Field(glm::vec3 origin, int w, int h, float tileSize,
   }
 }
 
-inline void Field::Advance() {
-  for (auto &tile : m_tiles) {
-    tile.Advance();
-  }
-}
-
 inline void Field::Render(Renderer &renderer, const glm::vec3 &campos) {
   for (auto &tile : m_tiles) {
     tile.Render(renderer, campos);

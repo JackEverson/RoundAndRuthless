@@ -18,12 +18,11 @@ public:
     
     Tile(glm::vec3 position, Texture* soil_texture, Texture* refuse_texture, Texture* tilled_texture, Texture* seeded_texture, TileState state = TileState::Refuse);
 
-    void Advance();
-    void Grow(float dt); // real-time growth tick (replaces day-based Advance)
+    void Update(float dt); 
     void Render(Renderer& renderer, const glm::vec3& campos);
 
     void Plant(const PlantDef* plant);
-    void Set(TileState state, bool watered, const PlantDef* plant, int days_growing);
+    void Set(TileState state, const PlantDef* plant, int days_growing);
     int Harvest();
     void Water();
     void PullUp();
@@ -50,6 +49,8 @@ private:
     const float WET_FACTOR = 0.5;
     const float PLOT_SIZE = 1.0f;
     const float SOIL_OFFSET = 0.05f;
+    const float WATER_DURATION = 30.0f; // seconds until soil dries out
+    float m_water_timer = 0.0f;
 
     void RefreshState();
 
@@ -96,9 +97,17 @@ m_state(state)
     m_refuse_sprite.texture = refuse_texture;
 }
 
-inline void Tile::Grow(float dt){
-    //TODO: Watering checks, etc. (for now, just grow regardless of state)
-    
+inline void Tile::Update(float dt){
+    if (m_watered) {
+        m_water_timer += dt;
+        if (m_water_timer >= WATER_DURATION) {
+            m_watered = false;
+            m_soil_sprite.color = SOIL_COLOR;
+            m_water_timer = 0.0f;
+        }
+    }
+    else { return; }
+
     if (!m_plant) return;
     if (m_plant->type == PlantType::Harvestable && m_state != TileState::Growing) return;
     if (m_plant->type == PlantType::Producing && m_state == TileState::Ripe) return;
@@ -167,7 +176,7 @@ inline void Tile::Plant(const PlantDef* plant){
     m_ripe_sprite = ripe_sprite;
 }
 
-inline void Tile::Set(TileState state, bool watered, const PlantDef* plant, int days_growing){
+inline void Tile::Set(TileState state, const PlantDef* plant, int days_growing){
     if (plant) {
         Plant(plant);
         m_seconds_growing = days_growing;
@@ -178,7 +187,6 @@ inline void Tile::Set(TileState state, bool watered, const PlantDef* plant, int 
             ? TileState::Empty
             : state;            // refuse / empty / tilled load
     }
-    m_watered = watered;
 }
 
 inline void Tile::RefreshState(){
@@ -191,11 +199,14 @@ inline void Tile::RefreshState(){
 
     if (m_seconds_growing >= m_plant->seconds_to_grow) m_state = TileState::Grown;
     if (m_seconds_growing >= m_plant->seconds_to_grow + m_plant->seconds_to_ripen) m_state = TileState::Ripe;
+    
+    if (m_watered) m_soil_sprite.color = SOIL_COLOR * glm::vec4(WET_FACTOR, WET_FACTOR, WET_FACTOR, 1.0f);
+    else m_soil_sprite.color = SOIL_COLOR;
 }
 
 inline void Tile::Water(){
     m_watered = true;
-    m_soil_sprite.color = SOIL_COLOR * glm::vec4(WET_FACTOR, WET_FACTOR, WET_FACTOR, 1.0f);
+    m_water_timer = 0.0f;
 }
 
 inline int Tile::Harvest(){

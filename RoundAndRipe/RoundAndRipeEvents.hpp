@@ -117,7 +117,7 @@ public:
         "I now offer you a choice: MAKE QUOTA OR I KEEP THE LIVER.",
         "Lets get you started. This field has been left a mess... pull out your shovel and clear out these rocks",
         },delta)) {
-        m_scene.SetTaskText("Select shovel [1] and clear the rocks from the field [LMB] or [E]");
+        m_scene.SetTaskText("Select shovel [5] and clear the rocks from the field [LMB] or [E]");
         m_step = Step::WaitForNoRocks;
       }
       break;
@@ -164,8 +164,7 @@ public:
 };
 
 
-inline std::vector<std::unique_ptr<Event>> GetDaysEvents(GardenScene &scene,
-                                                         int day) {
+inline std::vector<std::unique_ptr<Event>> GetDaysEvents(GardenScene &scene, int day) {
   std::vector<std::unique_ptr<Event>> events;
 
   switch (day) {
