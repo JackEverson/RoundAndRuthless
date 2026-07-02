@@ -11,10 +11,10 @@ class Field {
 public:
   Field(glm::vec3 origin, int w, int h, float tileSize, Texture *soil,
         Texture *rock, Texture *till,Texture *seeded);
-  void Advance();
   void Render(Renderer &renderer, const glm::vec3 &campos);
   void CollectLights(std::vector<PointLight> &out) const;
   Tile *TileAtRay(glm::vec3 origin, glm::vec3 dir);
+  void RunSprinklers();
 
   std::vector<Tile>& Tiles() { return m_tiles; } // for load
   const std::vector<Tile>& Tiles() const { return m_tiles; } // for save
@@ -64,4 +64,17 @@ inline Tile *Field::TileAtRay(glm::vec3 origin, glm::vec3 dir) {
     return nullptr; // off the grid
 
   return &m_tiles[col * m_w + row];
+}
+
+inline void Field::RunSprinklers() {
+  for (int r = 0; r < m_h; r++)
+    for (int c = 0; c < m_w; c++) {
+      if (!m_tiles[r * m_w + c].HasSprinkler()) continue;
+      for (int dr : {-1, 1})
+        for (int dc : {-1, 1}) {
+          int nr = r + dr, nc = c + dc;
+          if (nr >= 0 && nr < m_h && nc >= 0 && nc < m_w)
+            m_tiles[nr * m_w + nc].Water();   // every frame = permanently topped up
+        }
+    }
 }

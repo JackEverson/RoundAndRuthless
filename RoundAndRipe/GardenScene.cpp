@@ -157,6 +157,9 @@ void GardenScene::onEnter(GLFWwindow &window) {
     m_seeds.push_back({Tomato(&m_bush_texture, &m_tomato_texture), 0});
 
     m_seeds.push_back({StaringCabbage(&m_staring_cabbage_growing_texture, &m_staring_cabbage_ripe_texture), 0});
+    
+    m_seeds.push_back({Sprinkler(&m_sushi_texture), 0});
+
 
     if (!Load()) {
       StartEvent(std::make_unique<RoundAndRipeEvents::TutorialEvent>(*this));
@@ -209,6 +212,7 @@ Scene *GardenScene::update(GLFWwindow &window, float delta) {
       }
     }
 
+    m_field.RunSprinklers();
 
     // TODO: Theses scenes
     // if (m_outcome == Outcome::Won) {

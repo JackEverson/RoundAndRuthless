@@ -39,6 +39,7 @@ public:
     bool IsEmpty() const { return m_state == TileState::Empty; }
     bool IsWatered() const { return m_watered; }
     bool HasPlant() const { return m_plant != nullptr; }
+    bool HasSprinkler() const { return m_plant && m_plant->type == PlantType::Structure; }
 
     glm::vec3 Position() const { return m_position; }
     float SecondsGrowing() const { return m_seconds_growing; }
@@ -230,6 +231,7 @@ inline void Tile::PullUp(){
 
 inline bool Tile::IsHarvestable() const{
     if (!m_plant) return false;
+    if (m_plant->type == PlantType::Structure) return false;
     return (m_plant->type == PlantType::Producing) ? m_state == TileState::Ripe
                                                    : m_state == TileState::Grown;
 }
