@@ -28,6 +28,16 @@ public:
   }
 };
 
+inline std::vector<std::string> TierUpLines(int tier) {
+  switch (tier) {
+  case 1: return {"Tier 1. The Gods of Round acknowledge your existence.",
+                  "Barely."};
+  case 2: return {"Tier 2! Your liver is safe for another day.",
+                  "New seeds are available. Spend wisely, inmate."};
+  default: return {"Another tier. How industrious."};
+  }
+}
+
 class DialogueEvent : public Event {
   std::vector<std::string> m_lines;
   int m_line = 0;

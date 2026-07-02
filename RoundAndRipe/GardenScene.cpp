@@ -460,12 +460,10 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
       ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f), ImGuiCond_Always,
                               ImVec2(0.5f, 0.5f));
       ImGui::SetNextWindowBgAlpha(
-          0.9f); // visible panel (your HUD used 0 = invisible)
+          0.9f); 
       ImGui::Begin("Upgrade Store", nullptr,
-                   ImGuiWindowFlags_AlwaysAutoResize); // NOTE: no NoInputs — it
-                                                       // must take clicks
+                   ImGuiWindowFlags_AlwaysAutoResize); 
       ImGui::SetWindowFontScale(m_font_size);
-
       ImGui::Text("Biomass: %d g", m_biomass);
       ImGui::Separator();
       if (m_tier >= (int)TIER_COST.size()) {
@@ -477,7 +475,14 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
                   m_biomass -= TIER_COST[m_tier];
                   m_tier++;
                   sound_manager.PlaySound("bell");
-                  if (m_tier >= (int)TIER_COST.size()) m_outcome = Outcome::Won;
+
+                  if (m_tier >= (int)TIER_COST.size()) {
+                    m_outcome = Outcome::Won;
+                  } else{
+                    StartEvent(std::make_unique<RoundAndRipeEvents::DialogueEvent>(
+              *this, RoundAndRipeEvents::TierUpLines(m_tier)));
+                      m_menu_mode = MenuMode::None;   
+                  }
               } else m_notification_manager.Push("Not enough biomass", 1.5f);
           }
       }
