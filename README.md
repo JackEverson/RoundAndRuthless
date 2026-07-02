@@ -39,3 +39,7 @@ cmake --build ./build-windows --parallel
 - ghost-scare-vintage.wav, modified from [onderwish - freesound](https://freesound.org/people/onderwish/sounds/457514/)
 - ambient-noise.ogg, modified from [patchytherat - freesound](https://freesound.org/people/patchytherat/sounds/535048/)
 - beep.wav, modified from [Breviceps - freesound](https://freesound.org/people/Breviceps/sounds/444492/)
+- fire_truck_bell-clean.wav from [RemyMarshal - freesound](https://freesound.org/people/RemyMarshal/sounds/860385/)
+- big_dynamite_explode.wav from [felix.blume - freesound](https://freesound.org/people/felix.blume/sounds/475780/)
+- sugar_dig.wav from [MrFossy - freesound](https://freesound.org/people/MrFossy/sounds/523276/)
+- eating.wav from [harrisonlace - freesound](https://freesound.org/people/harrisonlace/sounds/771954/)
