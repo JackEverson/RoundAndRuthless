@@ -231,16 +231,17 @@ public:
 
   void UseToolOn(Tile &t) {
     switch (m_tool) {
+    
     case Tool::Shovel:
       if (t.HasPlant())
-        t.PullUp();        // real-time: no confirm — careless shovelling costs you the crop
+        { t.PullUp(); sound_manager.PlaySound("dig"); }
       else if (t.IsRefuse())
-        t.Clear();
+        { t.Clear();sound_manager.PlaySound("dig"); }
       break;
 
     case Tool::Hoe:
       if (t.IsEmpty())
-        t.Till();
+        { t.Till(); sound_manager.PlaySound("dig"); }
       break;
     case Tool::WateringCan:
         t.Water();

@@ -57,10 +57,13 @@ void GardenScene::onEnter(GLFWwindow &window) {
       GardenEngine::SetBorderless(window, true); // window is created windowed; only switch if needed
 
     sound_manager.Initialize();
-    sound_manager.LoadSound("background_noise",
-                            "./res/sounds/ambient-noise.ogg");
-
+    sound_manager.LoadSound("background_noise","./res/sounds/ambient-noise.ogg");
     sound_manager.PlayBackgroundMusic("background_noise");
+
+    sound_manager.LoadSound("water","./res/sounds/water.ogg");
+    sound_manager.LoadSound("dig",   "./res/sounds/dig.wav");
+    sound_manager.LoadSound("bell",  "./res/sounds/fire_truck_bell-clean.wav");
+
 
     glm::vec3 seed_maker_position = glm::vec3(0.0f, HALF_SUSHI_SIZE, -10.0f);
     m_camera.SetCamera(glm::vec3(0.0f, PLAYER_HEIGHT, 0.0f));
@@ -234,6 +237,16 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
     }
     m_esc_held = esc;
 
+    // water-can loop: must run BEFORE the InputDisabled early-return,
+    // or the stop-branch can't fire while a menu is open
+    bool watering = (m_tool == Tool::WateringCan) &&
+                    m_controller.InteractionHeld() &&
+                    !m_controller.InputDisabled();
+    if (watering && !sound_manager.IsSoundPlaying("water"))
+        sound_manager.PlaySound("water", true);
+    else if (!watering && sound_manager.IsSoundPlaying("water"))
+        sound_manager.StopSound("water");
+
     if (m_controller.InputDisabled())
       return;
 
@@ -261,7 +274,6 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
     if (glfwGetKey(&window, GLFW_KEY_4) == GLFW_PRESS)m_tool = Tool::SeedPacket;
     if (glfwGetKey(&window, GLFW_KEY_5) == GLFW_PRESS)m_tool = Tool::Shovel;
 
-
     // temp scroll wheel seed selection
     float wheel = ImGui::GetIO().MouseWheel; // + up / - down, this frame
     if (wheel > 0)
@@ -272,7 +284,6 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
     if (m_tool == Tool::SeedPacket && glfwGetMouseButton(&window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
       m_menu_mode = MenuMode::SeedSelection;
     }
-
 
   }
 
@@ -465,6 +476,7 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
               if (m_biomass >= TIER_COST[m_tier]) {
                   m_biomass -= TIER_COST[m_tier];
                   m_tier++;
+                  sound_manager.PlaySound("bell");
                   if (m_tier >= (int)TIER_COST.size()) m_outcome = Outcome::Won;
               } else m_notification_manager.Push("Not enough biomass", 1.5f);
           }
