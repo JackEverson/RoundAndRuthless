@@ -15,7 +15,6 @@ private:
 
   float m_player_radius = 0.3f;
   float m_speed = 5.0f;
-  double m_mouse_sensitivity = 0.05;
   double m_lastMouseX = 0.0;
   double m_lastMouseY = 0.0;
 
@@ -37,6 +36,9 @@ public:
 
   int KeyInteract = GLFW_KEY_E;
   int MouseClick = GLFW_MOUSE_BUTTON_LEFT;
+
+  float MouseSensitivity = 0.05f; // settings-tunable
+  bool InvertY = false;
 
 public:
   FPSController(Camera &camera);
@@ -106,8 +108,8 @@ inline void FPSController::HandleInput(GLFWwindow &window, float delta) {
   double mouseX, mouseY;
   glfwGetCursorPos(&window, &mouseX, &mouseY);
 
-  double deltaX = (mouseX - m_lastMouseX) * m_mouse_sensitivity;
-  double deltaY = (mouseY - m_lastMouseY) * -m_mouse_sensitivity;
+  double deltaX = (mouseX - m_lastMouseX) * MouseSensitivity;
+  double deltaY = (mouseY - m_lastMouseY) * (InvertY ? MouseSensitivity : -MouseSensitivity);
 
   m_camera.ShiftRotation(deltaX, deltaY);
 

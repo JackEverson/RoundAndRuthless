@@ -1,6 +1,7 @@
 #include "GardenScene.hpp"
 #include "GLFW/glfw3.h"
-#include "RoundAndRipeEvents.hpp"   
+#include "RoundAndRipeEvents.hpp"
+#include "Engine.hpp"           
 #include "FPSController.hpp"
 #include "TriggerVolume.hpp"
 
@@ -43,6 +44,19 @@ GardenScene::GardenScene()
 void GardenScene::onEnter(GLFWwindow &window) {
     glfwSetInputMode(&window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     m_controller.Init(window);
+
+    // settings: load (defaults if no file) and apply
+    GameSettings cfg;
+    SaveSystem::LoadSettings(SETTINGS_PATH, cfg);
+    m_master_volume = cfg.volume;
+    sound_manager.SetMasterVolume(cfg.volume);
+    m_brightness = cfg.brightness;
+    m_controller.MouseSensitivity = cfg.sensitivity;
+    m_controller.InvertY = cfg.invert_y;
+    m_font_size = cfg.ui_scale;
+    m_borderless = cfg.borderless;
+    if (m_borderless)
+      GardenEngine::SetBorderless(window, true); // window is created windowed; only switch if needed
 
     sound_manager.Initialize();
     sound_manager.LoadSound("background_noise",
@@ -153,7 +167,17 @@ void GardenScene::onEnter(GLFWwindow &window) {
 }
 
 void GardenScene::onExit(GLFWwindow &window) {
-  if (m_outcome == Outcome::Playing) Save(); 
+  if (m_outcome == Outcome::Playing) Save();
+
+  // settings persist regardless of outcome
+  GameSettings cfg;
+  cfg.volume      = m_master_volume;
+  cfg.brightness  = m_brightness;
+  cfg.sensitivity = m_controller.MouseSensitivity;
+  cfg.invert_y    = m_controller.InvertY;
+  cfg.ui_scale    = m_font_size;
+  cfg.borderless  = m_borderless;
+  SaveSystem::SaveSettings(SETTINGS_PATH, cfg);
 
   glfwSetInputMode(&window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
@@ -199,8 +223,14 @@ Scene *GardenScene::update(GLFWwindow &window, float delta) {
 
 void GardenScene::handleInput(GLFWwindow &window, float delta) {
     HandleCommonInput(window, delta);
-    
-    if (glfwGetKey(&window, GLFW_KEY_ESCAPE) == GLFW_PRESS) m_menu_mode = MenuMode::None;
+
+    // ESC: edge-detected toggle — opens Settings, or closes whatever menu is up
+    bool esc = glfwGetKey(&window, GLFW_KEY_ESCAPE) == GLFW_PRESS;
+    if (esc && !m_esc_held) {
+      m_menu_mode = (m_menu_mode == MenuMode::None) ? MenuMode::Settings
+                                                    : MenuMode::None;
+    }
+    m_esc_held = esc;
 
     if (m_controller.InputDisabled())
       return;
@@ -258,7 +288,7 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
     if (m_show_highlight)
       lights.push_back(m_highlight);
 
-    renderer.SetLights(lights, 0.15f);
+    renderer.SetLights(lights, 0.15f * m_brightness);
 
     SetupRenderingObjects(renderer);
 
@@ -468,6 +498,34 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
 
       ImGui::Separator();
       if (ImGui::Button("Close")) m_menu_mode = MenuMode::None;
+      ImGui::End();
+    }
+    else if (m_menu_mode == MenuMode::Settings) {
+      ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f), ImGuiCond_Always,
+                              ImVec2(0.5f, 0.5f));
+      ImGui::SetNextWindowBgAlpha(0.9f);
+      ImGui::Begin("Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+      ImGui::SetWindowFontScale(m_font_size);
+
+      if (ImGui::SliderFloat("Volume", &m_master_volume, 0.0f, 1.0f))
+        sound_manager.SetMasterVolume(m_master_volume);
+
+      ImGui::SliderFloat("Brightness", &m_brightness, 0.3f, 2.0f); // applied via SetLights each frame
+
+      ImGui::SliderFloat("Mouse Sensitivity", &m_controller.MouseSensitivity,
+                         0.01f, 0.15f);
+      ImGui::Checkbox("Invert Y", &m_controller.InvertY);
+
+      ImGui::SliderFloat("UI Scale", &m_font_size, 1.0f, 3.0f);
+
+      if (ImGui::Checkbox("Windowed Fullscreen", &m_borderless))
+        GardenEngine::SetBorderless(window, m_borderless);
+
+      ImGui::Separator();
+      if (ImGui::Button("Close")) m_menu_mode = MenuMode::None;
+      ImGui::SameLine();
+      if (ImGui::Button("Quit Game"))
+        glfwSetWindowShouldClose(&window, true); // autosaves via onExit
       ImGui::End();
     }
 

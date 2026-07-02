@@ -22,9 +22,23 @@ struct GameState {
 };
 
 
+// Machine preferences — separate file from the game save so they survive
+// New Game / save wipes / SAVE_VERSION bumps. Defaults here = first-run values.
+struct GameSettings {
+    float volume = 1.0f;
+    float brightness = 1.0f;
+    float sensitivity = 0.05f;
+    bool  invert_y = false;
+    float ui_scale = 2.0f;
+    bool  borderless = true;   // fullscreen by default
+};
+
 namespace SaveSystem {
     void Save(const std::string& path, const GameState& s);          // GameState -> json -> file
     bool Load(const std::string& path, int version, GameState& out); // file -> json -> GameState; false if missing/version-mismatch
+
+    void SaveSettings(const std::string& path, const GameSettings& s);
+    bool LoadSettings(const std::string& path, GameSettings& out);   // false if missing/malformed (out keeps defaults)
 }
 
 

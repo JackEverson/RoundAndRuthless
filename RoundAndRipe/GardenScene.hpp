@@ -62,7 +62,7 @@ private:
   enum class Outcome { Playing, Won, Lost };
   enum class Tool { None, Shovel, Hoe, WateringCan, SeedPacket };
 
-  enum class MenuMode { None, SeedShop, UpgradeShop, SeedSelection };
+  enum class MenuMode { None, Settings, SeedShop, UpgradeShop, SeedSelection };
 
   struct Seed {
     PlantDef def;
@@ -85,8 +85,14 @@ private:
 
   // menu
   float m_font_size = 2.0f;
-  
+
   MenuMode m_menu_mode = MenuMode::None;
+  bool m_esc_held = false;
+
+  // settings (persisted to settings.json; fullscreen default)
+  float m_master_volume = 1.0f;
+  float m_brightness = 1.0f;    // scales the ambient light
+  bool m_borderless = true;
 
   // field
   PointLight m_highlight;
@@ -215,7 +221,6 @@ public:
         t.Till();
       break;
     case Tool::WateringCan:
-      if (!t.IsWatered())
         t.Water();
       break;
     case Tool::None:
@@ -294,6 +299,7 @@ public:
 
   const int SAVE_VERSION = 2;
   const std::string SAVE_PATH = "./save.json";
+  const std::string SETTINGS_PATH = "./settings.json";
 
   void Save() {
     GameState s;

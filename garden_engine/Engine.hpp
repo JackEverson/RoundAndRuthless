@@ -25,6 +25,10 @@ public:
 
   int Start(std::unique_ptr<Scene> scene, float fps);
 
+  // Windowed fullscreen (borderless) toggle. Static so scenes — which only
+  // hold the GLFWwindow& — can call it; remembers the windowed rect to restore.
+  static void SetBorderless(GLFWwindow &window, bool borderless);
+
 private:
   void setupGlfwWindow(std::string name, bool windowed, int win_width,
                        int win_height);
