@@ -14,6 +14,8 @@
 
 namespace RoundAndRipeEvents {
 
+static constexpr float LINE_TIME = 4.5f;
+
 struct VoiceLine {
   std::string text;
   std::string voice = "meow_talk";
@@ -21,6 +23,28 @@ struct VoiceLine {
   VoiceLine(std::string t, std::string v) : text(std::move(t)), voice(std::move(v)) {}
 };
 
+class LineEvent : public Event {
+protected:
+  float m_line_timer = 0.0f;
+  size_t m_line = 0;
+
+  using Event::Event;   // inherit the (GardenScene&) constructor
+
+  // One line per line_time; returns true when the set finishes. Empty text = skip.
+  bool PlayLines(const std::vector<VoiceLine> &lines, float dt,
+                 float line_time = LINE_TIME) {
+    m_line_timer -= dt;
+    if (m_line_timer <= 0.0f) {
+      if (m_line >= lines.size()) { m_line = 0; m_line_timer = 0; return true; }
+      if (lines[m_line].text.empty()) { m_line++; return false; }
+      m_scene.PushNotification(lines[m_line].text, line_time);
+      m_scene.PlaySound(lines[m_line].voice);
+      m_line++;
+      m_line_timer = line_time;
+    }
+    return false;
+  }
+};
 
 class ActionEvent : public Event {
   std::function<void(GardenScene &)> m_fn;
@@ -38,11 +62,13 @@ public:
 
 inline std::vector<VoiceLine> TierUpLines(int tier) {
   switch (tier) {
-  case 1: return {"Tier 1. The Gods of Round acknowledge your existence.",
-                  "Barely."};
-  case 2: return {"Tier 2! Your liver is safe for another day.",
-                  "New seeds are available. Spend wisely, inmate."};
+  case 1: return {"Tier 1. You get access to new seeds and sprinklers.",
+                  "Start automating that watering! I'll be here... in your liver"};
+  case 2: return {"Tier 2. You unlocked staring cabbage......",
+                  VoiceLine("I don't like them.... they feel.... judgey...", "meow_sad")};
+  
   default: return {"Another tier. How industrious."};
+  
   }
 }
 
@@ -55,7 +81,7 @@ public:
   DialogueEvent(GardenScene &scene, std::vector<VoiceLine> lines)
       : Event(scene), m_lines(std::move(lines)) {}
 
-  void Render(Renderer &) override {
+  void Render(Renderer &, const int &, const int& ) override {
     if (m_line >= (int)m_lines.size())
       return;
 
@@ -109,11 +135,7 @@ public:
 
 // ── TutorialEvent: reactive, polls world state and walks its own steps. ─
 // Stays alive (never completes early) so Update() runs every frame until done.
-class TutorialEvent : public Event {
-  static constexpr float LINE_TIME = 6.0f;
-
-  float m_timer = 0.0f;
-  size_t m_line = 0;
+class TutorialEvent : public LineEvent {
 
   enum class Step { 
     Intro, 
@@ -132,9 +154,7 @@ class TutorialEvent : public Event {
 
 
 public:
-  using Event::Event;
-
-  // void OnStart() override {}
+  using LineEvent::LineEvent;
 
   void Update(float delta) override {
     switch (m_step) {
@@ -167,10 +187,10 @@ public:
       break;
     case Step::WaitForNoRocks:
       if (m_scene.HasNoRocks()) {
-        if (PlayLines({"Good. Nice and clear. Now hoe a spot for planting."}, delta)) {
-          m_scene.SetTaskText("Select hoe [2] and hoe a spot for planting [LMB] or [E]");
-          m_step = Step::WaitForHoedSpot;
-        }
+        m_scene.PlaySound("meow_talk");
+        m_scene.PushNotification("Good. Nice and clear. Now hoe a spot for planting.", LINE_TIME);
+        m_scene.SetTaskText("Select hoe [2] and hoe a spot for planting [LMB] or [E]");
+        m_step = Step::WaitForHoedSpot;
       }
       break;
     case Step::WaitForHoedSpot:
@@ -238,18 +258,71 @@ public:
       break;
     }
   }
+};
 
-   bool PlayLines(const std::vector<VoiceLine>& lines, float dt, float line_time = LINE_TIME) {
-      m_timer -= dt;
-        if (m_timer <= 0.0f) {
-          if (m_line >= lines.size()) { m_line = 0; m_timer = 0; return true; }
-          m_scene.PushNotification(lines[m_line].text, line_time);
-          m_scene.PlaySound(lines[m_line].voice);
-          m_line++;
-          m_timer = line_time;
-        }
-        return false;
+class EndEvent : public LineEvent {
+  enum class EndPhase { None, Farewell, FadeRed, FadeBlack, Hold };
+  EndPhase m_end_phase = EndPhase::None;
+  float m_end_timer = 0.0f;
+
+  using LineEvent::LineEvent;
+
+  void OnStart() override{
+    m_scene.SetOutcome(GardenScene::Outcome::Won);         
   }
+
+  void Update(float delta) override {
+    switch (m_end_phase) {
+    case EndPhase::None: 
+      if (PlayLines({
+        VoiceLine{"You have reached your final tier. The FOUR GODS OF ROUND acknowledge your existence", "meow_talk"},
+        VoiceLine{"Barely.", "meow_sad"},
+        VoiceLine{"Well I guess now you can go home and I keep the liver", "meow_talk"},
+        VoiceLine{"Oh did I say you go home OR I keep your ", "meow_angry"},
+        VoiceLine{"I always seem to mix them up", "meow_talk"},
+        VoiceLine{"And by the way, this is your home now", "meow_talk"},
+        },delta, 4.0f)) {
+        m_scene.SetTaskText("Relinquish your Liver");
+        m_end_phase = EndPhase::Farewell;
+      }
+      break;
+
+    case EndPhase::Farewell:
+        m_scene.PlaySound("eating");                     
+        m_end_phase = EndPhase::FadeRed;
+        m_end_timer = 0.0f;
+      break;
+
+    case EndPhase::FadeRed:                      // ~2s: red rises
+      m_end_timer += delta;
+      if (m_end_timer >= 2.0f) { m_end_phase = EndPhase::FadeBlack; m_end_timer = 0.0f; }
+      break;
+
+    case EndPhase::FadeBlack:                    // ~1.5s: red drains to black
+      m_end_timer += delta;
+      if (m_end_timer >= 1.5f) { m_end_phase = EndPhase::Hold; m_end_timer = 0.0f; }
+      break;
+
+    case EndPhase::Hold:                         // beat of black, then out
+      m_end_timer += delta;
+      if (m_end_timer >= 1.5f) m_scene.QUIT();
+      break;
+    }
+  }
+
+  void Render(Renderer& r, const int &w, const int &h) override {
+     
+    if (m_end_phase == EndPhase::FadeRed) {
+      int a = (int)(255 * std::min(m_end_timer / 2.0f, 1.0f));
+      ImGui::GetForegroundDrawList()->AddRectFilled(ImVec2(0,0), ImVec2((float)w,(float)h),
+                                                    IM_COL32(160, 10, 10, a));
+    } else if (m_end_phase == EndPhase::FadeBlack || m_end_phase == EndPhase::Hold) {
+      float t = (m_end_phase == EndPhase::Hold) ? 1.0f : std::min(m_end_timer / 1.5f, 1.0f);
+      ImGui::GetForegroundDrawList()->AddRectFilled(ImVec2(0,0), ImVec2((float)w,(float)h),
+          IM_COL32((int)(160 * (1.0f - t)), (int)(10 * (1.0f - t)), (int)(10 * (1.0f - t)), 255));
+    }
+  }
+
 };
 
 
@@ -257,10 +330,11 @@ inline std::unique_ptr<Event> GetRandomBackgroundEvent(GardenScene &scene) {
   int event_number = rand() % 4;
 
   switch (event_number) {
-    case 0: // a distant, unexplained detonation. Not your business, inmate.
-      return std::make_unique<ActionEvent>(scene, [](GardenScene &s) {
-        s.PlaySound("boom", 0.8f);
-      });
+    case 0: 
+      return std::make_unique<NotificationEvent>(scene, std::vector<VoiceLine>{
+          VoiceLine{"", "boom"},                                        
+          VoiceLine{"Did you hear that? ......No? Good.", "meow_talk"},
+      }, 5.0f);
 
     case 1: // Sushi small talk
       return std::make_unique<ActionEvent>(scene, [](GardenScene &s) {
@@ -274,10 +348,10 @@ inline std::unique_ptr<Event> GetRandomBackgroundEvent(GardenScene &scene) {
         s.PushNotification("The quota isn't going to fill itself.", 4.0f);
       });
 
-    case 3: // Sushi hears the booms too. Probably fine.
+    case 3: 
       return std::make_unique<ActionEvent>(scene, [](GardenScene &s) {
-        s.PlaySound("meow_talk");
-        s.PushNotification("Did you hear that? ......No? Good.", 4.0f);
+        s.PlaySound("meow_angry");
+        s.PushNotification("Are you done yet?", 4.0f);
       });
 
     default:

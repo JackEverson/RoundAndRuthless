@@ -15,8 +15,9 @@ public:
   virtual ~Event() = default;
   virtual void OnStart() {}                    // empty defaults:
   virtual void Update(float dt) {}             // override only what you need
-  virtual void Render(Renderer& r) {}
+  virtual void Render(Renderer& r, const int& w, const int& h) {}
   virtual void HandleInput(GLFWwindow& w, float dt) {}
   virtual void OnComplete() {}
   bool IsComplete() const { return m_complete; }
+
 };

@@ -24,6 +24,8 @@
 
 class GardenScene : public GardenRoom {
 
+
+
 private:
   SimpleSoundManager &sound_manager;
 
@@ -59,9 +61,10 @@ private:
   Texture m_staring_cabbage_growing_texture;
   Texture m_staring_cabbage_ripe_texture;
 
-
   // enums and struct
+  public:
   enum class Outcome { Playing, Won, Lost };
+  private:
   enum class Tool { None, Shovel, Hoe, WateringCan, SeedPacket };
 
   enum class MenuMode { None, Settings, SeedShop, UpgradeShop, SeedSelection };
@@ -107,7 +110,10 @@ private:
   int m_biomass = 0;
   double m_elapsed = 0.0;
   float m_random_event_timer = 0.0f;
-  const float RANDOM_EVENT_INTERVAL = 30.0f;
+  float m_next_random_event = 45.0f;    // first ambient beat ~45s in
+  const float RANDOM_EVENT_MIN = 60.0f; // after that: every 60–150s, never clockwork
+  const int RANDOM_EVENT_SPREAD = 90;
+  bool m_quit_game = false;
   Outcome m_outcome = Outcome::Playing;
 
   const float SAVE_INTERVAL = 30.0f;
@@ -159,6 +165,8 @@ private:
   const float APPLE_RESPAWN_TIME = 120.0f;
 
 public:
+
+
   GardenScene();
   void onEnter(GLFWwindow &window) override;
   void onExit(GLFWwindow &window) override;
@@ -212,6 +220,8 @@ public:
   int HarvestCount() const { return m_harvest_count; }
   void SetTaskText(const std::string &text) { m_task_text = text; }
   void ClearTaskText() { m_task_text = ""; }
+  void SetOutcome(const Outcome &outcome){ m_outcome = outcome; }
+  void QUIT() { m_quit_game = true; };
 
   void PlaySound(const std::string &name, float volume = 1.0f) 
   { 
@@ -265,8 +275,7 @@ public:
       if (t.IsTilled() && m_selected_seed >= 0 &&
           m_seeds[m_selected_seed].count > 0) {
         t.Plant(&m_seeds[m_selected_seed].def);
-        if (--m_seeds[m_selected_seed].count == 0)
-          m_selected_seed = -1;
+        --m_seeds[m_selected_seed].count; 
       }
       break;
     }

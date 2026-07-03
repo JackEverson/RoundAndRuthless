@@ -121,8 +121,8 @@ protected:
   void HandleCommonInput(GLFWwindow &window, float delta) {
     
     glfwPollEvents();
-    if (glfwGetKey(&window, GLFW_KEY_MINUS) == GLFW_PRESS)
-      glfwSetWindowShouldClose(&window, true);
+    // if (glfwGetKey(&window, GLFW_KEY_MINUS) == GLFW_PRESS)
+    //   glfwSetWindowShouldClose(&window, true);
 
     m_controller.HandleInput(window, delta);
     m_controller.CheckTriggers(window, delta, m_triggers);

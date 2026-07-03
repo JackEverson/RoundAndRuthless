@@ -68,6 +68,7 @@ void GardenScene::onEnter(GLFWwindow &window) {
   sound_manager.LoadSound("meow_talk", "./res/sounds/meow_talk.wav");
   sound_manager.LoadSound("meow_angry", "./res/sounds/meow_angry.wav");
   sound_manager.LoadSound("meow_sad", "./res/sounds/meow_sad.wav");
+  sound_manager.LoadSound("eating", "./res/sounds/eating.wav");
 
   sound_manager.LoadSound("water", "./res/sounds/water.ogg");
   sound_manager.LoadSound("dig", "./res/sounds/dig.wav");
@@ -241,11 +242,19 @@ Scene *GardenScene::update(GLFWwindow &window, float delta) {
 
   m_field.RunSprinklers();
 
-  if (m_random_event_timer >= RANDOM_EVENT_INTERVAL && m_events.empty()) {
-    auto e = RoundAndRipeEvents::GetRandomBackgroundEvent(*this);
-    if (e)
-      StartEvent(std::move(e));
-    m_random_event_timer = 0.0f;
+  if (m_random_event_timer >= m_next_random_event) {
+    if (m_events.empty()) {
+      auto e = RoundAndRipeEvents::GetRandomBackgroundEvent(*this);
+      if (e)
+        StartEvent(std::move(e));
+      m_random_event_timer = 0.0f;
+      m_next_random_event =
+          RANDOM_EVENT_MIN + (float)(rand() % RANDOM_EVENT_SPREAD);
+    } else {
+      // busy (tutorial/dialogue up): hold just short of the threshold so
+      // ambience waits a breather after events clear, not fires instantly
+      m_random_event_timer = m_next_random_event - 20.0f;
+    }
   }
 
 
@@ -257,6 +266,9 @@ Scene *GardenScene::update(GLFWwindow &window, float delta) {
   // }
   if (m_outcome != Outcome::Playing) {
     m_controller.DisableInput();
+  }
+  if (m_quit_game){
+    glfwSetWindowShouldClose(&window, true);
   }
 
   return nullptr;
@@ -348,7 +360,7 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
   SetupRenderingObjects(renderer);
 
   for (auto &e : m_events)
-    e->Render(renderer);
+    e->Render(renderer, w, h);
 
   glm::vec3 campos = m_camera.GetLocation();
   glm::mat4 view = m_camera.GetViewMat();
@@ -426,7 +438,7 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
   if (!m_task_text.empty()) {
     const char *task_text = m_task_text.c_str();
 
-    ImGui::SetNextWindowPos(ImVec2(w * 0.75f, h - 40.0f), ImGuiCond_Always,
+    ImGui::SetNextWindowPos(ImVec2(w * 0.75f, h - 60.0f), ImGuiCond_Always,
                             ImVec2(0.5f, 0.0f));
     ImGui::SetNextWindowBgAlpha(0.0f);
     ImGui::Begin("##task", nullptr,
@@ -527,7 +539,7 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
           sound_manager.PlaySound("bell");
 
           if (m_tier >= (int)TIER_COST.size()) {
-            m_outcome = Outcome::Won;
+            StartEvent(std::make_unique<RoundAndRipeEvents::EndEvent>(*this));
           } else {
             StartEvent(std::make_unique<RoundAndRipeEvents::NotificationEvent>(
                 *this, RoundAndRipeEvents::TierUpLines(m_tier)));
@@ -548,12 +560,12 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
     ImGui::Begin("Seeds", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
     ImGui::SetWindowFontScale(m_font_size);
 
-    bool any_in_stock = false;
+    bool any_shown = false;
     for (int n = 0; n < (int)m_seeds.size(); n++) {
       Seed &seed = m_seeds[n];
       if (seed.count <= 0)
-        continue; // only seeds the player actually has
-      any_in_stock = true;
+        continue; // only seeds the player actually has in stock
+      any_shown = true;
 
       ImGui::PushID(n);
       ImGui::Text("%s%s  x%d", (m_selected_seed == n) ? "> " : "",
@@ -566,7 +578,7 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
       }
       ImGui::PopID();
     }
-    if (!any_in_stock)
+    if (!any_shown)
       ImGui::Text("No seeds. Buy some at the seed maker.");
 
     ImGui::Separator();
@@ -620,11 +632,10 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
     ImGui::End();
   }
 
-  if (m_outcome != Outcome::Playing) {
+  if (m_outcome == Outcome::Lost) {
     ImGui::GetForegroundDrawList()->AddRectFilled(
         ImVec2(0, 0), ImVec2((float)w, (float)h), IM_COL32(0, 0, 0, 200));
-    const char *msg = (m_outcome == Outcome::Won) ? "Sentence served."
-                                                  : "You have been recycled.";
+    const char *msg = "You have been recycled.";
     ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f), ImGuiCond_Always,
                             ImVec2(0.5f, 0.5f));
     ImGui::Begin("##end", nullptr,

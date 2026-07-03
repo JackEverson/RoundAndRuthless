@@ -79,7 +79,7 @@ inline void FPSController::HandleInput(GLFWwindow &window, float delta) {
   float speed = m_speed;
   if (glfwGetKey(&window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
       glfwGetKey(&window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) {
-    speed *= 5;
+    speed *= 2.0f;
   }
   auto flat_forward = m_camera.GetForward() * glm::vec3(1, 0, 1);
   auto flat_right = m_camera.GetRight() * glm::vec3(1, 0, 1);
