@@ -31,7 +31,7 @@ struct GameSettings {
     float brightness = 1.0f;
     float sensitivity = 0.05f;
     bool  invert_y = false;
-    float ui_scale = 2.0f;
+    float ui_scale = 3.0f;
     bool  borderless = true;   // fullscreen by default
 };
 

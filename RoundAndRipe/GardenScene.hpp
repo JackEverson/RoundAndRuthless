@@ -269,6 +269,7 @@ public:
       if (t.IsHarvestable()) {
         m_biomass += t.Harvest();
         m_harvest_count++;
+        sound_manager.PlaySound("pop");
       }
       break;
     case Tool::SeedPacket:
@@ -337,6 +338,17 @@ public:
     m_triggers[m_apple_trigger_index].position = pos; // move the *registered* trigger
     m_apple_collected = false;
   }
+
+  void EaseLookDown(float dt, float target_pitch_deg = -89.0f, float speed = 1.0f) {
+    glm::vec3 f = m_camera.GetForward();
+    float pitch = glm::degrees(asinf(glm::clamp(f.y, -1.0f, 1.0f)));
+    float yaw   = glm::degrees(atan2f(f.z, f.x));   // matches CalcLookAt's convention
+
+    float t = 1.0f - expf(-speed * dt);             // framerate-independent ease
+    m_camera.SetRotation(yaw, pitch + (target_pitch_deg - pitch) * t);
+  }
+
+
 
   const int SAVE_VERSION = 2;
   const std::string SAVE_PATH = "./save.json";

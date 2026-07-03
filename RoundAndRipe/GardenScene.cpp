@@ -73,7 +73,8 @@ void GardenScene::onEnter(GLFWwindow &window) {
   sound_manager.LoadSound("water", "./res/sounds/water.ogg");
   sound_manager.LoadSound("dig", "./res/sounds/dig.wav");
   sound_manager.LoadSound("bell", "./res/sounds/fire_truck_bell-clean.wav");
-  sound_manager.LoadSound("boom", "./res/sounds/big_dynamite_explode.wav");
+  sound_manager.LoadSound("boom", "./res/sounds/big_dynamite_explode.ogg");
+  sound_manager.LoadSound("pop", "./res/sounds/pop.wav");
 
   glm::vec3 seed_maker_position = glm::vec3(0.0f, HALF_SUSHI_SIZE, -10.0f);
   m_camera.SetCamera(glm::vec3(0.0f, PLAYER_HEIGHT, 0.0f));
