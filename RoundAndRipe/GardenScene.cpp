@@ -10,6 +10,7 @@
 #include "glm/geometric.hpp"
 #include "imgui.h"
 #include <json.hpp>
+#include <string>
 
 
 GardenScene::GardenScene()
@@ -243,6 +244,7 @@ Scene *GardenScene::update(GLFWwindow &window, float delta) {
 
   m_field.RunSprinklers();
 
+  // random events
   if (m_random_event_timer >= m_next_random_event) {
     if (m_events.empty()) {
       auto e = RoundAndRipeEvents::GetRandomBackgroundEvent(*this);
@@ -258,6 +260,16 @@ Scene *GardenScene::update(GLFWwindow &window, float delta) {
     }
   }
 
+  // look down quips
+  m_sushi_quip_cooldown -= delta;
+  bool looking = IsLookingDown();
+  if (looking && !m_was_looking_down            // edge: just looked down, not "is holding gaze"
+      && m_sushi_quip_cooldown <= 0.0f
+      && m_events.empty()) {                    // never talk over tutorial/dialogue/ending
+    StartEvent(RoundAndRipeEvents::GetLookDownQuip(*this));
+    m_sushi_quip_cooldown = 60.0f + rand() % 60;  // then at most ~once a minute
+  }
+  m_was_looking_down = looking;
 
   // TODO: Theses scenes
   // if (m_outcome == Outcome::Won) {
@@ -345,9 +357,10 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
 void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
   int w, h;
   glfwGetWindowSize(&window, &w, &h);
-  if (w == 0 || h == 0)
-    return;
+  if (w == 0 || h == 0) { return; } 
 
+  const float ui = GetUiScale(h);
+  
   renderer.Clear(0.05f, 0.05f, 0.05f, 1.0f);
   renderer.BeginBatchDraw(30, 400);
 
@@ -436,20 +449,25 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
   renderer.RendBatch(view, projection, campos, 0.05f);
 
   // HUD and UI (ImGUI)
+
+  ImGui::SetNextWindowPos(ImVec2(w * 0.75f, h - 60.0f), ImGuiCond_Always,
+                            ImVec2(0.5f, 0.0f));
+  ImGui::SetNextWindowBgAlpha(0.0f);
+  ImGui::Begin("##task", nullptr,
+                ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
+                    ImGuiWindowFlags_NoMove |
+                    ImGuiWindowFlags_AlwaysAutoResize);
+
   if (!m_task_text.empty()) {
     const char *task_text = m_task_text.c_str();
-
-    ImGui::SetNextWindowPos(ImVec2(w * 0.75f, h - 60.0f), ImGuiCond_Always,
-                            ImVec2(0.5f, 0.0f));
-    ImGui::SetNextWindowBgAlpha(0.0f);
-    ImGui::Begin("##task", nullptr,
-                 ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
-                     ImGuiWindowFlags_NoMove |
-                     ImGuiWindowFlags_AlwaysAutoResize);
     ImGui::Text("Task: %s", task_text);
-    ImGui::SetWindowFontScale(m_font_size);
-    ImGui::End();
   }
+  else if (m_tier < (int)TIER_COST.size()){
+    std::string t = "Reach tier " + std::to_string(m_tier) + " - " + std::to_string((int)TIER_COST[m_tier]) + "g";
+    ImGui::Text("Task: %s", t.c_str());
+  }
+  ImGui::SetWindowFontScale(ui);
+  ImGui::End();
 
   std::string seed_text;
 
@@ -469,7 +487,7 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
   ImGui::Text("Tool: %s\nSeed: %s\nTime: %d\nBiomass: %d g\nTier: %d",
               GetToolName(m_tool), seed_text.c_str(), (int)m_elapsed, m_biomass,
               m_tier);
-  ImGui::SetWindowFontScale(m_font_size);
+  ImGui::SetWindowFontScale(ui);
   ImGui::End();
 
   // rendering shop menu
@@ -488,7 +506,7 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
     ImGui::Begin("Seed Store", nullptr,
                  ImGuiWindowFlags_AlwaysAutoResize); // NOTE: no NoInputs — it
                                                      // must take clicks
-    ImGui::SetWindowFontScale(m_font_size);
+    ImGui::SetWindowFontScale(ui);
 
     ImGui::Text("Biomass: %d g", m_biomass);
     ImGui::Separator();
@@ -525,7 +543,7 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
                             ImVec2(0.5f, 0.5f));
     ImGui::SetNextWindowBgAlpha(0.9f);
     ImGui::Begin("Upgrade Store", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-    ImGui::SetWindowFontScale(m_font_size);
+    ImGui::SetWindowFontScale(ui);
     ImGui::Text("Biomass: %d g", m_biomass);
     ImGui::Separator();
     if (m_tier >= (int)TIER_COST.size()) {
@@ -559,7 +577,7 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
                             ImVec2(0.5f, 0.5f));
     ImGui::SetNextWindowBgAlpha(0.9f);
     ImGui::Begin("Seeds", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-    ImGui::SetWindowFontScale(m_font_size);
+    ImGui::SetWindowFontScale(ui);
 
     bool any_shown = false;
     for (int n = 0; n < (int)m_seeds.size(); n++) {
@@ -591,7 +609,7 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
                             ImVec2(0.5f, 0.5f));
     ImGui::SetNextWindowBgAlpha(0.9f);
     ImGui::Begin("Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-    ImGui::SetWindowFontScale(m_font_size);
+    ImGui::SetWindowFontScale(ui);
 
     if (ImGui::SliderFloat("Volume", &m_master_volume, 0.0f, 1.0f))
       sound_manager.SetMasterVolume(m_master_volume);
@@ -642,10 +660,10 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
     ImGui::Begin("##end", nullptr,
                  ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
                      ImGuiWindowFlags_AlwaysAutoResize);
-    ImGui::SetWindowFontScale(m_font_size * 1.5f);
+    ImGui::SetWindowFontScale(ui * 1.5f);
     ImGui::Text("%s", msg);
     ImGui::End();
   }
 
-  m_notification_manager.Render(w, h);
+  m_notification_manager.Render(w, h, ui);
 }

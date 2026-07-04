@@ -64,6 +64,7 @@ private:
   // enums and struct
   public:
   enum class Outcome { Playing, Won, Lost };
+
   private:
   enum class Tool { None, Shovel, Hoe, WateringCan, SeedPacket };
 
@@ -121,11 +122,17 @@ private:
   bool m_new_game = false; 
   bool m_confirm_new = false;
 
+  bool m_was_looking_down = false;
+  float m_sushi_quip_cooldown = 0.0f;
+
+
   // player
   Tool m_tool = Tool::None;
   int m_selected_seed = -1;
   std::vector<Seed> m_seeds;
   int m_harvest_count = 0;
+ 
+
 
   const glm::vec2 TOOL_SIZE = glm::vec2(0.35f);
   const float TOOL_FWD = 0.6f;   
@@ -349,6 +356,9 @@ public:
     m_camera.SetRotation(yaw, pitch + (target_pitch_deg - pitch) * t);
   }
 
+  const float GetUiScale(int h){
+    return m_font_size * (float)h / 1440.0f;   // 1440p = your tuning reference
+  };
 
 
   const int SAVE_VERSION = 2;

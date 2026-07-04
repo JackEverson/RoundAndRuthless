@@ -20,7 +20,7 @@ public:
 
   void Push(const std::string &message, float duration = 5.0f);
   void Update(float delta);
-  void Render(int w, int h);
+  void Render(int w, int h, float scale = 2.0f);
 };
 
 inline NotificationManager::NotificationManager() {}
@@ -47,7 +47,7 @@ inline void NotificationManager::Update(float delta) {
   });
 }
 
-inline void NotificationManager::Render(int w, int h){
+inline void NotificationManager::Render(int w, int h, float scale){
     if (m_notifications.empty()) return;
 
     ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.85f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
@@ -61,7 +61,7 @@ inline void NotificationManager::Render(int w, int h){
 
     for (auto& n : m_notifications) {
         float alpha = n.remaining / n.duration;
-        ImGui::SetWindowFontScale(2.0f);
+        ImGui::SetWindowFontScale(scale);
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 1, 1, alpha));
         ImGui::TextUnformatted(n.message.c_str());
         ImGui::PopStyleColor();

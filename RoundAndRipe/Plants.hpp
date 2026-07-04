@@ -56,8 +56,8 @@ inline PlantDef Blueberry(Texture* growing, Texture* ripe){
     blueberry.name = "blueberry";
     blueberry.type = PlantType::Producing;
     blueberry.seconds_to_grow = 40;
-    blueberry.seconds_to_ripen = 20;
-    blueberry.biomass_yield = 2;
+    blueberry.seconds_to_ripen = 30;
+    blueberry.biomass_yield = 6;
     blueberry.biomass_cost = 6;
     blueberry.growing_texture = growing;
     blueberry.ripe_texture = ripe;
@@ -84,9 +84,9 @@ inline PlantDef Tomato(Texture* growing, Texture* ripe){
     PlantDef tomato;
     tomato.name = "tomato";
     tomato.type = PlantType::Producing;
-    tomato.seconds_to_grow = 90;
-    tomato.seconds_to_ripen = 20;
-    tomato.biomass_yield = 5;
+    tomato.seconds_to_grow = 40;
+    tomato.seconds_to_ripen = 30;
+    tomato.biomass_yield = 20;
     tomato.biomass_cost = 20;
     tomato.growing_texture = growing;
     tomato.ripe_texture = ripe;

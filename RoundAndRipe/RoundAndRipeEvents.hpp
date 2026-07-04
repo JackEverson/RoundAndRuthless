@@ -72,6 +72,21 @@ inline std::vector<VoiceLine> TierUpLines(int tier) {
   }
 }
 
+inline std::unique_ptr<Event> GetLookDownQuip(GardenScene &scene) {
+  static const std::vector<VoiceLine> quips = {
+      {"Hi.", "meow_talk"},
+      {"Don't mind me.", "meow_talk"},
+      {"Yes, that ache in your side is me. Keep working.", "meow_talk"},
+      {"What? Never seen a parole officer in a liver before?", "meow_angry"},
+      {"The Gods of Round see you too.", "meow_sad"},
+  };
+  const VoiceLine &q = quips[rand() % quips.size()];
+  return std::make_unique<ActionEvent>(scene, [q](GardenScene &s) {
+    s.PlaySound(q.voice);
+    s.PushNotification(q.text, 4.0f);
+  });
+}
+
 class DialogueEvent : public Event {
   std::vector<VoiceLine> m_lines;
   int m_line = 0;
@@ -93,7 +108,7 @@ public:
     ImGui::Begin("##dialogue", nullptr,
                  ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
                      ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize);
-    ImGui::SetWindowFontScale(2.0f);
+    ImGui::SetWindowFontScale(m_scene.GetUiScale(io.DisplaySize.y));
     ImGui::TextWrapped("%s", m_lines[m_line].text.c_str());
     ImGui::Text("[E] continue");
     ImGui::End();
@@ -330,28 +345,30 @@ class EndEvent : public LineEvent {
 
 
 inline std::unique_ptr<Event> GetRandomBackgroundEvent(GardenScene &scene) {
-  int event_number = rand() % 4;
+  
+  int event_number = rand() % 5;
 
   switch (event_number) {
     case 0: 
+    case 1:
       return std::make_unique<NotificationEvent>(scene, std::vector<VoiceLine>{
           VoiceLine{"", "boom"},                                        
           VoiceLine{"Did you hear that? ......No? Good.", "meow_talk"},
       }, 5.0f);
 
-    case 1: // Sushi small talk
+    case 2: // Sushi small talk
       return std::make_unique<ActionEvent>(scene, [](GardenScene &s) {
         s.PlaySound("meow_talk");
         s.PushNotification("Your liver is very warm. Cozy.", 4.0f);
       });
 
-    case 2: // Sushi passive-aggression
+    case 3: // Sushi passive-aggression
       return std::make_unique<ActionEvent>(scene, [](GardenScene &s) {
         s.PlaySound("meow_sad");
         s.PushNotification("The quota isn't going to fill itself.", 4.0f);
       });
 
-    case 3: 
+    case 4: 
       return std::make_unique<ActionEvent>(scene, [](GardenScene &s) {
         s.PlaySound("meow_angry");
         s.PushNotification("Are you done yet?", 4.0f);
