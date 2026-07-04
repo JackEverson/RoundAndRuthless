@@ -10,16 +10,17 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "stb_image.h"
 
 #include "Engine.hpp"
 #include "gl_debug.hpp"
 
 GardenEngine::GardenEngine(std::string name, bool windowed, int win_width,
-                           int win_height)
+                           int win_height, const std::string& png_icon)
     : soundManager(SimpleSoundManager::Instance()) {
   printf("Creating GardenEngine...\n");
 
-  setupGlfwWindow(name, windowed, win_width, win_height);
+  setupGlfwWindow(name, windowed, win_width, win_height, png_icon);
   setupOpenGl();
   setupImGui();
   setupAudio();
@@ -115,7 +116,7 @@ int GardenEngine::Start(std::unique_ptr<Scene> scene, float fps) {
 }
 
 void GardenEngine::setupGlfwWindow(std::string win_name, bool windowed,
-                                   int win_width, int win_height) {
+                                   int win_width, int win_height, const std::string& png_icon) {
   printf("Creating GLFW Window...\n");
 
   if (!glfwInit()) {
@@ -170,12 +171,6 @@ void GardenEngine::setupGlfwWindow(std::string win_name, bool windowed,
   }
 
   glfwSetWindowAspectRatio(m_window, 16, 9);
-  // load icon
-  // GLFWimage icon;
-  // icon.pixels = Loadimgpngdotjpg();
-  // icon.width = 64;
-  // icon.height = 64;
-  // glfwSetWindowIcon(m_window, 1, &icon);
 
   if (!m_window) {
     printf("Failed to create GLFW window\n");
@@ -187,6 +182,23 @@ void GardenEngine::setupGlfwWindow(std::string win_name, bool windowed,
   glfwSwapInterval(1); // vsync on
 
   glfwSetFramebufferSizeCallback(m_window, framebuffer_size_callback);
+
+  // load icon
+  GLFWimage icon;
+  std::string icon_path;
+  if (png_icon.empty()) { 
+    icon_path = "./res/textures/sushi.png";
+  }
+  else { 
+    icon_path = png_icon;
+  }
+  
+  icon.pixels = stbi_load(icon_path.c_str(), &icon.width, &icon.height, 0, 4);
+  if(icon.pixels){
+    glfwSetWindowIcon(m_window, 1, &icon);
+    stbi_image_free(icon.pixels);
+    glfwPollEvents();
+  }
 
   printf("GLFW Window Created Successfully!\n");
 }

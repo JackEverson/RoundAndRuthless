@@ -20,7 +20,7 @@ private:
   bool m_first_click = false;
 
 public:
-  GardenEngine(std::string, bool windowed, int win_width, int win_height);
+  GardenEngine(std::string, bool windowed, int win_width, int win_height, const std::string& png_icon = "");
   ~GardenEngine();
 
   int Start(std::unique_ptr<Scene> scene, float fps);
@@ -31,7 +31,7 @@ public:
 
 private:
   void setupGlfwWindow(std::string name, bool windowed, int win_width,
-                       int win_height);
+                       int win_height, const std::string& png_icon = "");
   void setupOpenGl();
   void setupImGui();
   void setupAudio();
