@@ -175,7 +175,7 @@ void GardenEngine::setupGlfwWindow(std::string win_name, bool windowed,
   // icon.pixels = Loadimgpngdotjpg();
   // icon.width = 64;
   // icon.height = 64;
-  // glfwSetWindowIcon(window, 1, &icon);
+  // glfwSetWindowIcon(m_window, 1, &icon);
 
   if (!m_window) {
     printf("Failed to create GLFW window\n");

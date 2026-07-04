@@ -17,16 +17,18 @@ Steps for building:
 ```bash
 git clone --recurse-submodules https://github.com/JackEverson/RoundAndRuthless.git
 cd RoundAndRuthless
+
+# linux
 cmake -B ./build -S .
+# windows
+cmake -B ./build -S . -G "MinGW Makefiles"
 
-# g++
 cmake --build ./build --parallel
-# MSVC
-cmake --build ./build --config Release --parallel
 
-# or if you are building for windows on Linux
-cmake -B ./build-windows -S . -DCMAKE_TOOLCHAIN_FILE=mingw-toolchain.cmake
-cmake --build ./build-windows --parallel
+
+# release build for windows
+cmake -B build-release -S . -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXE_LINKER_FLAGS="-static"
+cmake --build build-release --parallel
 ```
 
 

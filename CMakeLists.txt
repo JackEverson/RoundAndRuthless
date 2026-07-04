@@ -116,9 +116,7 @@ COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
 "${CMAKE_BINARY_DIR}/res/"
 )
 
-if(MSVC)
-  set(APP_ICON_RESOURCE "${CMAKE_CURRENT_SOURCE_DIR}/resources.rc")
-endif()
+set(APP_ICON_RESOURCE "${CMAKE_CURRENT_SOURCE_DIR}/resources.rc")
 
 #RoundAndRipe executable
 set(RoundAndRipe_files
