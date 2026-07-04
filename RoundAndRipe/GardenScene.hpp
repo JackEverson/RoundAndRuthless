@@ -162,7 +162,8 @@ private:
   const glm::vec2 BODY_SIZE = glm::vec2(BODY_DROP, PLAYER_HEIGHT);
 
   const float FADE_SPEED = 2.0f;
-  const float APPLE_RESPAWN_TIME = 120.0f;
+  const float APPLE_RESPAWN_TIME = 60.0f;  // was 120 — felt like "never respawns"
+  const float APPLE_SPAWN_RANGE = 16.0f;   // spawn band around the farm (field edge is ±5)
 
 public:
 
@@ -254,8 +255,8 @@ public:
     case Tool::Shovel:
       if (t.HasPlant())
         { t.PullUp(); sound_manager.PlaySound("dig"); }
-      else if (t.IsRefuse())
-        { t.Clear();sound_manager.PlaySound("dig"); }
+      else if (t.IsRefuse() || t.IsTilled())
+        { t.Clear(); sound_manager.PlaySound("dig"); }
       break;
 
     case Tool::Hoe:
@@ -324,11 +325,11 @@ public:
   }
   
   void PlaceApple() {
-    // Floor spans ~[-FLOOR_TILE_SIZE/2, +FLOOR_TILE_SIZE/2] in x/z; the farm field
-    // sits in x,z ∈ [-5, 5]. Roll a spot, reject any that land on the farm.
+    // Spawn in a band just around the farm (field is x,z ∈ [-5, 5]) so the
+    // apple is a short forage, not a wasteland expedition. Reject on-farm rolls.
     static std::mt19937 rng(std::random_device{}());
-    std::uniform_real_distribution<float> coord(-FLOOR_TILE_SIZE / 2 + 2.0f,
-                                                 FLOOR_TILE_SIZE / 2 - 2.0f);
+    std::uniform_real_distribution<float> coord(-APPLE_SPAWN_RANGE,
+                                                APPLE_SPAWN_RANGE);
     glm::vec3 pos;
     do {
       pos = glm::vec3(coord(rng), m_apple.size.y / 2.0f, coord(rng));

@@ -26,7 +26,7 @@ public:
     int Harvest();
     void Water();
     void PullUp();
-    void Clear() { if (m_state == TileState::Refuse) m_state = TileState::Empty; }
+    void Clear() { if (m_state == TileState::Refuse || m_state == TileState::Tilled) m_state = TileState::Empty; }
     void Till() { if (m_state == TileState::Empty) m_state = TileState::Tilled; }
     
     const TileState& GetState() const { return m_state; }
