@@ -30,6 +30,7 @@ GardenScene::GardenScene()
       m_hoe_texture("./res/textures/hoe.png"),
       m_can_texture("./res/textures/watering_can.png"),
       m_packet_texture("./res/textures/seed_packet.png"),
+      m_wrench_texture("./res/textures/wrench.png"),
       m_sprinkler_texture("./res/textures/sprinkler.png"),
       m_veg_top_texture("./res/textures/veg_top.png"),
       m_apple_texture("./res/textures/apple.png"),
@@ -118,6 +119,38 @@ void GardenScene::onEnter(GLFWwindow &window) {
   };
   m_triggers.push_back(seed_maker_trigger);
 
+  // house
+  m_house.texture = &m_house_texture;
+  m_house.size = glm::vec2(HOUSE_SIZE, HOUSE_SIZE);
+  m_house.color = glm::vec4(1.0f);
+  m_house.position = HOUSE_POS;
+  m_static_sprites.push_back(m_house);
+
+  TriggerVolume house_trigger;
+  house_trigger.position = HOUSE_POS;
+  house_trigger.size = glm::vec3(HOUSE_SIZE, HOUSE_SIZE, 0.10f);
+  house_trigger.time_to_trigger = 0.01f;
+  house_trigger.type = TriggerType::Interact;
+  house_trigger.on_triggered = [this]() { m_menu_mode = MenuMode::StructureShop; };
+  m_triggers.push_back(house_trigger);
+
+  // chest
+  m_chest.texture = &m_chest_texture;
+  m_chest.size = glm::vec2(CHEST_SIZE, CHEST_SIZE);
+  m_chest.color = glm::vec4(1.0f);
+  m_chest.position = CHEST_POS;
+  m_static_sprites.push_back(m_chest);
+
+  TriggerVolume chest_trigger;
+  chest_trigger.position = CHEST_POS;
+  chest_trigger.size = glm::vec3(CHEST_SIZE, CHEST_SIZE, 0.10f);
+  chest_trigger.time_to_trigger = 0.01f;
+  chest_trigger.type = TriggerType::Interact;
+  chest_trigger.on_triggered = [this]() {
+    m_menu_mode = MenuMode::UpgradeShop;
+  };
+  m_triggers.push_back(chest_trigger);
+
   // Apple
   float apple_size = 0.25f;
   m_apple.texture = &m_apple_texture;
@@ -137,55 +170,23 @@ void GardenScene::onEnter(GLFWwindow &window) {
   m_triggers.push_back(m_apple_trigger);
   PlaceApple();
 
-  // house + chest
-  m_house.texture = &m_house_texture;
-  m_house.size = glm::vec2(HOUSE_SIZE, HOUSE_SIZE);
-  m_house.color = glm::vec4(1.0f);
-  m_house.position = HOUSE_POS;
-  m_static_sprites.push_back(m_house);
-
-  // TriggerVolume house_trigger;
-  // house_trigger.position = HOUSE_POS;
-  // house_trigger.size = glm::vec3(HOUSE_SIZE, HOUSE_SIZE, 0.10f);
-  // house_trigger.time_to_trigger = 2.0f;
-  // house_trigger.type = TriggerType::Interact;
-  // house_trigger.on_triggered = [this]() { StartSleep(); };
-  // m_triggers.push_back(house_trigger);
-
-  m_chest.texture = &m_chest_texture;
-  m_chest.size = glm::vec2(CHEST_SIZE, CHEST_SIZE);
-  m_chest.color = glm::vec4(1.0f);
-  m_chest.position = CHEST_POS;
-  m_static_sprites.push_back(m_chest);
-
-  TriggerVolume chest_trigger;
-  chest_trigger.position = CHEST_POS;
-  chest_trigger.size = glm::vec3(CHEST_SIZE, CHEST_SIZE, 0.10f);
-  chest_trigger.time_to_trigger = 0.01f;
-  chest_trigger.type = TriggerType::Interact;
-  chest_trigger.on_triggered = [this]() {
-    m_menu_mode = MenuMode::UpgradeShop;
-  };
-  m_triggers.push_back(chest_trigger);
-
   // seeds
   m_seeds.push_back({Radish(&m_veg_top_texture, &m_radish_texture), 0});
   m_seeds.push_back({Blueberry(&m_bush_texture, &m_blueberry_texture), 0});
 
   m_seeds.push_back({Turnip(&m_veg_top_texture, &m_turnip_texture), 0});
   m_seeds.push_back({Tomato(&m_bush_texture, &m_tomato_texture), 0});
-  m_seeds.push_back({Sprinkler(&m_sprinkler_texture), 0});
 
   m_seeds.push_back({StaringCabbage(&m_staring_cabbage_growing_texture,
                                     &m_staring_cabbage_ripe_texture),
                      0});
+  
+  //TODO: Structure defs
+  // m_structures.push_back()
 
-  if (!Load()) {
-    StartEvent(std::make_unique<RoundAndRipeEvents::TutorialEvent>(*this));
-  }
 
-  // for (auto& e : RoundAndRipeEvents::GetDaysEvents(*this, m_day))
-  //     StartEvent(std::move(e));
+  bool loaded_save = Load();
+  if (!loaded_save) { StartEvent(std::make_unique<RoundAndRipeEvents::TutorialEvent>(*this)); }
 }
 
 void GardenScene::onExit(GLFWwindow &window) {
@@ -242,7 +243,7 @@ Scene *GardenScene::update(GLFWwindow &window, float delta) {
     }
   }
 
-  m_field.RunSprinklers();
+  m_field.RunStructures(delta);
 
   // random events
   if (m_random_event_timer >= m_next_random_event) {
@@ -339,14 +340,16 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
   if (glfwGetKey(&window, GLFW_KEY_4) == GLFW_PRESS)
     m_tool = Tool::SeedPacket;
   if (glfwGetKey(&window, GLFW_KEY_5) == GLFW_PRESS)
+    m_tool = Tool::Wrench;
+  if (glfwGetKey(&window, GLFW_KEY_6) == GLFW_PRESS)
     m_tool = Tool::Shovel;
 
   // temp scroll wheel seed selection
   float wheel = ImGui::GetIO().MouseWheel; // + up / - down, this frame
   if (wheel > 0)
-    CycleTool(+1);
-  else if (wheel < 0)
     CycleTool(-1);
+  else if (wheel < 0)
+    CycleTool(+1);
 
   if (m_tool == Tool::SeedPacket &&
       glfwGetMouseButton(&window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
@@ -664,6 +667,36 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
     ImGui::Text("%s", msg);
     ImGui::End();
   }
+
+  // tool bar
+  const float slot = 48.0f * ui / 2.0f;   // icon size, tracks UI scale
+  ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h - 10.0f), ImGuiCond_Always, ImVec2(0.5f, 1.0f));
+  ImGui::SetNextWindowBgAlpha(0.35f);
+  ImGui::Begin("##hotbar", nullptr,
+              ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
+                  ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize);
+  for (int i = 0; i < 6; i++) {
+    Tool t = (Tool)i;
+    if (i) ImGui::SameLine();
+    bool selected = (t == m_tool);
+    ImVec4 tint   = selected ? ImVec4(1,1,1,1) : ImVec4(1,1,1,0.35f);   // dim unselected
+    ImVec4 border = selected ? ImVec4(1,1,0,1) : ImVec4(0,0,0,0);       // gold ring on current
+
+    ImGui::BeginGroup();
+    if (Texture* tex = ToolTexture(t))
+      ImGui::Image((ImTextureID)(intptr_t)tex->GetID(), ImVec2(slot, slot),
+                  ImVec2(0, 1), ImVec2(1, 0), tint, border);
+    else {   // Hands has no texture — placeholder slot
+      ImGui::TextColored(tint, "  X  ");
+    }
+    ImGui::SetWindowFontScale(ui * 0.6f);
+    ImGui::Text("  %d", i + 1);          // key label under each slot
+    ImGui::SetWindowFontScale(ui);
+    ImGui::EndGroup();
+  }
+  ImGui::End();
+
+
 
   m_notification_manager.Render(w, h, ui);
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Structures.hpp"
 #include "Texture.hpp"
 #include "Tile.hpp"
 #include "Renderer.hpp"
@@ -14,13 +15,23 @@ public:
   void Render(Renderer &renderer, const glm::vec3 &campos);
   void CollectLights(std::vector<PointLight> &out) const;
   Tile *TileAtRay(glm::vec3 origin, glm::vec3 dir);
-  void RunSprinklers();
+  
+  Structure* StructureAt(int row, int col);
+  bool PlaceStructureAt(Tile &t, const StructureDef* structure);
+  void RunStructures(float delta);
 
-  std::vector<Tile>& Tiles() { return m_tiles; } // for load
-  const std::vector<Tile>& Tiles() const { return m_tiles; } // for save
+  // for load
+  std::vector<Tile>& Tiles() { return m_tiles; } 
+  std::vector<Structure>& Structures() { return m_structures; }
+
+  // for save
+  const std::vector<Tile>& Tiles() const { return m_tiles; } 
+  const std::vector<Structure>& Structures() const { return m_structures; }
+
 
 private:
   std::vector<Tile> m_tiles;
+  std::vector<Structure> m_structures;
   int m_w = 0, m_h = 0;
   float m_tile_size = 1.0f;
   glm::vec3 m_origin{0.0f};
@@ -66,15 +77,38 @@ inline Tile *Field::TileAtRay(glm::vec3 origin, glm::vec3 dir) {
   return &m_tiles[col * m_w + row];
 }
 
-inline void Field::RunSprinklers() {
-  for (int r = 0; r < m_h; r++)
-    for (int c = 0; c < m_w; c++) {
-      if (!m_tiles[r * m_w + c].HasSprinkler()) continue;
-      for (int dr : {-1, 1})
-        for (int dc : {-1, 1}) {
-          int nr = r + dr, nc = c + dc;
-          if (nr >= 0 && nr < m_h && nc >= 0 && nc < m_w)
-            m_tiles[nr * m_w + nc].Water();   // every frame = permanently topped up
-        }
-    }
+inline bool Field::PlaceStructureAt(Tile &t, const StructureDef *def) {
+  int idx = (int)(&t - m_tiles.data());          // pointer arithmetic: which element is this?
+  if (idx < 0 || idx >= (int)m_tiles.size()) return false;
+  int row = idx % m_w, col = idx / m_w;          // invert your col * m_w + row indexing
+
+  if (t.IsTilled()) { t.Clear(); }
+  if (!t.IsEmpty() || t.HasStructure()) return false;
+
+  Structure s;
+  s.def = def; 
+  s.row = row; s.col = col; 
+
+  m_structures.push_back(s);
+  t.SetStructure(true);                          // ← Field is the flag's writer
+  return true;
+}
+
+
+inline void Field::RunStructures(float delta) {
+  
+  // TODO switch for structure effects 
+  
+  // for (int r = 0; r < m_h; r++)
+  //   for (int c = 0; c < m_w; c++) {
+  //     if (!m_tiles[r * m_w + c].HasSprinkler()) continue;
+  //     for (int dr : {-1, 1})
+  //       for (int dc : {-1, 1}) {
+  //         int nr = r + dr, nc = c + dc;
+  //         if (nr >= 0 && nr < m_h && nc >= 0 && nc < m_w)
+  //           m_tiles[nr * m_w + nc].Water();   // every frame = permanently topped up
+  //       }
+  //   }
+
+  
 }

@@ -131,6 +131,7 @@ set(RoundAndRipe_files
   RoundAndRipe/Plants.hpp
   RoundAndRipe/SaveSystem.hpp
   RoundAndRipe/RoundAndRipeEvents.hpp
+  RoundAndRipe/Structures.hpp
 )
 
 add_library(RoundAndRipe_game STATIC ${RoundAndRipe_files})

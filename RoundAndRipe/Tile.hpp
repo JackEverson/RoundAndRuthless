@@ -28,7 +28,8 @@ public:
     void PullUp();
     void Clear() { if (m_state == TileState::Refuse || m_state == TileState::Tilled) m_state = TileState::Empty; }
     void Till() { if (m_state == TileState::Empty) m_state = TileState::Tilled; }
-    
+    void SetStructure(bool s) {m_structure = s; }
+
     const TileState& GetState() const { return m_state; }
     int DaysGrowing() { return m_seconds_growing; }
 
@@ -39,7 +40,8 @@ public:
     bool IsEmpty() const { return m_state == TileState::Empty; }
     bool IsWatered() const { return m_watered; }
     bool HasPlant() const { return m_plant != nullptr; }
-    bool HasSprinkler() const { return m_plant && m_plant->type == PlantType::Structure; }
+    bool HasStructure() const { return m_structure; }
+
 
     glm::vec3 Position() const { return m_position; }
     float SecondsGrowing() const { return m_seconds_growing; }
@@ -65,6 +67,7 @@ private:
     float m_seconds_growing = 0.0f; 
     TileState m_state = TileState::Empty;
     bool m_watered = false;
+    bool m_structure = false;
     const PlantDef* m_plant = nullptr;
     SpriteInstance m_growing_sprite;
     SpriteInstance m_ripe_sprite;
@@ -231,7 +234,7 @@ inline void Tile::PullUp(){
 
 inline bool Tile::IsHarvestable() const{
     if (!m_plant) return false;
-    if (m_plant->type == PlantType::Structure) return false;
+    if (m_structure) return false;
     return (m_plant->type == PlantType::Producing) ? m_state == TileState::Ripe
                                                    : m_state == TileState::Grown;
 }

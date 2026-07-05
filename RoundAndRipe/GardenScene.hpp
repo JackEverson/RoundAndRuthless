@@ -6,6 +6,7 @@
 #include "Plants.hpp"
 #include "PointLight.hpp"
 #include "SaveSystem.hpp"
+#include "Structures.hpp"
 #include "Texture.hpp"
 #include "Tile.hpp"
 #include "Field.hpp"
@@ -48,6 +49,8 @@ private:
   Texture m_hoe_texture;
   Texture m_can_texture;
   Texture m_packet_texture;
+  Texture m_wrench_texture;
+  
 
   Texture m_sprinkler_texture;
 
@@ -66,12 +69,16 @@ private:
   enum class Outcome { Playing, Won, Lost };
 
   private:
-  enum class Tool { None, Shovel, Hoe, WateringCan, SeedPacket };
-
-  enum class MenuMode { None, Settings, SeedShop, UpgradeShop, SeedSelection };
+  enum class Tool { None, Hoe, WateringCan, SeedPacket, Wrench, Shovel };
+  enum class MenuMode { None, Settings, SeedShop, SeedSelection, StructureShop, StructureSelection, UpgradeShop };
 
   struct Seed {
     PlantDef def;
+    int count = 0;
+  };
+
+  struct StructureInv{
+    StructureDef def;
     int count = 0;
   };
 
@@ -129,10 +136,11 @@ private:
   // player
   Tool m_tool = Tool::None;
   int m_selected_seed = -1;
-  std::vector<Seed> m_seeds;
+  int m_selected_structure = -1;
   int m_harvest_count = 0;
- 
 
+  std::vector<Seed> m_seeds;
+  std::vector<StructureInv> m_structure_inv;
 
   const glm::vec2 TOOL_SIZE = glm::vec2(0.35f);
   const float TOOL_FWD = 0.6f;   
@@ -183,7 +191,7 @@ public:
   void render(GLFWwindow &window, Renderer &renderer) override;
   void AdvanceDay(); 
 
-  void PushNotification(const std::string &msg, float duration = 1.5f) { m_notification_manager.Push(msg, duration); }
+  void PushNotification(const std::string &msg, float duration = 4.5f) { m_notification_manager.Push(msg, duration); }
 
   // Query verbs — read-only conditions that reactive events poll each frame.
   bool HasPlantedTile() const {
@@ -260,19 +268,20 @@ public:
     switch (m_tool) {
     
     case Tool::Shovel:
-      if (t.HasPlant())
-        { t.PullUp(); sound_manager.PlaySound("dig"); }
-      else if (t.IsRefuse() || t.IsTilled())
-        { t.Clear(); sound_manager.PlaySound("dig"); }
+      if (t.HasPlant()) { t.PullUp(); sound_manager.PlaySound("dig"); }
+      else if (t.IsRefuse() || t.IsTilled()) { t.Clear(); sound_manager.PlaySound("dig"); }
+      else if (t.HasStructure()){ t.SetStructure(false); } 
       break;
 
     case Tool::Hoe:
-      if (t.IsEmpty())
+      if (t.IsEmpty() && !t.HasStructure())
         { t.Till(); sound_manager.PlaySound("dig"); }
       break;
+
     case Tool::WateringCan:
         t.Water();
       break;
+
     case Tool::None:
       if (t.IsHarvestable()) {
         m_biomass += t.Harvest();
@@ -282,10 +291,16 @@ public:
       break;
     case Tool::SeedPacket:
       if (t.IsTilled() && m_selected_seed >= 0 &&
-          m_seeds[m_selected_seed].count > 0) {
+          m_seeds[m_selected_seed].count > 0 && !t.HasStructure()) {
         t.Plant(&m_seeds[m_selected_seed].def);
         --m_seeds[m_selected_seed].count; 
       }
+    case Tool::Wrench:
+    if (m_selected_structure >= 0 && m_structure_inv[m_selected_structure].count > 0) {
+      if (m_field.PlaceStructureAt(t, &m_structure_inv[m_selected_structure].def)){
+        --m_structure_inv[m_selected_structure].count;
+      }
+    }
       break;
     }
   }
@@ -302,6 +317,8 @@ public:
       return "Seed Packet";
     case Tool::None:
       return "Hands";
+    case Tool::Wrench:
+      return "Wrench";
     }
     return "?";
   }
@@ -311,7 +328,8 @@ public:
       case Tool::Shovel:      return &m_shovel_texture;
       case Tool::Hoe:         return &m_hoe_texture;
       case Tool::WateringCan: return &m_can_texture;
-      case Tool::SeedPacket:  return &m_packet_texture;
+      case Tool::SeedPacket:  return &m_packet_texture; 
+      case Tool::Wrench:      return &m_wrench_texture;
       case Tool::None:        return nullptr;   // hands = nothing
     }
     return nullptr;

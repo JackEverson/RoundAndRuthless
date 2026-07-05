@@ -12,14 +12,23 @@ struct TileSave {
     std::string plant; 
 };
 
+struct StructureSave
+{
+    std::string name; 
+    int row, col; 
+    std::string crop;
+};
+
 struct GameState {
-    int version = 2;
+    int version = 3;
     double elapsed = 0.0;
     int biomass = 0;
     int tier = 0;
     int harvest_count = 0;
     std::string selected_seed;
     std::map<std::string, int> seeds;   // name -> count
+    std::map<std::string, int> structure_inv;
+    std::vector<StructureSave> structures_field;
     std::vector<TileSave> tiles;
 };
 

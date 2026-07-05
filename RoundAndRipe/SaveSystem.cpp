@@ -10,9 +10,10 @@ void SaveSystem::Save(const std::string& path, const GameState& s) {
     j["elapsed"]       = s.elapsed;
     j["biomass"]       = s.biomass;
     j["selected_seed"] = s.selected_seed;
-    j["seeds"]         = s.seeds;                 // std::map<string,int> serializes directly
+    j["seeds"]         = s.seeds;                   // std::map<string,int> serializes directly
     j["tier"]          = s.tier; 
     j["harvest_count"] = s.harvest_count;
+    j["structure_inv"] = s.structure_inv;           // std::map<string,int> serializes directly
 
     j["tiles"] = nlohmann::json::array();
     for (const auto& t : s.tiles) {
@@ -21,6 +22,16 @@ void SaveSystem::Save(const std::string& path, const GameState& s) {
             {"watered", t.watered},
             {"seconds_growing",    t.seconds_growing},
             {"plant",   t.plant}
+        });
+    }
+
+    j["structure_field"] = nlohmann::json::array();
+    for (const auto& s : s.structures_field){
+        j["structure_field"].push_back({
+            {"name", s.name},
+            {"col", s.col},
+            {"row", s.row},
+            {"crop", s.crop}
         });
     }
 
@@ -69,6 +80,7 @@ bool SaveSystem::Load(const std::string& path, int version, GameState& out) {
     out.seeds         = j.value("seeds", std::map<std::string, int>{});
     out.tier          = j.value("tier", 0);
     out.harvest_count = j.value("harvest_count", 0);
+    out.structure_inv = j.value("structure_inv", std::map<std::string, int>{});
 
     out.tiles.clear();
     for (const auto& tj : j.value("tiles", nlohmann::json::array())) {
@@ -79,5 +91,15 @@ bool SaveSystem::Load(const std::string& path, int version, GameState& out) {
         t.plant   = tj.value("plant",   std::string{});
         out.tiles.push_back(t);
     }
+
+    out.structures_field.clear();
+    for (const auto& sj : j.value("structure_field", nlohmann::json::array())){
+        StructureSave s;
+        s.name = sj.value("name", std::string{});
+        s.col = sj.value("col", -1);
+        s.row = sj.value("row", -1);
+        s.crop = sj.value("crop", std::string{});
+    }
+
     return true;
 }

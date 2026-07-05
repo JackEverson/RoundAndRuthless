@@ -7,7 +7,7 @@
 #include <string>
 
 
-enum class PlantType { Harvestable, Producing, Structure };
+enum class PlantType { Harvestable, Producing};
 
 struct PlantDef {
     std::string name;
@@ -21,21 +21,6 @@ struct PlantDef {
     Texture*    ripe_texture;         
     glm::vec2   full_size;     
 };
-
-inline PlantDef Sprinkler(Texture* tex){
-    PlantDef sprinkler;
-    sprinkler.name = "sprinkler";
-    sprinkler.type = PlantType::Structure;
-    sprinkler.seconds_to_grow = 0;
-    sprinkler.biomass_yield = 0;
-    sprinkler.biomass_cost = 25;
-    sprinkler.growing_texture = tex;
-    sprinkler.ripe_texture = tex;
-    sprinkler.full_size = glm::vec2(0.8f, 0.8f);
-    sprinkler.tier = 1;
-    return sprinkler;
-}
-
 
 inline PlantDef Radish(Texture* growing, Texture* ripe){
     PlantDef radish;

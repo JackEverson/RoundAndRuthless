@@ -141,7 +141,7 @@ public:
     m_timer -= dt;
     if (m_timer > 0.0f) return;
     if (m_line >= m_lines.size()) { m_complete = true; return; }
-    m_scene.PushNotification(m_lines[m_line].text, m_line_time);
+    if (!m_lines[m_line].text.empty()){ m_scene.PushNotification(m_lines[m_line].text, m_line_time); }
     m_scene.PlaySound(m_lines[m_line].voice);
     m_line++;
     m_timer = m_line_time;
