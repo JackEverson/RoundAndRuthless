@@ -99,6 +99,7 @@ bool SaveSystem::Load(const std::string& path, int version, GameState& out) {
         s.col = sj.value("col", -1);
         s.row = sj.value("row", -1);
         s.crop = sj.value("crop", std::string{});
+        out.structures_field.push_back(s);
     }
 
     return true;

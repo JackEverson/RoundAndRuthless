@@ -1,16 +1,17 @@
 #pragma once
 
 #include "Event.hpp"
+#include "Field.hpp"
 #include "GardenRoom.hpp"
 #include "NotificationManager.hpp"
 #include "Plants.hpp"
 #include "PointLight.hpp"
+#include "Renderer.hpp"
 #include "SaveSystem.hpp"
 #include "Structures.hpp"
 #include "Texture.hpp"
 #include "Tile.hpp"
-#include "Field.hpp"
-#include "Renderer.hpp" 
+
 
 #include "GLFW/glfw3.h"
 #include "glm/ext/vector_float2.hpp"
@@ -24,8 +25,6 @@
 #include <vector>
 
 class GardenScene : public GardenRoom {
-
-
 
 private:
   SimpleSoundManager &sound_manager;
@@ -50,7 +49,6 @@ private:
   Texture m_can_texture;
   Texture m_packet_texture;
   Texture m_wrench_texture;
-  
 
   Texture m_sprinkler_texture;
 
@@ -65,19 +63,27 @@ private:
   Texture m_staring_cabbage_ripe_texture;
 
   // enums and struct
-  public:
+public:
   enum class Outcome { Playing, Won, Lost };
 
-  private:
+private:
   enum class Tool { None, Hoe, WateringCan, SeedPacket, Wrench, Shovel };
-  enum class MenuMode { None, Settings, SeedShop, SeedSelection, StructureShop, StructureSelection, UpgradeShop };
+  enum class MenuMode {
+    None,
+    Settings,
+    SeedShop,
+    SeedSelection,
+    StructureShop,
+    StructureSelection,
+    UpgradeShop
+  };
 
   struct Seed {
     PlantDef def;
     int count = 0;
   };
 
-  struct StructureInv{
+  struct StructureInv {
     StructureDef def;
     int count = 0;
   };
@@ -94,7 +100,8 @@ private:
   TriggerVolume m_apple_trigger;
   bool m_apple_collected = false;
   float m_apple_timer = 0.0f;
-  size_t m_apple_trigger_index = 0; // where the apple's trigger lives in m_triggers
+  size_t m_apple_trigger_index =
+      0; // where the apple's trigger lives in m_triggers
 
   // menu
   float m_font_size = 2.0f;
@@ -104,7 +111,7 @@ private:
 
   // settings (persisted to settings.json; fullscreen default)
   float m_master_volume = 1.0f;
-  float m_brightness = 1.0f;    // scales the ambient light
+  float m_brightness = 1.0f; // scales the ambient light
   bool m_borderless = true;
 
   // field
@@ -118,20 +125,20 @@ private:
   int m_biomass = 0;
   double m_elapsed = 0.0;
   float m_random_event_timer = 0.0f;
-  float m_next_random_event = 45.0f;    // first ambient beat ~45s in
-  const float RANDOM_EVENT_MIN = 60.0f; // after that: every 60–150s, never clockwork
+  float m_next_random_event = 45.0f; // first ambient beat ~45s in
+  const float RANDOM_EVENT_MIN =
+      60.0f; // after that: every 60–150s, never clockwork
   const int RANDOM_EVENT_SPREAD = 90;
   bool m_quit_game = false;
   Outcome m_outcome = Outcome::Playing;
 
   const float SAVE_INTERVAL = 30.0f;
   float m_save_timer = 0.0f;
-  bool m_new_game = false; 
+  bool m_new_game = false;
   bool m_confirm_new = false;
 
   bool m_was_looking_down = false;
   float m_sushi_quip_cooldown = 0.0f;
-
 
   // player
   Tool m_tool = Tool::None;
@@ -143,17 +150,17 @@ private:
   std::vector<StructureInv> m_structure_inv;
 
   const glm::vec2 TOOL_SIZE = glm::vec2(0.35f);
-  const float TOOL_FWD = 0.6f;   
-  const float TOOL_SIDE = 0.30f; 
-  const float TOOL_DROP = 0.30f; 
-
+  const float TOOL_FWD = 0.6f;
+  const float TOOL_SIDE = 0.30f;
+  const float TOOL_DROP = 0.30f;
 
   // animation
 
   // const
-  const std::vector<long long> TIER_COST = {100, 1000, 10000};//, 1000000, 100000000};
+  const std::vector<long long> TIER_COST = {100, 1000,
+                                            10000}; //, 1000000, 100000000};
 
-  const float TIME_LIMIT = 1000000000.0f; 
+  const float TIME_LIMIT = 1000000000.0f;
 
   const float FLOOR_TILE_SIZE = 100.0f;
 
@@ -177,21 +184,23 @@ private:
   const glm::vec2 BODY_SIZE = glm::vec2(BODY_DROP, PLAYER_HEIGHT);
 
   const float FADE_SPEED = 2.0f;
-  const float APPLE_RESPAWN_TIME = 60.0f;  // was 120 — felt like "never respawns"
-  const float APPLE_SPAWN_RANGE = 16.0f;   // spawn band around the farm (field edge is ±5)
+  const float APPLE_RESPAWN_TIME =
+      60.0f; // was 120 — felt like "never respawns"
+  const float APPLE_SPAWN_RANGE =
+      16.0f; // spawn band around the farm (field edge is ±5)
 
 public:
-
-
   GardenScene();
   void onEnter(GLFWwindow &window) override;
   void onExit(GLFWwindow &window) override;
   Scene *update(GLFWwindow &window, float delta) override;
   void handleInput(GLFWwindow &window, float delta) override;
   void render(GLFWwindow &window, Renderer &renderer) override;
-  void AdvanceDay(); 
+  void AdvanceDay();
 
-  void PushNotification(const std::string &msg, float duration = 4.5f) { m_notification_manager.Push(msg, duration); }
+  void PushNotification(const std::string &msg, float duration = 4.5f) {
+    m_notification_manager.Push(msg, duration);
+  }
 
   // Query verbs — read-only conditions that reactive events poll each frame.
   bool HasPlantedTile() const {
@@ -236,13 +245,12 @@ public:
   int HarvestCount() const { return m_harvest_count; }
   void SetTaskText(const std::string &text) { m_task_text = text; }
   void ClearTaskText() { m_task_text = ""; }
-  void SetOutcome(const Outcome &outcome){ m_outcome = outcome; }
+  void SetOutcome(const Outcome &outcome) { m_outcome = outcome; }
   void QUIT() { m_quit_game = true; };
 
-  void PlaySound(const std::string &name, float volume = 1.0f) 
-  { 
-    sound_manager.PlaySound(name); 
-    sound_manager.SetSoundVolume(name, volume );
+  void PlaySound(const std::string &name, float volume = 1.0f) {
+    sound_manager.PlaySound(name);
+    sound_manager.SetSoundVolume(name, volume);
   }
   void StartEvent(std::unique_ptr<Event> e) {
     e->OnStart();
@@ -261,25 +269,40 @@ public:
   int SeedCost(PlantDef def) { return (def.biomass_yield / 2) + 1; }
 
   void CycleTool(int dir) {
-    m_tool = static_cast<Tool>((static_cast<int>(m_tool) + dir + 5) % 5);
+    m_tool = static_cast<Tool>((static_cast<int>(m_tool) + dir + 6) % 6);
   }
 
   void UseToolOn(Tile &t) {
     switch (m_tool) {
-    
+
     case Tool::Shovel:
-      if (t.HasPlant()) { t.PullUp(); sound_manager.PlaySound("dig"); }
-      else if (t.IsRefuse() || t.IsTilled()) { t.Clear(); sound_manager.PlaySound("dig"); }
-      else if (t.HasStructure()){ t.SetStructure(false); } 
-      break;
+    if (t.HasStructure()) {
+      if (Structure *s = m_field.StructureAtTile(t)) {
+        std::string name = s->def->name;      // ⚠ capture BEFORE removal —
+        m_field.RemoveStructureAt(t);         // erase invalidates s (dangling!)
+        for (auto &si : m_structure_inv)      // refund the machine
+          if (si.def.name == name) { ++si.count; break; }
+        sound_manager.PlaySound("dig");
+      }
+    }
+    else if (t.HasPlant()) {
+        t.PullUp();
+        sound_manager.PlaySound("dig");
+      } else if (t.IsRefuse() || t.IsTilled()) {
+        t.Clear();
+        sound_manager.PlaySound("dig");
+      }
+    break;
 
     case Tool::Hoe:
-      if (t.IsEmpty() && !t.HasStructure())
-        { t.Till(); sound_manager.PlaySound("dig"); }
+      if (t.IsEmpty() && !t.HasStructure()) {
+        t.Till();
+        sound_manager.PlaySound("dig");
+      }
       break;
 
     case Tool::WateringCan:
-        t.Water();
+      t.Water();
       break;
 
     case Tool::None:
@@ -289,18 +312,37 @@ public:
         sound_manager.PlaySound("pop");
       }
       break;
+
     case Tool::SeedPacket:
-      if (t.IsTilled() && m_selected_seed >= 0 &&
-          m_seeds[m_selected_seed].count > 0 && !t.HasStructure()) {
-        t.Plant(&m_seeds[m_selected_seed].def);
-        --m_seeds[m_selected_seed].count; 
-      }
-    case Tool::Wrench:
-    if (m_selected_structure >= 0 && m_structure_inv[m_selected_structure].count > 0) {
-      if (m_field.PlaceStructureAt(t, &m_structure_inv[m_selected_structure].def)){
-        --m_structure_inv[m_selected_structure].count;
+    if (t.HasStructure()) {
+      Structure *s = m_field.StructureAtTile(t);
+      if (s && s->def->kind == StructureKind::Planter && !s->crop &&
+          m_selected_seed >= 0) {
+        if (m_seeds[m_selected_seed].count >= s->def->seed_load) {
+          s->crop = &m_seeds[m_selected_seed].def;
+          m_seeds[m_selected_seed].count -= s->def->seed_load;
+          PushNotification("Planter loaded: " + s->crop->name);
+          PlaySound("pop");
+        } else {
+          PushNotification("Planter needs " + std::to_string(s->def->seed_load) +
+                          " seeds to load", 3.0f);
+        }
+      } else if (t.IsTilled() && m_selected_seed >= 0 &&
+            m_seeds[m_selected_seed].count > 0 && !t.HasStructure()) {
+          t.Plant(&m_seeds[m_selected_seed].def);
+          --m_seeds[m_selected_seed].count;
       }
     }
+    break;
+
+    case Tool::Wrench:
+      if (m_selected_structure >= 0 &&
+          m_structure_inv[m_selected_structure].count > 0) {
+        if (m_field.PlaceStructureAt(
+                t, &m_structure_inv[m_selected_structure].def)) {
+          --m_structure_inv[m_selected_structure].count;
+        }
+      }
       break;
     }
   }
@@ -323,22 +365,37 @@ public:
     return "?";
   }
 
-  Texture* ToolTexture(Tool t) {
+  Texture *ToolTexture(Tool t) {
     switch (t) {
-      case Tool::Shovel:      return &m_shovel_texture;
-      case Tool::Hoe:         return &m_hoe_texture;
-      case Tool::WateringCan: return &m_can_texture;
-      case Tool::SeedPacket:  return &m_packet_texture; 
-      case Tool::Wrench:      return &m_wrench_texture;
-      case Tool::None:        return nullptr;   // hands = nothing
+    case Tool::Shovel:
+      return &m_shovel_texture;
+    case Tool::Hoe:
+      return &m_hoe_texture;
+    case Tool::WateringCan:
+      return &m_can_texture;
+    case Tool::SeedPacket:
+      return &m_packet_texture;
+    case Tool::Wrench:
+      return &m_wrench_texture;
+    case Tool::None:
+      return nullptr; // hands = nothing
     }
     return nullptr;
   }
 
-  const PlantDef *FindDef(const std::string &name) {
+  const PlantDef *FindPlantDef(const std::string &name) {
     for (auto &s : m_seeds)
       if (s.def.name == name)
         return &s.def;
+    return nullptr;
+  }
+
+  const StructureDef *FindStructureDef(const std::string &name){
+    for (auto&s : m_structure_inv){
+      if (s.def.name == name){
+        return &s.def;
+      }
+    }
     return nullptr;
   }
 
@@ -348,10 +405,11 @@ public:
         return i;
     return -1; // not found / "" → none
   }
-  
+
   void PlaceApple() {
     // Spawn in a band just around the farm (field is x,z ∈ [-5, 5]) so the
-    // apple is a short forage, not a wasteland expedition. Reject on-farm rolls.
+    // apple is a short forage, not a wasteland expedition. Reject on-farm
+    // rolls.
     static std::mt19937 rng(std::random_device{}());
     std::uniform_real_distribution<float> coord(-APPLE_SPAWN_RANGE,
                                                 APPLE_SPAWN_RANGE);
@@ -361,25 +419,27 @@ public:
     } while (pos.x > -5.0f && pos.x < 5.0f && pos.z > -5.0f && pos.z < 5.0f);
 
     m_apple.position = pos;
-    m_triggers[m_apple_trigger_index].position = pos; // move the *registered* trigger
+    m_triggers[m_apple_trigger_index].position =
+        pos; // move the *registered* trigger
     m_apple_collected = false;
   }
 
-  void EaseLookDown(float dt, float target_pitch_deg = -89.0f, float speed = 1.0f) {
+  void EaseLookDown(float dt, float target_pitch_deg = -89.0f,
+                    float speed = 1.0f) {
     glm::vec3 f = m_camera.GetForward();
     float pitch = glm::degrees(asinf(glm::clamp(f.y, -1.0f, 1.0f)));
-    float yaw   = glm::degrees(atan2f(f.z, f.x));   // matches CalcLookAt's convention
+    float yaw =
+        glm::degrees(atan2f(f.z, f.x)); // matches CalcLookAt's convention
 
-    float t = 1.0f - expf(-speed * dt);             // framerate-independent ease
+    float t = 1.0f - expf(-speed * dt); // framerate-independent ease
     m_camera.SetRotation(yaw, pitch + (target_pitch_deg - pitch) * t);
   }
 
-  const float GetUiScale(int h){
-    return m_font_size * (float)h / 1440.0f;   // 1440p = your tuning reference
+  const float GetUiScale(int h) {
+    return m_font_size * (float)h / 1440.0f; // 1440p = your tuning reference
   };
 
-
-  const int SAVE_VERSION = 2;
+  const int SAVE_VERSION = 3;
   const std::string SAVE_PATH = "./save.json";
   const std::string SETTINGS_PATH = "./settings.json";
 
@@ -397,6 +457,13 @@ public:
     for (auto &t : m_field.Tiles())
       s.tiles.push_back({(int)t.GetState(), t.IsWatered(), t.SecondsGrowing(),
                          t.GetPlantName()});
+    for (auto &si : m_structure_inv) {
+      s.structure_inv[si.def.name] = si.count;
+    }
+    for (auto &sf : m_field.Structures()) {
+      s.structures_field.push_back(
+          {sf.def->name, sf.row, sf.col, sf.crop ? sf.crop->name : ""});
+    }
     SaveSystem::Save(SAVE_PATH, s);
   }
 
@@ -408,13 +475,28 @@ public:
     m_biomass = s.biomass;
     m_tier = s.tier;
     m_harvest_count = s.harvest_count;
-    for (auto &sd : m_seeds)
+    
+    for (auto &sd : m_seeds) {
       sd.count = s.seeds.count(sd.def.name) ? s.seeds[sd.def.name] : 0;
-    m_selected_seed = SeedIndex(s.selected_seed);
+      m_selected_seed = SeedIndex(s.selected_seed);
+    }
     auto &tiles = m_field.Tiles();
-    if (s.tiles.size() == tiles.size())
+    if (s.tiles.size() == tiles.size()) {
       for (size_t i = 0; i < tiles.size(); i++)
-        tiles[i].Set((Tile::TileState)s.tiles[i].state, FindDef(s.tiles[i].plant), s.tiles[i].seconds_growing);
+        tiles[i].Set((Tile::TileState)s.tiles[i].state,
+                     FindPlantDef(s.tiles[i].plant), s.tiles[i].seconds_growing);
+    }
+
+    for (auto &si : m_structure_inv){
+      si.count = s.structure_inv.count(si.def.name) ? s.structure_inv[si.def.name] : 0;
+    }
+    
+    auto &structs = m_field.Structures();
+    for (auto &st : s.structures_field){
+      if (const StructureDef* def = FindStructureDef(st.name)) 
+      { m_field.PlaceStructureAt(st.row, st.col, def, FindPlantDef(st.crop)); }
+    }
+
     return true;
   }
 };

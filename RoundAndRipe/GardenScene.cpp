@@ -3,6 +3,7 @@
 #include "FPSController.hpp"
 #include "GLFW/glfw3.h"
 #include "RoundAndRipeEvents.hpp"
+#include "Structures.hpp"
 #include "TriggerVolume.hpp"
 
 
@@ -178,11 +179,13 @@ void GardenScene::onEnter(GLFWwindow &window) {
   m_seeds.push_back({Tomato(&m_bush_texture, &m_tomato_texture), 0});
 
   m_seeds.push_back({StaringCabbage(&m_staring_cabbage_growing_texture,
-                                    &m_staring_cabbage_ripe_texture),
-                     0});
+                                    &m_staring_cabbage_ripe_texture),0});
   
   //TODO: Structure defs
-  // m_structures.push_back()
+  m_structure_inv.push_back({Sprinkler(&m_sprinkler_texture), 10});
+  m_structure_inv.push_back({Harvester(&m_sprinkler_texture), 10});
+  m_structure_inv.push_back({Hoer(&m_sprinkler_texture), 10});
+  m_structure_inv.push_back({Planter(&m_sprinkler_texture), 10});
 
 
   bool loaded_save = Load();
@@ -243,7 +246,7 @@ Scene *GardenScene::update(GLFWwindow &window, float delta) {
     }
   }
 
-  m_field.RunStructures(delta);
+  m_biomass += m_field.RunStructures(delta);
 
   // random events
   if (m_random_event_timer >= m_next_random_event) {
@@ -351,9 +354,9 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
   else if (wheel < 0)
     CycleTool(+1);
 
-  if (m_tool == Tool::SeedPacket &&
-      glfwGetMouseButton(&window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
-    m_menu_mode = MenuMode::SeedSelection;
+  if (glfwGetMouseButton(&window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS){
+    if (m_tool == Tool::SeedPacket){ m_menu_mode = MenuMode::SeedSelection; }
+    else if (m_tool == Tool::Wrench){ m_menu_mode = MenuMode::StructureSelection; }
   }
 }
 
@@ -585,19 +588,19 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
     bool any_shown = false;
     for (int n = 0; n < (int)m_seeds.size(); n++) {
       Seed &seed = m_seeds[n];
-      if (seed.count <= 0)
-        continue; // only seeds the player actually has in stock
+      if (seed.count <= 0) continue; // only seeds the player actually has in stock
+      ImGui::PushID(n);
       any_shown = true;
 
-      ImGui::PushID(n);
-      ImGui::Text("%s%s  x%d", (m_selected_seed == n) ? "> " : "",
-                  seed.def.name.c_str(), seed.count);
-      ImGui::SameLine();
       if (ImGui::Button("Select")) {
         m_selected_seed = n;
         m_menu_mode =
             MenuMode::None; // pick -> close, straight back to planting
       }
+      ImGui::SameLine();
+      ImGui::Text("%s%s  x%d", (m_selected_seed == n) ? "> " : "",
+                  seed.def.name.c_str(), seed.count);
+
       ImGui::PopID();
     }
     if (!any_shown)
@@ -607,7 +610,78 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
     if (ImGui::Button("Close"))
       m_menu_mode = MenuMode::None;
     ImGui::End();
-  } else if (m_menu_mode == MenuMode::Settings) {
+  } else if (m_menu_mode == MenuMode::StructureSelection){
+    ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f), ImGuiCond_Always,
+                                ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowBgAlpha(0.9f);
+        ImGui::Begin("Structures", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+        ImGui::SetWindowFontScale(ui);
+
+        bool any_shown = false;
+        for (int n = 0; n < (int)m_structure_inv.size(); n++) {
+          StructureInv &s = m_structure_inv[n];
+          if (s.count <= 0) continue; 
+          ImGui::PushID(n);
+          any_shown = true;
+
+          if (ImGui::Button("Select")) {
+            m_selected_structure = n;
+            m_menu_mode =
+                MenuMode::None; 
+          }
+          ImGui::SameLine();
+          ImGui::Text("%s%s  x%d : %s", (m_selected_structure == n) ? "> " : "",
+                      s.def.name.c_str(), s.count, s.def.description.c_str());
+          ImGui::PopID();
+        }
+        if (!any_shown)
+          ImGui::Text("No structures. Buy some at the structure maker.");
+
+        ImGui::Separator();
+        if (ImGui::Button("Close"))
+          m_menu_mode = MenuMode::None;
+        ImGui::End();
+  }
+  else if (m_menu_mode == MenuMode::StructureShop){
+    ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f), ImGuiCond_Always,
+                                ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowBgAlpha(
+            0.9f); // visible panel (your HUD used 0 = invisible)
+        ImGui::Begin("Structure Store", nullptr,
+                    ImGuiWindowFlags_AlwaysAutoResize); // NOTE: no NoInputs — it
+                                                        // must take clicks
+        ImGui::SetWindowFontScale(ui);
+
+        ImGui::Text("Biomass: %d g", m_biomass);
+        ImGui::Separator();
+
+        for (int n = 0; n < (int)m_structure_inv.size(); n++) {
+          StructureInv &st = m_structure_inv[n];
+
+          ImGui::PushID(n);
+          if (st.def.tier > m_tier) {
+            ImGui::Text("%s  (locked, tier %d)", st.def.name.c_str(),
+                        st.def.tier);
+            ImGui::PopID();
+            continue;
+          }
+          ImGui::Text("%s  (have %d)  -  %d g", st.def.name.c_str(), st.count,
+                      st.def.biomass_cost);
+          ImGui::SameLine();
+          if (ImGui::Button("Buy")) {
+            if (m_biomass >= st.def.biomass_cost) {
+              m_biomass -= st.def.biomass_cost;
+              st.count++;
+            } else
+              m_notification_manager.Push("Not enough biomass", 1.5f);
+          }
+          ImGui::PopID();
+    }
+    if (ImGui::Button("Close"))
+      m_menu_mode = MenuMode::None;
+    ImGui::End();
+  }
+  else if (m_menu_mode == MenuMode::Settings) {
     ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f), ImGuiCond_Always,
                             ImVec2(0.5f, 0.5f));
     ImGui::SetNextWindowBgAlpha(0.9f);
