@@ -482,24 +482,33 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
   ImGui::SetWindowFontScale(ui);
   ImGui::End();
 
-  std::string seed_text;
+  std::string hud_text = std::string("Tool: ") + GetToolName(m_tool);
 
-  if (m_selected_seed == -1) {
-    seed_text = "none";
-  } else {
-    seed_text = m_seeds[m_selected_seed].def.name + " x" +
-                std::to_string(m_seeds[m_selected_seed].count);
+  if (m_tool == Tool::SeedPacket) {
+    hud_text += "\nSeed: ";
+    hud_text += (m_selected_seed == -1)
+        ? "none"
+        : m_seeds[m_selected_seed].def.name + " x" +
+              std::to_string(m_seeds[m_selected_seed].count);
   }
+  if (m_tool == Tool::Wrench) {
+    hud_text += "\nStructure: ";
+    hud_text += (m_selected_structure == -1)
+        ? "none"
+        : m_structure_inv[m_selected_structure].def.name + " x" +
+              std::to_string(m_structure_inv[m_selected_structure].count);
+  }
+  hud_text += "\nTime: " + std::to_string((int)m_elapsed) +
+              "\nBiomass: " + std::to_string(m_biomass) +
+              " g\nTier: " + std::to_string(m_tier);
 
   ImGui::SetNextWindowPos(ImVec2(w * 0.15f, h - 250.0f), ImGuiCond_Always,
-                          ImVec2(0.5f, 0.0f));
+                          ImVec2(0.5f, 1.0f));
   ImGui::SetNextWindowBgAlpha(0.0f);
   ImGui::Begin("##hud", nullptr,
                ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
                    ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize);
-  ImGui::Text("Tool: %s\nSeed: %s\nTime: %d\nBiomass: %lld g\nTier: %d",
-              GetToolName(m_tool), seed_text.c_str(), (int)m_elapsed, m_biomass,
-              m_tier);
+  ImGui::Text("%s", hud_text.c_str());
   ImGui::SetWindowFontScale(ui);
   ImGui::End();
 
@@ -534,16 +543,24 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
         ImGui::PopID();
         continue;
       }
-      ImGui::Text("%s  (have %d)  -  %d g", seed.def.name.c_str(), seed.count,
-                  seed.def.biomass_cost);
-      ImGui::SameLine();
-      if (ImGui::Button("Buy")) {
-        if (m_biomass >= seed.def.biomass_cost) {
-          m_biomass -= seed.def.biomass_cost;
-          seed.count++;
+      auto buy = [&](int qty) {
+        long long cost = (long long)seed.def.biomass_cost * qty;
+        if (m_biomass >= cost) {
+          m_biomass -= cost;
+          seed.count += qty;
         } else
           m_notification_manager.Push("Not enough biomass", 1.5f);
-      }
+      };
+      if (ImGui::Button("Buy")) buy(1);
+      ImGui::SameLine();
+      if (ImGui::Button("x5")) buy(5);
+      ImGui::SameLine();
+      if (ImGui::Button("x10")) buy(10);
+      ImGui::SameLine();
+      if (ImGui::Button("x100")) buy(100);
+      ImGui::SameLine();
+      ImGui::Text("%s  (have %d)  -  %d g", seed.def.name.c_str(), seed.count,
+                  seed.def.biomass_cost);
       ImGui::PopID();
     }
     ImGui::Separator();
@@ -672,16 +689,22 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
             ImGui::PopID();
             continue;
           }
-          ImGui::Text("%s  (have %d)  -  %d g", st.def.name.c_str(), st.count,
-                      st.def.biomass_cost);
-          ImGui::SameLine();
-          if (ImGui::Button("Buy")) {
-            if (m_biomass >= st.def.biomass_cost) {
-              m_biomass -= st.def.biomass_cost;
-              st.count++;
+          auto buy = [&](int qty) {
+            long long cost = (long long)st.def.biomass_cost * qty;
+            if (m_biomass >= cost) {
+              m_biomass -= cost;
+              st.count += qty;
             } else
               m_notification_manager.Push("Not enough biomass", 1.5f);
-          }
+          };
+          if (ImGui::Button("Buy")) buy(1);
+          ImGui::SameLine();
+          if (ImGui::Button("x5")) buy(5);
+          ImGui::SameLine();
+          if (ImGui::Button("x10")) buy(10);
+          ImGui::SameLine();
+          ImGui::Text("%s  (have %d)  -  %d g", st.def.name.c_str(), st.count,
+                      st.def.biomass_cost);
           ImGui::PopID();
     }
     if (ImGui::Button("Close"))
