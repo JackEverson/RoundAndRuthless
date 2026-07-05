@@ -76,7 +76,7 @@ bool SaveSystem::Load(const std::string& path, int version, GameState& out) {
 
     out.version       = version;
     out.elapsed       = j.value("elapsed", 0.0);
-    out.biomass       = j.value("biomass", 0);    out.selected_seed = j.value("selected_seed", std::string{});
+    out.biomass       = j.value("biomass", 0ll);    out.selected_seed = j.value("selected_seed", std::string{});
     out.seeds         = j.value("seeds", std::map<std::string, int>{});
     out.tier          = j.value("tier", 0);
     out.harvest_count = j.value("harvest_count", 0);

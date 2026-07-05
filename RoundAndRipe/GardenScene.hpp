@@ -34,6 +34,7 @@ private:
   Texture m_floor_texture;
 
   Texture m_sushi_texture;
+  Texture m_sushi_eat_texture;
   Texture m_house_texture;
   Texture m_chest_texture;
   Texture m_human_texture;
@@ -122,7 +123,7 @@ private:
   // progression
   std::string m_task_text = "";
   int m_tier = 0;
-  int m_biomass = 0;
+  long long m_biomass = 0;
   double m_elapsed = 0.0;
   float m_random_event_timer = 0.0f;
   float m_next_random_event = 45.0f; // first ambient beat ~45s in
@@ -157,8 +158,7 @@ private:
   // animation
 
   // const
-  const std::vector<long long> TIER_COST = {100, 1000,
-                                            10000}; //, 1000000, 100000000};
+  const std::vector<long long> TIER_COST = {100, 1000,10000, 1000000, 1000000000};
 
   const float TIME_LIMIT = 1000000000.0f;
 

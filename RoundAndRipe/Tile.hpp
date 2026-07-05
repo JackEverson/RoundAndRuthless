@@ -16,7 +16,7 @@ class Tile {
 public:
     enum class TileState { Refuse, Empty, Tilled, Growing, Grown, Ripe };
     
-    Tile(glm::vec3 position, Texture* soil_texture, Texture* refuse_texture, Texture* tilled_texture, Texture* seeded_texture, TileState state = TileState::Refuse);
+    Tile(glm::vec3 position, Texture* soil_texture, Texture* refuse_texture, Texture* tilled_texture, Texture* seeded_texture, TileState state = TileState::Empty);
 
     void Update(float dt); 
     void Render(Renderer& renderer, const glm::vec3& campos);

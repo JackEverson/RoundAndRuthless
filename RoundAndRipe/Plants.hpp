@@ -93,3 +93,31 @@ inline PlantDef StaringCabbage(Texture* growing, Texture* ripe){
     cabbage.tier = 2;
     return cabbage;
 }
+
+inline PlantDef Tier3Placeholder(Texture* growing, Texture* ripe){
+    PlantDef crop;
+    crop.name = "tier 3 placeholder crop";
+    crop.type = PlantType::Harvestable;
+    crop.seconds_to_grow = 80;
+    crop.biomass_yield = 500;      // ~2000 harvests to clear the 1M gate
+    crop.biomass_cost = 100;
+    crop.growing_texture = growing;
+    crop.ripe_texture = ripe;
+    crop.full_size = glm::vec2(1.0f, 1.0f);
+    crop.tier = 3;
+    return crop;
+}
+
+inline PlantDef Tier4Placeholder(Texture* growing, Texture* ripe){
+    PlantDef crop;
+    crop.name = "tier 4 placeholder crop";
+    crop.type = PlantType::Harvestable;
+    crop.seconds_to_grow = 100;
+    crop.biomass_yield = 500000;   // ~2000 harvests to clear the 1B gate
+    crop.biomass_cost = 100000;
+    crop.growing_texture = growing;
+    crop.ripe_texture = ripe;
+    crop.full_size = glm::vec2(1.1f, 1.1f);
+    crop.tier = 4;
+    return crop;
+}

@@ -22,7 +22,7 @@ struct StructureSave
 struct GameState {
     int version = 3;
     double elapsed = 0.0;
-    int biomass = 0;
+    long long biomass = 0;
     int tier = 0;
     int harvest_count = 0;
     std::string selected_seed;

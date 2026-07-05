@@ -2,6 +2,7 @@
 #include "Engine.hpp"
 #include "FPSController.hpp"
 #include "GLFW/glfw3.h"
+#include "Plants.hpp"
 #include "RoundAndRipeEvents.hpp"
 #include "Structures.hpp"
 #include "TriggerVolume.hpp"
@@ -19,6 +20,7 @@ GardenScene::GardenScene()
       m_wall_texture("./res/textures/concrete_wall.png"),
       m_floor_texture("./res/textures/gravel_floor.png"),
       m_sushi_texture("./res/textures/sushi.png"),
+      m_sushi_eat_texture("./res/textures/sushi_eat.png"),
       m_house_texture("./res/textures/house.png"),
       m_chest_texture("./res/textures/chest.png"),
       m_human_texture("./res/textures/human_hazsuit.png"),
@@ -43,12 +45,14 @@ GardenScene::GardenScene()
       m_staring_cabbage_growing_texture(
           "./res/textures/staring_cabbage_growing.png"),
       m_staring_cabbage_ripe_texture("./res/textures/staring_cabbage_ripe.png"),
-      m_field(glm::vec3(-5.0f, 0.0f, -5.0f), 10, 10, 1.0f, &m_soil_texture,
-              &m_rock_texture, &m_till_texture, &m_seeded_texture) {};
+      m_field(glm::vec3(-5.0f, 0.0f, -5.0f), 10, 30, 1.0f, &m_soil_texture,
+              &m_rock_texture, &m_till_texture, &m_seeded_texture, 10) {};
 
 void GardenScene::onEnter(GLFWwindow &window) {
   glfwSetInputMode(&window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   m_controller.Init(window);
+
+  srand((unsigned)time(nullptr));  
 
   // settings: load (defaults if no file) and apply
   GameSettings cfg;
@@ -181,7 +185,10 @@ void GardenScene::onEnter(GLFWwindow &window) {
   m_seeds.push_back({StaringCabbage(&m_staring_cabbage_growing_texture,
                                     &m_staring_cabbage_ripe_texture),0});
   
-  //TODO: Structure defs
+  m_seeds.push_back({Tier3Placeholder(&m_sushi_texture, &m_sushi_eat_texture), 0});
+  m_seeds.push_back({Tier4Placeholder(&m_sushi_texture, &m_sushi_eat_texture), 0});
+
+
   m_structure_inv.push_back({Sprinkler(&m_sprinkler_texture), 10});
   m_structure_inv.push_back({Harvester(&m_sprinkler_texture), 10});
   m_structure_inv.push_back({Hoer(&m_sprinkler_texture), 10});
@@ -490,7 +497,7 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
   ImGui::Begin("##hud", nullptr,
                ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
                    ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize);
-  ImGui::Text("Tool: %s\nSeed: %s\nTime: %d\nBiomass: %d g\nTier: %d",
+  ImGui::Text("Tool: %s\nSeed: %s\nTime: %d\nBiomass: %lld g\nTier: %d",
               GetToolName(m_tool), seed_text.c_str(), (int)m_elapsed, m_biomass,
               m_tier);
   ImGui::SetWindowFontScale(ui);
@@ -514,7 +521,7 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
                                                      // must take clicks
     ImGui::SetWindowFontScale(ui);
 
-    ImGui::Text("Biomass: %d g", m_biomass);
+    ImGui::Text("Biomass: %lld g", m_biomass);
     ImGui::Separator();
 
     for (int n = 0; n < (int)m_seeds.size(); n++) {
@@ -550,7 +557,7 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
     ImGui::SetNextWindowBgAlpha(0.9f);
     ImGui::Begin("Upgrade Store", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
     ImGui::SetWindowFontScale(ui);
-    ImGui::Text("Biomass: %d g", m_biomass);
+    ImGui::Text("Biomass: %lld g", m_biomass);
     ImGui::Separator();
     if (m_tier >= (int)TIER_COST.size()) {
       ImGui::Text("Max tier reached.");
@@ -652,7 +659,7 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
                                                         // must take clicks
         ImGui::SetWindowFontScale(ui);
 
-        ImGui::Text("Biomass: %d g", m_biomass);
+        ImGui::Text("Biomass: %lld g", m_biomass);
         ImGui::Separator();
 
         for (int n = 0; n < (int)m_structure_inv.size(); n++) {

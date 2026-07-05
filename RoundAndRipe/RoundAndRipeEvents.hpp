@@ -338,9 +338,6 @@ class EndEvent : public LineEvent {
           IM_COL32((int)(160 * (1.0f - t)), (int)(10 * (1.0f - t)), (int)(10 * (1.0f - t)), 255));
     }
   }
-
-
-
 };
 
 
