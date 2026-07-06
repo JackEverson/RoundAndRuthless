@@ -94,9 +94,24 @@ inline PlantDef StaringCabbage(Texture* growing, Texture* ripe){
     return cabbage;
 }
 
-inline PlantDef Tier3Placeholder(Texture* growing, Texture* ripe){
+inline PlantDef Tier2Producing(Texture* growing, Texture* ripe){
     PlantDef crop;
-    crop.name = "tier 3 placeholder crop";
+    crop.name = "producingplanttier2";
+    crop.type = PlantType::Producing;
+    crop.seconds_to_grow = 60;
+    crop.seconds_to_ripen = 30;
+    crop.biomass_yield = 100;       // half the cabbage's, but repeats
+    crop.biomass_cost = 100;
+    crop.growing_texture = growing;
+    crop.ripe_texture = ripe;
+    crop.full_size = glm::vec2(0.9f, 1.4f);
+    crop.tier = 2;
+    return crop;
+}
+
+inline PlantDef Tier3Havest(Texture* growing, Texture* ripe){
+    PlantDef crop;
+    crop.name = "tier 3 placeholder havestable";
     crop.type = PlantType::Harvestable;
     crop.seconds_to_grow = 80;
     crop.biomass_yield = 500;      // ~2000 harvests to clear the 1M gate
@@ -108,9 +123,24 @@ inline PlantDef Tier3Placeholder(Texture* growing, Texture* ripe){
     return crop;
 }
 
+inline PlantDef Tier3Producing(Texture* growing, Texture* ripe){
+    PlantDef crop;
+    crop.name = "producingplanttier3";
+    crop.type = PlantType::Producing;
+    crop.seconds_to_grow = 80;
+    crop.seconds_to_ripen = 30;
+    crop.biomass_yield = 250;       // half the harvestable's, but repeats
+    crop.biomass_cost = 200;
+    crop.growing_texture = growing;
+    crop.ripe_texture = ripe;
+    crop.full_size = glm::vec2(1.0f, 1.4f);
+    crop.tier = 3;
+    return crop;
+}
+
 inline PlantDef Tier4Placeholder(Texture* growing, Texture* ripe){
     PlantDef crop;
-    crop.name = "tier 4 placeholder crop";
+    crop.name = "tier4placeholderhavestable";
     crop.type = PlantType::Harvestable;
     crop.seconds_to_grow = 100;
     crop.biomass_yield = 500000;   // ~2000 harvests to clear the 1B gate
@@ -118,6 +148,21 @@ inline PlantDef Tier4Placeholder(Texture* growing, Texture* ripe){
     crop.growing_texture = growing;
     crop.ripe_texture = ripe;
     crop.full_size = glm::vec2(1.1f, 1.1f);
+    crop.tier = 4;
+    return crop;
+}
+
+inline PlantDef Tier4Producing(Texture* growing, Texture* ripe){
+    PlantDef crop;
+    crop.name = "producingplanttier4";
+    crop.type = PlantType::Producing;
+    crop.seconds_to_grow = 100;
+    crop.seconds_to_ripen = 30;
+    crop.biomass_yield = 250000;    // half the harvestable's, but repeats
+    crop.biomass_cost = 200000;
+    crop.growing_texture = growing;
+    crop.ripe_texture = ripe;
+    crop.full_size = glm::vec2(1.1f, 1.5f);
     crop.tier = 4;
     return crop;
 }

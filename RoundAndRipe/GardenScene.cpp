@@ -184,9 +184,13 @@ void GardenScene::onEnter(GLFWwindow &window) {
 
   m_seeds.push_back({StaringCabbage(&m_staring_cabbage_growing_texture,
                                     &m_staring_cabbage_ripe_texture),0});
-  
+  m_seeds.push_back({Tier2Producing(&m_sushi_texture, &m_sushi_eat_texture), 0});
+
   m_seeds.push_back({Tier3Placeholder(&m_sushi_texture, &m_sushi_eat_texture), 0});
+  m_seeds.push_back({Tier3Producing(&m_sushi_texture, &m_sushi_eat_texture), 0});
+  
   m_seeds.push_back({Tier4Placeholder(&m_sushi_texture, &m_sushi_eat_texture), 0});
+  m_seeds.push_back({Tier4Producing(&m_sushi_texture, &m_sushi_eat_texture), 0});
 
 
   m_structure_inv.push_back({Sprinkler(&m_sprinkler_texture), 10});
@@ -502,8 +506,8 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
               "\nBiomass: " + std::to_string(m_biomass) +
               " g\nTier: " + std::to_string(m_tier);
 
-  ImGui::SetNextWindowPos(ImVec2(w * 0.15f, h - 250.0f), ImGuiCond_Always,
-                          ImVec2(0.5f, 1.0f));
+  ImGui::SetNextWindowPos(ImVec2(w * 0.05f, h - 250.0f), ImGuiCond_Always,
+                          ImVec2(0.0f, 0.0f));
   ImGui::SetNextWindowBgAlpha(0.0f);
   ImGui::Begin("##hud", nullptr,
                ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
