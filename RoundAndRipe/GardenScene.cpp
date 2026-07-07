@@ -186,10 +186,10 @@ void GardenScene::onEnter(GLFWwindow &window) {
                                     &m_staring_cabbage_ripe_texture),0});
   m_seeds.push_back({Tier2Producing(&m_sushi_texture, &m_sushi_eat_texture), 0});
 
-  m_seeds.push_back({Tier3Placeholder(&m_sushi_texture, &m_sushi_eat_texture), 0});
+  m_seeds.push_back({Tier3Harvest(&m_sushi_texture, &m_sushi_eat_texture), 0});
   m_seeds.push_back({Tier3Producing(&m_sushi_texture, &m_sushi_eat_texture), 0});
-  
-  m_seeds.push_back({Tier4Placeholder(&m_sushi_texture, &m_sushi_eat_texture), 0});
+
+  m_seeds.push_back({Tier4Harvest(&m_sushi_texture, &m_sushi_eat_texture), 0});
   m_seeds.push_back({Tier4Producing(&m_sushi_texture, &m_sushi_eat_texture), 0});
 
 
@@ -378,7 +378,9 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
 
   const float ui = GetUiScale(h);
   
-  renderer.Clear(0.05f, 0.05f, 0.05f, 1.0f);
+  float day01 = 0.5f + 0.5f * std::sin(m_elapsed * glm::two_pi<float>() / DAY_LENGTH); // 0 = midnight, 1 = noon; smooth ebb and flow
+  glm::vec3 sky = glm::mix(NIGHT_SKY, DAY_SKY, day01);
+  renderer.Clear(sky.r, sky.g, sky.b, 1.0f);
   renderer.BeginBatchDraw(30, 400);
 
   std::vector<PointLight> lights = m_lights;
@@ -386,7 +388,8 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
   if (m_show_highlight)
     lights.push_back(m_highlight);
 
-  renderer.SetLights(lights, 0.15f * m_brightness);
+  float ambient = glm::mix(NIGHT_AMBIENT, DAY_AMBIENT, day01);
+  renderer.SetLights(lights, ambient * m_brightness);
 
   SetupRenderingObjects(renderer);
 
@@ -463,7 +466,7 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
     renderer.SubmitTransparentSprite(toolspr);
   }
 
-  renderer.RendBatch(view, projection, campos, 0.05f);
+  renderer.RendBatch(view, projection, campos, glm::mix(NIGHT_FOG, DAY_FOG, day01) * (1 / (m_brightness)));
 
   // HUD and UI (ImGUI)
 
@@ -480,7 +483,7 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
     ImGui::Text("Task: %s", task_text);
   }
   else if (m_tier < (int)TIER_COST.size()){
-    std::string t = "Reach tier " + std::to_string(m_tier) + " - " + std::to_string((int)TIER_COST[m_tier]) + "g";
+    std::string t = "Reach tier " + std::to_string(m_tier) + " - " + std::to_string(TIER_COST[m_tier]) + "g";
     ImGui::Text("Task: %s", t.c_str());
   }
   ImGui::SetWindowFontScale(ui);
@@ -583,8 +586,7 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
     if (m_tier >= (int)TIER_COST.size()) {
       ImGui::Text("Max tier reached.");
     } else {
-      ImGui::Text("Tier %d -> Tier %d - %d g", m_tier, m_tier + 1,
-                  (int)TIER_COST[m_tier]);
+      ImGui::Text("Tier %d -> Tier %d - %lld g", m_tier, m_tier + 1, TIER_COST[m_tier]);
       if (ImGui::Button("Upgrade")) {
         if (m_biomass >= TIER_COST[m_tier]) {
           m_biomass -= TIER_COST[m_tier];

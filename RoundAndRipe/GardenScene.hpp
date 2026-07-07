@@ -189,6 +189,14 @@ private:
   const float APPLE_SPAWN_RANGE =
       16.0f; // spawn band around the farm (field edge is ±5)
 
+  const float DAY_LENGTH = 300.0f;
+  const glm::vec3 DAY_SKY = glm::vec3(0.10f, 0.09f, 0.07f);
+  const glm::vec3 NIGHT_SKY = glm::vec3(0.01f, 0.02f, 0.05f);
+  const float DAY_AMBIENT = 0.25f;
+  const float NIGHT_AMBIENT = 0.08f;
+  const float DAY_FOG = 0.05f;
+  const float NIGHT_FOG = 0.12f;
+
 public:
   GardenScene();
   void onEnter(GLFWwindow &window) override;
@@ -314,26 +322,27 @@ public:
       break;
 
     case Tool::SeedPacket:
-    if (t.HasStructure()) {
-      Structure *s = m_field.StructureAtTile(t);
-      if (s && s->def->kind == StructureKind::Planter && !s->crop &&
-          m_selected_seed >= 0) {
-        if (m_seeds[m_selected_seed].count >= s->def->seed_load) {
-          s->crop = &m_seeds[m_selected_seed].def;
-          m_seeds[m_selected_seed].count -= s->def->seed_load;
-          PushNotification("Planter loaded: " + s->crop->name);
-          PlaySound("pop");
-        } else {
-          PushNotification("Planter needs " + std::to_string(s->def->seed_load) +
-                          " seeds to load", 3.0f);
+      if (t.HasStructure()) {
+        Structure *s = m_field.StructureAtTile(t);
+        if (s && s->def->kind == StructureKind::Planter && !s->crop &&
+            m_selected_seed >= 0) {
+          if (m_seeds[m_selected_seed].count >= s->def->seed_load) {
+            s->crop = &m_seeds[m_selected_seed].def;
+            m_seeds[m_selected_seed].count -= s->def->seed_load;
+            PushNotification("Planter loaded: " + s->crop->name);
+            PlaySound("pop");
+          } else {
+            PushNotification("Planter needs " +
+                             std::to_string(s->def->seed_load) +
+                             " seeds to load", 3.0f);
+          }
         }
       } else if (t.IsTilled() && m_selected_seed >= 0 &&
-            m_seeds[m_selected_seed].count > 0 && !t.HasStructure()) {
-          t.Plant(&m_seeds[m_selected_seed].def);
-          --m_seeds[m_selected_seed].count;
+                 m_seeds[m_selected_seed].count > 0) {
+        t.Plant(&m_seeds[m_selected_seed].def);
+        --m_seeds[m_selected_seed].count;
       }
-    }
-    break;
+      break;
 
     case Tool::Wrench:
       if (m_selected_structure >= 0 &&

@@ -109,7 +109,7 @@ inline PlantDef Tier2Producing(Texture* growing, Texture* ripe){
     return crop;
 }
 
-inline PlantDef Tier3Havest(Texture* growing, Texture* ripe){
+inline PlantDef Tier3Harvest(Texture* growing, Texture* ripe){
     PlantDef crop;
     crop.name = "tier 3 placeholder havestable";
     crop.type = PlantType::Harvestable;
@@ -138,7 +138,7 @@ inline PlantDef Tier3Producing(Texture* growing, Texture* ripe){
     return crop;
 }
 
-inline PlantDef Tier4Placeholder(Texture* growing, Texture* ripe){
+inline PlantDef Tier4Harvest(Texture* growing, Texture* ripe){
     PlantDef crop;
     crop.name = "tier4placeholderhavestable";
     crop.type = PlantType::Harvestable;

@@ -32,9 +32,6 @@ struct GameState {
     std::vector<TileSave> tiles;
 };
 
-
-// Machine preferences — separate file from the game save so they survive
-// New Game / save wipes / SAVE_VERSION bumps. Defaults here = first-run values.
 struct GameSettings {
     float volume = 1.0f;
     float brightness = 1.0f;
