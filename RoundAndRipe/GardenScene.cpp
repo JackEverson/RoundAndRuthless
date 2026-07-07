@@ -42,9 +42,12 @@ GardenScene::GardenScene()
       m_bush_texture("./res/textures/bush.png"),
       m_tomato_texture("./res/textures/tomato_bush.png"),
       m_blueberry_texture("./res/textures/blueberry_bush.png"),
-      m_staring_cabbage_growing_texture(
-          "./res/textures/staring_cabbage_growing.png"),
-      m_staring_cabbage_ripe_texture("./res/textures/staring_cabbage_ripe.png"),
+      m_kidneybean_texture("./res/textures/kidneybean_bush.png"),
+      m_staring_mellon_growing_texture("./res/textures/eye_plant.png"),
+      m_staring_mellon_ripe_texture("./res/textures/eye_plant_ripe.png"),
+      m_liverbounty_grow("./res/textures/liver_grow.png"),
+      m_liverbounty_ripe("./res/textures/liver_ripe.png"),
+
       m_field(glm::vec3(-5.0f, 0.0f, -5.0f), 10, 30, 1.0f, &m_soil_texture,
               &m_rock_texture, &m_till_texture, &m_seeded_texture, 10) {};
 
@@ -181,22 +184,15 @@ void GardenScene::onEnter(GLFWwindow &window) {
 
   m_seeds.push_back({Turnip(&m_veg_top_texture, &m_turnip_texture), 0});
   m_seeds.push_back({Tomato(&m_bush_texture, &m_tomato_texture), 0});
-
-  m_seeds.push_back({StaringCabbage(&m_staring_cabbage_growing_texture,
-                                    &m_staring_cabbage_ripe_texture),0});
-  m_seeds.push_back({Tier2Producing(&m_sushi_texture, &m_sushi_eat_texture), 0});
-
-  m_seeds.push_back({Tier3Harvest(&m_sushi_texture, &m_sushi_eat_texture), 0});
-  m_seeds.push_back({Tier3Producing(&m_sushi_texture, &m_sushi_eat_texture), 0});
-
-  m_seeds.push_back({Tier4Harvest(&m_sushi_texture, &m_sushi_eat_texture), 0});
-  m_seeds.push_back({Tier4Producing(&m_sushi_texture, &m_sushi_eat_texture), 0});
+  m_seeds.push_back({KidneyBean(&m_bush_texture, &m_kidneybean_texture), 0});
+  m_seeds.push_back({StaringMellon(&m_staring_mellon_growing_texture,&m_staring_mellon_ripe_texture),0});
+  m_seeds.push_back({LiverBounty(&m_liverbounty_grow, &m_liverbounty_ripe), 0});
 
 
-  m_structure_inv.push_back({Sprinkler(&m_sprinkler_texture), 10});
-  m_structure_inv.push_back({Harvester(&m_sprinkler_texture), 10});
-  m_structure_inv.push_back({Hoer(&m_sprinkler_texture), 10});
-  m_structure_inv.push_back({Planter(&m_sprinkler_texture), 10});
+  m_structure_inv.push_back({Sprinkler(&m_sprinkler_texture), 0});
+  m_structure_inv.push_back({Harvester(&m_sprinkler_texture), 0});
+  m_structure_inv.push_back({Hoer(&m_sprinkler_texture), 0});
+  m_structure_inv.push_back({Planter(&m_sprinkler_texture), 0});
 
 
   bool loaded_save = Load();

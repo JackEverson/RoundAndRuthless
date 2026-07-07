@@ -60,8 +60,11 @@ private:
   Texture m_bush_texture;
   Texture m_tomato_texture;
   Texture m_blueberry_texture;
-  Texture m_staring_cabbage_growing_texture;
-  Texture m_staring_cabbage_ripe_texture;
+  Texture m_kidneybean_texture;
+  Texture m_staring_mellon_growing_texture;
+  Texture m_staring_mellon_ripe_texture;
+  Texture m_liverbounty_grow;
+  Texture m_liverbounty_ripe;
 
   // enums and struct
 public:
