@@ -9,6 +9,16 @@
 #include "glm/ext/vector_float3.hpp"
 
 
+// What the machines did this frame — Field stays audio-free; the scene reads
+// this and plays one sound per action wave (not one per tile).
+struct StructureReport {
+  long long collected = 0;   // harvester income → biomass
+  bool tilled = false;
+  bool planted = false;
+  bool harvested = false;
+  bool watered = false;
+};
+
 class Field {
 public:
   Field(glm::vec3 origin, int w, int h, float tileSize, Texture *soil,
@@ -22,7 +32,7 @@ public:
   Structure* StructureAtTile(Tile &t);   // for tools that only hold a Tile&
   bool PlaceStructureAt(int row, int col, const StructureDef *def, const PlantDef *pdef = nullptr);
   bool PlaceStructureAt(Tile &t, const StructureDef* structure);
-  int RunStructures(float delta);
+  StructureReport RunStructures(float delta);
 
   // for load
   std::vector<Tile>& Tiles() { return m_tiles; } 
@@ -159,8 +169,8 @@ inline Structure* Field::StructureAt(int row, int col){
   return nullptr;
 }
 
-inline int Field::RunStructures(float delta) {
-  int collected = 0;
+inline StructureReport Field::RunStructures(float delta) {
+  StructureReport report;
 
   // advance the shared cycle; a phase fires only on the frame its second begins
   m_cycle += delta;
@@ -187,23 +197,30 @@ inline int Field::RunStructures(float delta) {
 
         switch (s.def->kind) {
         case StructureKind::Sprinkler:
+          if (!n.IsWatered()) report.watered = true;     // only "did something"
           n.Water();                                     // topped up every frame
           break;
         case StructureKind::Harvester:
-          if (n.IsHarvestable())
-            collected += n.Harvest();
+          if (n.IsHarvestable()) {
+            report.collected += n.Harvest();
+            report.harvested = true;
+          }
           break;
         case StructureKind::Hoer:
-          if (!n.HasStructure())
-            n.Till();                                    // Till() itself requires Empty
+          if (!n.HasStructure() && n.IsEmpty()) {        // IsEmpty → Till will succeed
+            n.Till();
+            report.tilled = true;
+          }
           break;
         case StructureKind::Planter:
-          if (s.crop && n.IsTilled() && !n.HasStructure())
+          if (s.crop && n.IsTilled() && !n.HasStructure()) {
             n.Plant(s.crop);
+            report.planted = true;
+          }
           break;
         }
       }
     }
   }
-  return collected;   // harvester income — scene adds it to biomass
+  return report;   // scene adds report.collected to biomass, plays action sounds
 }

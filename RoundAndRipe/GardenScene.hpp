@@ -192,13 +192,18 @@ private:
   const float APPLE_SPAWN_RANGE =
       16.0f; // spawn band around the farm (field edge is ±5)
 
-  const float DAY_LENGTH = 300.0f;
+  const float DAY_LENGTH = 15.0f;// testing
+  // const float DAY_LENGTH = 300.0f; 
   const glm::vec3 DAY_SKY = glm::vec3(0.10f, 0.09f, 0.07f);
-  const glm::vec3 NIGHT_SKY = glm::vec3(0.01f, 0.02f, 0.05f);
+  const glm::vec3 NIGHT_SKY = glm::vec3(0.04f, 0.05f, 0.09f);
   const float DAY_AMBIENT = 0.25f;
-  const float NIGHT_AMBIENT = 0.08f;
+  const float NIGHT_AMBIENT = 0.16f;
   const float DAY_FOG = 0.05f;
   const float NIGHT_FOG = 0.12f;
+
+  // torch that follows the player; scaled by nightfall in render()
+  const glm::vec3 PLAYER_LIGHT_COLOR = glm::vec3(0.9f, 0.85f, 0.7f) * 0.7f;
+  const float PLAYER_LIGHT_RADIUS = 7.0f;
 
 public:
   GardenScene();

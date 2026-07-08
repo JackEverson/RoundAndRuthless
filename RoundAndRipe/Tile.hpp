@@ -121,9 +121,6 @@ inline void Tile::Update(float dt){
 
 inline void Tile::Render(Renderer& renderer, const glm::vec3& campos){
     
-    // for (auto &p:m_bed){
-    //     renderer.SubmitSprite(p);
-    // }
     renderer.SubmitSprite(m_soil_sprite);
 
     switch (m_state) {

@@ -29,7 +29,7 @@ class Structure {
 
 
 inline StructureDef Sprinkler(Texture* tex){
-    StructureDef s;
+    StructureDef s; 
     s.name = "sprinkler";
     s.description = "Keeps the 8 surrounding tiles watered.";
     s.kind = StructureKind::Sprinkler;

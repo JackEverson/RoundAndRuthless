@@ -3,6 +3,7 @@
 #include "FPSController.hpp"
 #include "GLFW/glfw3.h"
 #include "Plants.hpp"
+#include "Renderer.hpp"
 #include "RoundAndRipeEvents.hpp"
 #include "Structures.hpp"
 #include "TriggerVolume.hpp"
@@ -100,7 +101,8 @@ void GardenScene::onEnter(GLFWwindow &window) {
       glm::vec3(seed_maker_position.x, 1, seed_maker_position.z);
   m_highlight.radius = 0.25f;
 
-  AddFloor(glm::vec3(0.0f), glm::vec2(FLOOR_TILE_SIZE), &m_floor_texture);
+  // AddFloor(glm::vec3(0.0f), glm::vec2(FLOOR_TILE_SIZE), &m_floor_texture);
+  AddFloor(glm::vec3(0.0f), glm::vec2(FLOOR_TILE_SIZE), &m_sushi_eat_texture);
   AddWall(glm::vec3(0.0f, 0.0f, FLOOR_TILE_SIZE / 2),
           glm::vec2(FLOOR_TILE_SIZE, 4.0f), &m_wall_texture);
   AddWall(glm::vec3(0.0f, 0.0f, -FLOOR_TILE_SIZE / 2),
@@ -197,6 +199,7 @@ void GardenScene::onEnter(GLFWwindow &window) {
 
   bool loaded_save = Load();
   if (!loaded_save) { StartEvent(std::make_unique<RoundAndRipeEvents::TutorialEvent>(*this)); }
+
 }
 
 void GardenScene::onExit(GLFWwindow &window) {
@@ -253,7 +256,12 @@ Scene *GardenScene::update(GLFWwindow &window, float delta) {
     }
   }
 
-  m_biomass += m_field.RunStructures(delta);
+  StructureReport machines = m_field.RunStructures(delta);
+  m_biomass += machines.collected;
+  if (machines.tilled)    PlaySound("dig");
+  if (machines.planted)   PlaySound("pop");
+  if (machines.harvested) PlaySound("pop");
+  if (machines.watered)   PlaySound("water");
 
   // random events
   if (m_random_event_timer >= m_next_random_event) {
@@ -377,12 +385,20 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
   float day01 = 0.5f + 0.5f * std::sin(m_elapsed * glm::two_pi<float>() / DAY_LENGTH); // 0 = midnight, 1 = noon; smooth ebb and flow
   glm::vec3 sky = glm::mix(NIGHT_SKY, DAY_SKY, day01);
   renderer.Clear(sky.r, sky.g, sky.b, 1.0f);
-  renderer.BeginBatchDraw(30, 400);
+  renderer.BeginBatchDraw(500, 500);
 
   std::vector<PointLight> lights = m_lights;
 
   if (m_show_highlight)
     lights.push_back(m_highlight);
+
+  // player torch — a pool of light that follows you, fading in as night falls
+  // so the ground stays readable without a daytime spotlight artifact
+  PointLight player_light;
+  player_light.position = m_camera.GetLocation();
+  player_light.color = PLAYER_LIGHT_COLOR * (1.0f - day01);
+  player_light.radius = PLAYER_LIGHT_RADIUS;
+  lights.push_back(player_light);
 
   float ambient = glm::mix(NIGHT_AMBIENT, DAY_AMBIENT, day01);
   renderer.SetLights(lights, ambient * m_brightness);
