@@ -101,8 +101,7 @@ void GardenScene::onEnter(GLFWwindow &window) {
       glm::vec3(seed_maker_position.x, 1, seed_maker_position.z);
   m_highlight.radius = 0.25f;
 
-  // AddFloor(glm::vec3(0.0f), glm::vec2(FLOOR_TILE_SIZE), &m_floor_texture);
-  AddFloor(glm::vec3(0.0f), glm::vec2(FLOOR_TILE_SIZE), &m_sushi_eat_texture);
+  AddFloor(glm::vec3(0.0f), glm::vec2(FLOOR_TILE_SIZE), &m_floor_texture);
   AddWall(glm::vec3(0.0f, 0.0f, FLOOR_TILE_SIZE / 2),
           glm::vec2(FLOOR_TILE_SIZE, 4.0f), &m_wall_texture);
   AddWall(glm::vec3(0.0f, 0.0f, -FLOOR_TILE_SIZE / 2),

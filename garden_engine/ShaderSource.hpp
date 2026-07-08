@@ -15,7 +15,6 @@ constexpr const char *TextureVertexShader =
 
     out vec4 v_color;
     out vec2 v_tex_coord;
-    out float v_distance;
     out vec3 v_world_pos;
 
     void main()
@@ -25,9 +24,8 @@ constexpr const char *TextureVertexShader =
 
       gl_Position = u_projection * u_view * worldpos;
 
-      v_color = i_color;      
+      v_color = i_color;
       v_tex_coord = a_tex_coord;
-	    v_distance = distance(worldpos.xyz, u_cam_pos);  
       v_world_pos = worldpos.xyz;
     };
   )";
@@ -36,7 +34,6 @@ constexpr const char *TextureFragmentShader =
     R"(#version 460 core
     in vec4 v_color;
     in vec2 v_tex_coord;
-    in float v_distance;
     in vec3 v_world_pos;
 
     struct PointLight{
@@ -54,11 +51,15 @@ constexpr const char *TextureFragmentShader =
 
     uniform sampler2D u_texture;
     uniform float u_fog_factor = 0.15;
+    uniform vec3 u_cam_pos;
 
     out vec4 FragColor;
 
     void main() {
 
+      // per-fragment distance: interpolating this across large quads (e.g. the
+      // floor) pulled far-corner fog onto surfaces right under the camera
+      float v_distance = distance(v_world_pos, u_cam_pos);
       float fog_factor = exp(-v_distance * u_fog_factor);
 
       vec3 light_total = vec3(u_ambient);
