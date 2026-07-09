@@ -80,12 +80,13 @@ protected:
   }
 
   // Add a horizontal floor surface
-  Surface &AddFloor(glm::vec3 pos, glm::vec2 size, Texture *texture) {
+  Surface &AddFloor(glm::vec3 pos, glm::vec2 size, Texture *texture, glm::vec3 color = glm::vec3(1.0f)) {
     Surface s;
     s.type = SurfaceType::Floor;
     s.position = pos;
     s.size = size;
     s.texture = texture;
+    s.color = glm::vec4(color, 1.0f);
     s.rotation =
         glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0));
     m_surfaces.push_back(s);

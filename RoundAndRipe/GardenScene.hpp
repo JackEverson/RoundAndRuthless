@@ -50,6 +50,7 @@ private:
   Texture m_can_texture;
   Texture m_packet_texture;
   Texture m_wrench_texture;
+  Texture m_hand_texture;
 
   Texture m_sprinkler_texture;
 
@@ -395,7 +396,7 @@ public:
     case Tool::Wrench:
       return &m_wrench_texture;
     case Tool::None:
-      return nullptr; // hands = nothing
+      return &m_hand_texture; // hands = nothing
     }
     return nullptr;
   }

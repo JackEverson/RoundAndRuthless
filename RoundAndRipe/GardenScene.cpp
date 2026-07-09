@@ -10,6 +10,7 @@
 
 
 #include "glm/ext/matrix_float4x4.hpp"
+#include "glm/ext/vector_float3.hpp"
 #include "glm/geometric.hpp"
 #include "imgui.h"
 #include <json.hpp>
@@ -35,6 +36,7 @@ GardenScene::GardenScene()
       m_can_texture("./res/textures/watering_can.png"),
       m_packet_texture("./res/textures/seed_packet.png"),
       m_wrench_texture("./res/textures/wrench.png"),
+      m_hand_texture("./res/textures/hand.png"),
       m_sprinkler_texture("./res/textures/sprinkler.png"),
       m_veg_top_texture("./res/textures/veg_top.png"),
       m_apple_texture("./res/textures/apple.png"),
@@ -101,7 +103,7 @@ void GardenScene::onEnter(GLFWwindow &window) {
       glm::vec3(seed_maker_position.x, 1, seed_maker_position.z);
   m_highlight.radius = 0.25f;
 
-  AddFloor(glm::vec3(0.0f), glm::vec2(FLOOR_TILE_SIZE), &m_floor_texture);
+  AddFloor(glm::vec3(0.0f), glm::vec2(FLOOR_TILE_SIZE), &m_floor_texture, glm::vec3(0.59f, 0.29f, 0.0f));
   AddWall(glm::vec3(0.0f, 0.0f, FLOOR_TILE_SIZE / 2),
           glm::vec2(FLOOR_TILE_SIZE, 4.0f), &m_wall_texture);
   AddWall(glm::vec3(0.0f, 0.0f, -FLOOR_TILE_SIZE / 2),
@@ -805,11 +807,9 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
 
     ImGui::BeginGroup();
     if (Texture* tex = ToolTexture(t))
-      ImGui::Image((ImTextureID)(intptr_t)tex->GetID(), ImVec2(slot, slot),
-                  ImVec2(0, 1), ImVec2(1, 0), tint, border);
-    else {   // Hands has no texture — placeholder slot
-      ImGui::TextColored(tint, "  X  ");
-    }
+      { ImGui::Image((ImTextureID)(intptr_t)tex->GetID(), ImVec2(slot, slot),
+                  ImVec2(0, 1), ImVec2(1, 0), tint, border);}
+
     ImGui::SetWindowFontScale(ui * 0.6f);
     ImGui::Text("  %d", i + 1);          // key label under each slot
     ImGui::SetWindowFontScale(ui);
