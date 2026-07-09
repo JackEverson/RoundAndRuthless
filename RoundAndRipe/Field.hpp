@@ -78,10 +78,15 @@ inline void Field::Render(Renderer &renderer, const glm::vec3 &campos) {
   for (auto &tile : m_tiles) {
     tile.Render(renderer, campos);
   }
-  for (auto &s : m_structures) {   // yaw-billboard, same treatment as crops
+
+  for (auto &s : m_structures) {
     glm::vec3 to_cam = campos - s.sprite.position;
     float yaw = std::atan2(to_cam.x, to_cam.z);
     s.sprite.model_mat = glm::rotate(glm::mat4(1.0f), yaw, glm::vec3(0, 1, 0));
+
+    s.sprite.texture = (s.crop && s.def->texture2) ? s.def->texture2
+                                                  : s.def->texture;   // loaded look
+
     renderer.SubmitTransparentSprite(s.sprite);
   }
 }

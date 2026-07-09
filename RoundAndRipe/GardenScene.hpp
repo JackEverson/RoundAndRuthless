@@ -53,6 +53,10 @@ private:
   Texture m_hand_texture;
 
   Texture m_sprinkler_texture;
+  Texture m_hoer_texture;
+  Texture m_planter_unloaded_texture;
+  Texture m_planter_loaded_texture;
+  Texture m_harvester_texture;
 
   Texture m_veg_top_texture;
   Texture m_apple_texture;

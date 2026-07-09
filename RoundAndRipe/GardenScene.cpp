@@ -38,6 +38,10 @@ GardenScene::GardenScene()
       m_wrench_texture("./res/textures/wrench.png"),
       m_hand_texture("./res/textures/hand.png"),
       m_sprinkler_texture("./res/textures/sprinkler.png"),
+      m_hoer_texture("./res/textures/hoer.png"),
+      m_harvester_texture("./res/textures/harvester.png"),
+      m_planter_loaded_texture("./res/textures/planter_loaded.png"),
+      m_planter_unloaded_texture("./res/textures/planter_unloaded.png"),
       m_veg_top_texture("./res/textures/veg_top.png"),
       m_apple_texture("./res/textures/apple.png"),
       m_radish_texture("./res/textures/radish.png"),
@@ -191,12 +195,10 @@ void GardenScene::onEnter(GLFWwindow &window) {
   m_seeds.push_back({StaringMellon(&m_staring_mellon_growing_texture,&m_staring_mellon_ripe_texture),0});
   m_seeds.push_back({LiverBounty(&m_liverbounty_grow, &m_liverbounty_ripe), 0});
 
-
   m_structure_inv.push_back({Sprinkler(&m_sprinkler_texture), 0});
-  m_structure_inv.push_back({Harvester(&m_sprinkler_texture), 0});
-  m_structure_inv.push_back({Hoer(&m_sprinkler_texture), 0});
-  m_structure_inv.push_back({Planter(&m_sprinkler_texture), 0});
-
+  m_structure_inv.push_back({Harvester(&m_harvester_texture), 0});
+  m_structure_inv.push_back({Hoer(&m_hoer_texture), 0});
+  m_structure_inv.push_back({Planter(&m_planter_unloaded_texture, &m_planter_loaded_texture), 0});
 
   bool loaded_save = Load();
   if (!loaded_save) { StartEvent(std::make_unique<RoundAndRipeEvents::TutorialEvent>(*this)); }

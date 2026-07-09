@@ -15,7 +15,9 @@ struct StructureDef {
   int tier;
   float interval;        
   int seed_load = 0;     
-  Texture* texture; glm::vec2 full_size;
+  Texture* texture; 
+  Texture* texture2 = nullptr; 
+  glm::vec2 full_size;
 };
 
 class Structure {              
@@ -67,7 +69,7 @@ inline StructureDef Hoer(Texture* tex){
     return s;
 }
 
-inline StructureDef Planter(Texture* tex){
+inline StructureDef Planter(Texture* unloaded, Texture* loaded){
     StructureDef s;
     s.name = "planter";
     s.description = "Plants its bound crop in tilled ground around it. Loading it costs 100 seeds.";
@@ -76,7 +78,8 @@ inline StructureDef Planter(Texture* tex){
     s.tier = 3;
     s.interval = 3.0f;
     s.seed_load = 100;             
-    s.texture = tex;
+    s.texture = unloaded;
+    s.texture2 = loaded;
     s.full_size = glm::vec2(0.8f, 0.8f);
     return s;
 }
