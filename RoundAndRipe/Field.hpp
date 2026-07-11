@@ -21,7 +21,7 @@ struct StructureReport {
 
 class Field {
 public:
-  Field(glm::vec3 origin, int w, int h, float tileSize, Texture *soil,
+  Field(glm::vec3 origin, int w, int h, float tileSize, Texture *soil, glm::vec4 soil_color,
         Texture *rock, Texture *till,Texture *seeded, int = 10);
   void Render(Renderer &renderer, const glm::vec3 &campos);
   void CollectLights(std::vector<PointLight> &out) const;
@@ -59,7 +59,7 @@ private:
 };
 
 inline Field::Field(glm::vec3 origin, int w, int h, float tileSize,
-                    Texture *soil, Texture *refuse, Texture *till, Texture *seeded, int refuse_percent)
+                    Texture *soil, glm::vec4 soil_color, Texture *refuse, Texture *till, Texture *seeded, int refuse_percent)
     : m_origin(origin), m_w(w), m_h(h), m_tile_size(tileSize) {
   m_tiles.reserve(m_w * m_h);
 
@@ -67,9 +67,8 @@ inline Field::Field(glm::vec3 origin, int w, int h, float tileSize,
     for (int row = 0; row < m_w; row++) {
       Tile::TileState state = (rand() % 100) < refuse_percent ? Tile::TileState::Refuse : Tile::TileState::Empty;
 
-      m_tiles.emplace_back(
-          origin + glm::vec3((row + 0.5f) * m_tile_size, 0, (col + 0.5f) * m_tile_size), 
-          soil, refuse, till, seeded, state);
+      m_tiles.emplace_back(origin + glm::vec3((row + 0.5f) * m_tile_size, 0, (col + 0.5f) * m_tile_size), 
+          soil_color, soil, refuse, till, seeded, state);
     }
   }
 }
@@ -86,7 +85,6 @@ inline void Field::Render(Renderer &renderer, const glm::vec3 &campos) {
 
     s.sprite.texture = (s.crop && s.def->texture2) ? s.def->texture2
                                                   : s.def->texture;   // loaded look
-
     renderer.SubmitTransparentSprite(s.sprite);
   }
 }

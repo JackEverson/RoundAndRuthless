@@ -123,6 +123,11 @@ private:
   bool m_borderless = true;
 
   // field
+  // NOTE: these must stay declared above m_field — members initialize in
+  // declaration order, and m_field's constructor reads SOIL_COLOR
+  const glm::vec4 FLOOR_COLOR = glm::vec4(0.45f, 0.44f, 0.42f, 1.0f);
+  const glm::vec4 SOIL_COLOR = glm::vec4(0.58f, 0.28f, 0.20f, 1.0f);
+
   PointLight m_highlight;
   bool m_show_highlight = false;
   Field m_field;

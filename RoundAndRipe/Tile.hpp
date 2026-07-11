@@ -16,7 +16,7 @@ class Tile {
 public:
     enum class TileState { Refuse, Empty, Tilled, Growing, Grown, Ripe };
     
-    Tile(glm::vec3 position, Texture* soil_texture, Texture* refuse_texture, Texture* tilled_texture, Texture* seeded_texture, TileState state = TileState::Empty);
+    Tile(glm::vec3 position, glm::vec4 soil_color, Texture* soil_texture, Texture* refuse_texture, Texture* tilled_texture, Texture* seeded_texture, TileState state = TileState::Empty);
 
     void Update(float dt); 
     void Render(Renderer& renderer, const glm::vec3& campos);
@@ -48,7 +48,7 @@ public:
     std::string GetPlantName() const { return m_plant ? m_plant->name : ""; } 
 
 private:
-    const glm::vec4 SOIL_COLOR = glm::vec4(0.62f, 0.52f, 0.40f, 1.0f);
+    glm::vec4 m_soil_color = glm::vec4(1.0f);
     const float WET_FACTOR = 0.5;
     const float PLOT_SIZE = 1.0f;
     const float SOIL_OFFSET = 0.05f;
@@ -74,16 +74,18 @@ private:
 
 };
 
-inline Tile::Tile(glm::vec3 position, Texture* soil_texture, Texture* refuse_texture, Texture* tilled_texture, Texture* seeded_texture, TileState state) :
+inline Tile::Tile(glm::vec3 position, glm::vec4 soil_color, Texture* soil_texture, Texture* refuse_texture, Texture* tilled_texture, Texture* seeded_texture, TileState state) :
 m_position(position),
-m_state(state)
-{
+m_state(state),
+m_soil_color(soil_color)
+{ 
+
     glm::vec2 top_size(PLOT_SIZE, PLOT_SIZE);
 
     m_soil_sprite.size = top_size;
     m_soil_sprite.position = position + glm::vec3(0.0f, 0.001f, 0.0f);
     m_soil_sprite.texture = soil_texture;
-    m_soil_sprite.color = SOIL_COLOR;
+    m_soil_sprite.color = m_soil_color;
     m_soil_sprite.model_mat = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0));
 
     m_till_sprite.size = top_size;
@@ -107,7 +109,7 @@ inline void Tile::Update(float dt){
         m_water_timer += dt;
         if (m_water_timer >= WATER_DURATION) {
             m_watered = false;
-            m_soil_sprite.color = SOIL_COLOR;
+            m_soil_sprite.color = m_soil_color;
             m_water_timer = 0.0f;
         }
     }
@@ -190,8 +192,8 @@ inline void Tile::Set(TileState state, const PlantDef* plant, int days_growing){
 }
 
 inline void Tile::RefreshState(){
-    if (m_watered) m_soil_sprite.color = SOIL_COLOR * glm::vec4(WET_FACTOR, WET_FACTOR, WET_FACTOR, 1.0f);
-    else m_soil_sprite.color = SOIL_COLOR;
+    if (m_watered) m_soil_sprite.color = m_soil_color * glm::vec4(WET_FACTOR, WET_FACTOR, WET_FACTOR, 1.0f);
+    else m_soil_sprite.color = m_soil_color;
     
     if (!m_plant) return;
     float t = std::min((float)m_seconds_growing / m_plant->seconds_to_grow, 1.0f);

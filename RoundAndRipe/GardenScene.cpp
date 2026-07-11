@@ -54,8 +54,7 @@ GardenScene::GardenScene()
       m_staring_mellon_ripe_texture("./res/textures/eye_plant_ripe.png"),
       m_liverbounty_grow("./res/textures/liver_grow.png"),
       m_liverbounty_ripe("./res/textures/liver_ripe.png"),
-
-      m_field(glm::vec3(-5.0f, 0.0f, -5.0f), 10, 30, 1.0f, &m_soil_texture,
+      m_field(glm::vec3(-5.0f, 0.0f, -5.0f), 10, 30, 1.0f, &m_soil_texture, SOIL_COLOR,
               &m_rock_texture, &m_till_texture, &m_seeded_texture, 10) {};
 
 void GardenScene::onEnter(GLFWwindow &window) {
@@ -107,7 +106,7 @@ void GardenScene::onEnter(GLFWwindow &window) {
       glm::vec3(seed_maker_position.x, 1, seed_maker_position.z);
   m_highlight.radius = 0.25f;
 
-  AddFloor(glm::vec3(0.0f), glm::vec2(FLOOR_TILE_SIZE), &m_floor_texture, glm::vec3(0.59f, 0.29f, 0.0f));
+  AddFloor(glm::vec3(0.0f), glm::vec2(FLOOR_TILE_SIZE), &m_floor_texture, FLOOR_COLOR);
   AddWall(glm::vec3(0.0f, 0.0f, FLOOR_TILE_SIZE / 2),
           glm::vec2(FLOOR_TILE_SIZE, 4.0f), &m_wall_texture);
   AddWall(glm::vec3(0.0f, 0.0f, -FLOOR_TILE_SIZE / 2),
