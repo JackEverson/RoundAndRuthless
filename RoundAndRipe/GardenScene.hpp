@@ -12,7 +12,6 @@
 #include "Texture.hpp"
 #include "Tile.hpp"
 
-
 #include "GLFW/glfw3.h"
 #include "glm/ext/vector_float2.hpp"
 #include "glm/ext/vector_float3.hpp"
@@ -35,7 +34,7 @@ private:
 
   Texture m_sushi_texture;
   Texture m_sushi_eat_texture;
-  Texture m_house_texture;
+  Texture m_structure_maker_texture;
   Texture m_chest_texture;
   Texture m_human_texture;
 
@@ -102,7 +101,7 @@ private:
 
   // Sprites
   SpriteInstance m_seed_maker;
-  SpriteInstance m_house;
+  SpriteInstance m_structure_maker;
   SpriteInstance m_chest;
 
   SpriteInstance m_apple;
@@ -134,9 +133,8 @@ private:
   long long m_biomass = 0;
   double m_elapsed = 0.0;
   float m_random_event_timer = 0.0f;
-  float m_next_random_event = 45.0f; // first ambient beat ~45s in
-  const float RANDOM_EVENT_MIN =
-      60.0f; // after that: every 60–150s, never clockwork
+  float m_next_random_event = 45.0f; 
+  const float RANDOM_EVENT_MIN = 60.0f; 
   const int RANDOM_EVENT_SPREAD = 90;
   bool m_quit_game = false;
   Outcome m_outcome = Outcome::Playing;
@@ -172,7 +170,7 @@ private:
 
   const float FLOOR_TILE_SIZE = 100.0f;
 
-  const float HOUSE_SIZE = 4.0f;
+  const float HOUSE_SIZE = 2.0f;
   const glm::vec3 HOUSE_POS = glm::vec3(-5.0f, HOUSE_SIZE / 2.0, -10.0f);
 
   const float CHEST_SIZE = 1.0f;
@@ -192,10 +190,8 @@ private:
   const glm::vec2 BODY_SIZE = glm::vec2(BODY_DROP, PLAYER_HEIGHT);
 
   const float FADE_SPEED = 2.0f;
-  const float APPLE_RESPAWN_TIME =
-      60.0f; // was 120 — felt like "never respawns"
-  const float APPLE_SPAWN_RANGE =
-      16.0f; // spawn band around the farm (field edge is ±5)
+  const float APPLE_RESPAWN_TIME = 60.0f; 
+  const float APPLE_SPAWN_RANGE = 16.0f; 
 
   const float DAY_LENGTH = 15.0f;// testing
   // const float DAY_LENGTH = 300.0f; 

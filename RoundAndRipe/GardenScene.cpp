@@ -23,7 +23,7 @@ GardenScene::GardenScene()
       m_floor_texture("./res/textures/gravel_floor.png"),
       m_sushi_texture("./res/textures/sushi.png"),
       m_sushi_eat_texture("./res/textures/sushi_eat.png"),
-      m_house_texture("./res/textures/house.png"),
+      m_structure_maker_texture("./res/textures/structure_maker.png"),
       m_chest_texture("./res/textures/chest.png"),
       m_human_texture("./res/textures/human_hazsuit.png"),
       m_seed_maker_texture("./res/textures/seed_maker.png"),
@@ -135,11 +135,11 @@ void GardenScene::onEnter(GLFWwindow &window) {
   m_triggers.push_back(seed_maker_trigger);
 
   // house
-  m_house.texture = &m_house_texture;
-  m_house.size = glm::vec2(HOUSE_SIZE, HOUSE_SIZE);
-  m_house.color = glm::vec4(1.0f);
-  m_house.position = HOUSE_POS;
-  m_static_sprites.push_back(m_house);
+  m_structure_maker.texture = &m_structure_maker_texture;
+  m_structure_maker.size = glm::vec2(HOUSE_SIZE, HOUSE_SIZE);
+  m_structure_maker.color = glm::vec4(1.0f);
+  m_structure_maker.position = HOUSE_POS;
+  m_static_sprites.push_back(m_structure_maker);
 
   TriggerVolume house_trigger;
   house_trigger.position = HOUSE_POS;
