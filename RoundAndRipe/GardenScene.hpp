@@ -122,9 +122,6 @@ private:
   float m_brightness = 1.0f; // scales the ambient light
   bool m_borderless = true;
 
-  // field
-  // NOTE: these must stay declared above m_field — members initialize in
-  // declaration order, and m_field's constructor reads SOIL_COLOR
   const glm::vec4 FLOOR_COLOR = glm::vec4(0.45f, 0.44f, 0.42f, 1.0f);
   const glm::vec4 SOIL_COLOR = glm::vec4(0.58f, 0.28f, 0.20f, 1.0f);
 
@@ -171,8 +168,6 @@ private:
   // const
   const std::vector<long long> TIER_COST = {100, 1000,10000, 1000000, 1000000000};
 
-  const float TIME_LIMIT = 1000000000.0f;
-
   const float FLOOR_TILE_SIZE = 100.0f;
 
   const float HOUSE_SIZE = 2.0f;
@@ -198,8 +193,8 @@ private:
   const float APPLE_RESPAWN_TIME = 60.0f; 
   const float APPLE_SPAWN_RANGE = 16.0f; 
 
-  const float DAY_LENGTH = 15.0f;// testing
-  // const float DAY_LENGTH = 300.0f; 
+  // const float DAY_LENGTH = 10.0f; 
+  const float DAY_LENGTH = 300.0f; 
   const glm::vec3 DAY_SKY = glm::vec3(0.10f, 0.09f, 0.07f);
   const glm::vec3 NIGHT_SKY = glm::vec3(0.04f, 0.05f, 0.09f);
   const float DAY_AMBIENT = 0.25f;
@@ -208,8 +203,8 @@ private:
   const float NIGHT_FOG = 0.12f;
 
   // torch that follows the player; scaled by nightfall in render()
-  const glm::vec3 PLAYER_LIGHT_COLOR = glm::vec3(0.9f, 0.85f, 0.7f) * 0.7f;
-  const float PLAYER_LIGHT_RADIUS = 7.0f;
+  // const glm::vec3 PLAYER_LIGHT_COLOR = glm::vec3(0.9f, 0.85f, 0.7f) * 0.7f;
+  // const float PLAYER_LIGHT_RADIUS = 7.0f;
 
 public:
   GardenScene();

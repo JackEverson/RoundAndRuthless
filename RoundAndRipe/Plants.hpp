@@ -113,9 +113,9 @@ inline PlantDef LiverBounty(Texture* growing, Texture* ripe){
     PlantDef crop;
     crop.name = "Liver Bounty";
     crop.type = PlantType::Harvestable;
-    crop.seconds_to_grow = 100;
-    crop.biomass_yield = 1000000;   // ~1000 harvests to clear the 1B gate
-    crop.biomass_cost = 100000;
+    crop.seconds_to_grow = 60;
+    crop.biomass_yield = 1000000; 
+    crop.biomass_cost = 10000;
     crop.growing_texture = growing;
     crop.ripe_texture = ripe;
     crop.full_size = glm::vec2(1.1f, 1.1f);

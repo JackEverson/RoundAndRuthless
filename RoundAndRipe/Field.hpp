@@ -51,11 +51,6 @@ private:
   float m_tile_size = 1.0f;
   glm::vec3 m_origin{0.0f};
 
-  // universal machine cycle: all structures act in synchronized waves.
-  // second 0 → hoers, 1 → planters, 2 → harvesters (sprinklers continuous)
-  static constexpr float CYCLE_PERIOD = 3.0f;
-  float m_cycle = 0.0f;
-  int m_last_slot = -1;
 };
 
 inline Field::Field(glm::vec3 origin, int w, int h, float tileSize,
@@ -148,12 +143,12 @@ inline void Field::PlaceStructure(Tile &t, const StructureDef *def, int row, int
   Structure s;
   s.def = def;
   s.row = row; s.col = col;
-
   s.sprite.texture = def->texture;
   s.sprite.size = def->full_size;
   s.sprite.color = glm::vec4(1.0f);
   s.sprite.position = t.Position() + glm::vec3(0.0f, def->full_size.y / 2.0f, 0.0f);
   s.crop = pdef;
+  s.timer = s.def->interval * (rand() % 100) / 100.0f;
 
   m_structures.push_back(s);
   t.SetStructure(true);                          // ← Field is the flag's writer
@@ -175,20 +170,13 @@ inline Structure* Field::StructureAt(int row, int col){
 inline StructureReport Field::RunStructures(float delta) {
   StructureReport report;
 
-  // advance the shared cycle; a phase fires only on the frame its second begins
-  m_cycle += delta;
-  if (m_cycle >= CYCLE_PERIOD) m_cycle -= CYCLE_PERIOD;
-  int slot = (int)m_cycle;                       // 0, 1 or 2
-  bool phase_fired = (slot != m_last_slot);
-  m_last_slot = slot;
-
-  static constexpr StructureKind PHASE[3] = {
-      StructureKind::Hoer, StructureKind::Planter, StructureKind::Harvester};
-
   for (auto &s : m_structures) {
-    bool acts = (s.def->kind == StructureKind::Sprinkler)   // continuous
-             || (phase_fired && s.def->kind == PHASE[slot]); // this wave's turn
-    if (!acts) continue;
+    // each machine runs its own clock; interval 0 (sprinkler) = every frame
+    if (s.def->interval > 0.0f) {
+      s.timer += delta;
+      if (s.timer < s.def->interval) continue;
+      s.timer -= s.def->interval;
+    }
 
     // visit the 8 surrounding tiles
     for (int dr = -1; dr <= 1; dr++) {

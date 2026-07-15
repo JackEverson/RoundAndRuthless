@@ -147,7 +147,7 @@ protected:
 
   // --- Common render setup ---
   // Submits all surfaces to the renderer. Call between BeginBatchDraw and RendBatch.
-  void SetupRenderingObjects(Renderer &renderer, int opaque = 300, int transparent = 300 ) {
+  void SetupRenderingObjects(Renderer &renderer, int opaque = 400, int transparent = 400 ) {
     for (auto &surface : m_surfaces) {
       SpriteInstance sprite;
       sprite.position = surface.position;

@@ -13,17 +13,18 @@ struct StructureDef {
   StructureKind kind;
   int biomass_cost;
   int tier;
-  float interval;        
-  int seed_load = 0;     
+  float interval = 0.0f;
+  int seed_load = 0;
   Texture* texture; 
   Texture* texture2 = nullptr; 
   glm::vec2 full_size;
 };
 
-class Structure {              
+class Structure {
   public:
-  const StructureDef* def;    
-  int row, col;               
+  const StructureDef* def;
+  int row, col;
+  float timer = 0.0f;    
   SpriteInstance sprite;
   const PlantDef* crop = nullptr;
 };
@@ -37,7 +38,7 @@ inline StructureDef Sprinkler(Texture* tex){
     s.kind = StructureKind::Sprinkler;
     s.biomass_cost = 50;
     s.tier = 1;
-    s.interval = 0.0f;             
+    s.interval = 2.0f;             
     s.texture = tex;
     s.full_size = glm::vec2(0.8f, 0.8f);
     return s;

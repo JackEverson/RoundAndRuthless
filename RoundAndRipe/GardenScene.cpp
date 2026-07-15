@@ -54,7 +54,7 @@ GardenScene::GardenScene()
       m_staring_mellon_ripe_texture("./res/textures/eye_plant_ripe.png"),
       m_liverbounty_grow("./res/textures/liver_grow.png"),
       m_liverbounty_ripe("./res/textures/liver_ripe.png"),
-      m_field(glm::vec3(-5.0f, 0.0f, -5.0f), 10, 30, 1.0f, &m_soil_texture, SOIL_COLOR,
+      m_field(glm::vec3(-5.0f, 0.0f, -5.0f), 12, 30, 1.0f, &m_soil_texture, SOIL_COLOR,
               &m_rock_texture, &m_till_texture, &m_seeded_texture, 10) {};
 
 void GardenScene::onEnter(GLFWwindow &window) {
@@ -101,9 +101,9 @@ void GardenScene::onEnter(GLFWwindow &window) {
            HALF_SUSHI_SIZE, light_color);
   AddLight(glm::vec3(0), FLOOR_TILE_SIZE / 2, light_color);
 
-  m_highlight.color = glm::vec3(0.5);
+  m_highlight.color = glm::vec3(1.0f, 1.0f, 1.0f);
   m_highlight.position =
-      glm::vec3(seed_maker_position.x, 1, seed_maker_position.z);
+      glm::vec3(seed_maker_position.x, 0.1f, seed_maker_position.z);
   m_highlight.radius = 0.25f;
 
   AddFloor(glm::vec3(0.0f), glm::vec2(FLOOR_TILE_SIZE), &m_floor_texture, FLOOR_COLOR);
@@ -230,8 +230,8 @@ Scene *GardenScene::update(GLFWwindow &window, float delta) {
 
   m_elapsed += delta;
   m_random_event_timer += delta;
-  if (m_elapsed >= TIME_LIMIT && m_outcome == Outcome::Playing)
-    m_outcome = Outcome::Lost;
+  // if (m_elapsed >= TIME_LIMIT && m_outcome == Outcome::Playing)
+  //   m_outcome = Outcome::Lost;
 
   m_save_timer += delta;
   if (m_save_timer >= SAVE_INTERVAL) {
@@ -396,11 +396,11 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
 
   // player torch — a pool of light that follows you, fading in as night falls
   // so the ground stays readable without a daytime spotlight artifact
-  PointLight player_light;
-  player_light.position = m_camera.GetLocation();
-  player_light.color = PLAYER_LIGHT_COLOR * (1.0f - day01);
-  player_light.radius = PLAYER_LIGHT_RADIUS;
-  lights.push_back(player_light);
+  // PointLight player_light;
+  // player_light.position = m_camera.GetLocation();
+  // player_light.color = PLAYER_LIGHT_COLOR * (1.0f - day01);
+  // player_light.radius = PLAYER_LIGHT_RADIUS;
+  // lights.push_back(player_light);
 
   float ambient = glm::mix(NIGHT_AMBIENT, DAY_AMBIENT, day01);
   renderer.SetLights(lights, ambient * m_brightness);
