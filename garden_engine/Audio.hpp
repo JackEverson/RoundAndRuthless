@@ -2,6 +2,7 @@
 
 #include <AL/al.h>
 #include <AL/alc.h>
+#include <chrono>
 #include <mutex>
 #include <string>
 #include <unordered_map>
@@ -21,7 +22,7 @@ public:
   void Shutdown();
 
   bool LoadSound(const std::string &name, const std::string &filepath);
-  void PlaySound(const std::string &name);
+  void PlaySound(const std::string &name, float volume = 1.0f);
   void SetMasterVolume(float volume);
 
   void PlaySound(const std::string &name, bool loop);
@@ -50,13 +51,22 @@ private:
     ALuint source = 0;
     bool isLooping = false;
     float volume = 1.0f;
+    // one-shot retrigger guard: same sound within this window is skipped,
+    // so rapid repeats (tool spam, machine bursts) can't comb into static
+    std::chrono::steady_clock::time_point last_played{};
   };
+
+  static constexpr float MIN_RETRIGGER_SECONDS = 0.15f;
 
   std::unordered_map<std::string, Sound> sounds;
   float masterVolume = 1.0f;
   float musicVolume = 0.7f; // Separate volume for music
 
   std::string currentBackgroundMusic = ""; // Track what's playing
+
+  static const int ONESHOT_POOL = 32;
+  ALuint m_pool[ONESHOT_POOL] = {};
+  int m_pool_next = 0;
 
   bool LoadWAV(const std::string &filepath, ALuint buffer);
   bool LoadOGG(const std::string &filepath, ALuint buffer);

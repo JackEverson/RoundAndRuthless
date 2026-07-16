@@ -260,10 +260,8 @@ Scene *GardenScene::update(GLFWwindow &window, float delta) {
 
   StructureReport machines = m_field.RunStructures(delta);
   m_biomass += machines.collected;
-  if (machines.tilled)    PlaySound("dig");
-  if (machines.planted)   PlaySound("pop");
-  if (machines.harvested) PlaySound("pop");
-  if (machines.watered)   PlaySound("water");
+  if (machines.tilled)                        PlaySound("dig", 0.35f);
+  if (machines.planted || machines.harvested) PlaySound("pop", 0.35f);
 
   // random events
   if (m_random_event_timer >= m_next_random_event) {

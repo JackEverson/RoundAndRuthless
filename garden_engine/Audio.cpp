@@ -41,6 +41,11 @@ bool SimpleSoundManager::Initialize() {
       return false;
     }
 
+    alGenSources(ONESHOT_POOL, m_pool);
+    if (alGetError() != AL_NO_ERROR) {
+      std::cerr << "Failed to create one-shot source pool" << std::endl;
+    }
+
     std::cout << "OpenAL initialized successfully!" << std::endl;
 
     // Print some info about our audio setup
@@ -70,6 +75,8 @@ void SimpleSoundManager::Shutdown() {
     }
   }
   sounds.clear();
+
+  alDeleteSources(ONESHOT_POOL, m_pool);  
 
   // Clean up OpenAL
   if (context) {
@@ -142,18 +149,42 @@ bool SimpleSoundManager::LoadSound(const std::string &name,
   return true;
 }
 
-void SimpleSoundManager::PlaySound(const std::string &name) {
+void SimpleSoundManager::PlaySound(const std::string &name, float volume) {
   auto it = sounds.find(name);
   if (it == sounds.end()) {
     std::cerr << "Sound not found: " << name << std::endl;
     return;
   }
 
-  // Simple play - just start from the beginning each time
-  ALuint source = it->second.source;
-  alSourcePlay(source);
+  // retrigger guard: drop repeats of the same sound inside the window
+  auto now = std::chrono::steady_clock::now();
+  float since = std::chrono::duration<float>(now - it->second.last_played).count();
+  if (since < MIN_RETRIGGER_SECONDS) return;
+  it->second.last_played = now;
 
-  // Check for errors
+  // grab the next pool source, round-robin (steals the oldest if all 16 busy)
+  ALuint src = 0;
+  for (int i = 0; i < ONESHOT_POOL; i++) {          // scan for an idle source first
+    int idx = (m_pool_next + i) % ONESHOT_POOL;
+    ALint state;
+    alGetSourcei(m_pool[idx], AL_SOURCE_STATE, &state);
+    if (state != AL_PLAYING) {
+      src = m_pool[idx];
+      m_pool_next = (idx + 1) % ONESHOT_POOL;
+      break;
+    }
+  }
+  if (src == 0) {                                    // all 16 truly busy — steal oldest
+    src = m_pool[m_pool_next];
+    m_pool_next = (m_pool_next + 1) % ONESHOT_POOL;
+  }
+
+  alSourceStop(src);                              // required before rebinding a buffer
+  alSourcei(src, AL_BUFFER, it->second.buffer);   // point this player at the sound's data
+  alSourcef(src, AL_GAIN, volume * masterVolume);
+  alSourcef(src, AL_PITCH, 0.9f + 0.2f * (rand() % 100) / 100.0f);  // ±10% variation
+  alSourcePlay(src);
+
   if (alGetError() != AL_NO_ERROR) {
     std::cerr << "Failed to play sound: " << name << std::endl;
   }
