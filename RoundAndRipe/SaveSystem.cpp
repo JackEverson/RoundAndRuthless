@@ -46,6 +46,7 @@ void SaveSystem::SaveSettings(const std::string& path, const GameSettings& s) {
     j["invert_y"]    = s.invert_y;
     j["ui_scale"]    = s.ui_scale;
     j["borderless"]  = s.borderless;
+    j["crosshair"]   = s.crosshair;
     std::ofstream(path) << j.dump(2);
 }
 
@@ -63,6 +64,7 @@ bool SaveSystem::LoadSettings(const std::string& path, GameSettings& out) {
     out.invert_y    = j.value("invert_y",    d.invert_y);
     out.ui_scale    = j.value("ui_scale",    d.ui_scale);
     out.borderless  = j.value("borderless",  d.borderless);
+    out.crosshair   = j.value("crosshair",   d.crosshair);
     return true;
 }
 

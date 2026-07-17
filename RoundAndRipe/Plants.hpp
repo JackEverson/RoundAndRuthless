@@ -41,7 +41,7 @@ inline PlantDef Blueberry(Texture* growing, Texture* ripe){
     blueberry.name = "blueberry";
     blueberry.type = PlantType::Producing;
     blueberry.seconds_to_grow = 40;
-    blueberry.seconds_to_ripen = 30;
+    blueberry.seconds_to_ripen = 20;
     blueberry.biomass_yield = 6;
     blueberry.biomass_cost = 6;
     blueberry.growing_texture = growing;
@@ -55,7 +55,7 @@ inline PlantDef Turnip(Texture* growing, Texture* ripe){
     PlantDef turnip;
     turnip.name = "turnip";
     turnip.type = PlantType::Harvestable;
-    turnip.seconds_to_grow = 40;
+    turnip.seconds_to_grow = 30;
     turnip.biomass_yield = 40;
     turnip.biomass_cost = 10;
     turnip.growing_texture = growing;
@@ -99,7 +99,7 @@ inline PlantDef StaringMellon(Texture* growing, Texture* ripe){
     PlantDef cabbage;
     cabbage.name = "Staring Mellon";
     cabbage.type = PlantType::Harvestable;
-    cabbage.seconds_to_grow = 60;
+    cabbage.seconds_to_grow = 40;
     cabbage.biomass_yield = 1000;
     cabbage.biomass_cost = 100;
     cabbage.growing_texture = growing;
@@ -113,7 +113,7 @@ inline PlantDef LiverBounty(Texture* growing, Texture* ripe){
     PlantDef crop;
     crop.name = "Liver Bounty";
     crop.type = PlantType::Harvestable;
-    crop.seconds_to_grow = 60;
+    crop.seconds_to_grow = 40;
     crop.biomass_yield = 1000000; 
     crop.biomass_cost = 10000;
     crop.growing_texture = growing;

@@ -64,11 +64,14 @@ inline std::vector<VoiceLine> TierUpLines(int tier) {
   switch (tier) {
   case 1: return {"Tier 1. You get access to new seeds and sprinklers.",
                   "Start automating that watering! I'll be here... in your liver"};
+  case 2: return {"Tier 2. Kidney beans and harvesting things!"};
   case 3: return {"Tier 3. You unlocked staring Mellon......",
                   VoiceLine("I don't like them.... they feel.... judgey...", "meow_sad")};
+  case 4: return {"Tier 4......",
+                  "You have gained access to the LIVER BOUQUET!",
+                  VoiceLine("You are truly blessed by the 4 GODS OF ROUND", "meow_angry")};
   
   default: return {"Another tier. How industrious."};
-  
   }
 }
 

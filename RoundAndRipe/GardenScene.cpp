@@ -73,6 +73,7 @@ void GardenScene::onEnter(GLFWwindow &window) {
   m_controller.InvertY = cfg.invert_y;
   m_font_size = cfg.ui_scale;
   m_borderless = cfg.borderless;
+  m_show_crosshair = cfg.crosshair;
   if (m_borderless)
     GardenEngine::SetBorderless(
         window, true); // window is created windowed; only switch if needed
@@ -217,6 +218,7 @@ void GardenScene::onExit(GLFWwindow &window) {
   cfg.invert_y = m_controller.InvertY;
   cfg.ui_scale = m_font_size;
   cfg.borderless = m_borderless;
+  cfg.crosshair = m_show_crosshair;
   SaveSystem::SaveSettings(SETTINGS_PATH, cfg);
 
   glfwSetInputMode(&window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -495,7 +497,7 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
     ImGui::Text("Task: %s", task_text);
   }
   else if (m_tier < (int)TIER_COST.size()){
-    std::string t = "Reach tier " + std::to_string(m_tier) + " - " + std::to_string(TIER_COST[m_tier]) + "g";
+    std::string t = "Reach tier " + std::to_string(m_tier) + " - " + FormatBiomass(TIER_COST[m_tier]) + "g";
     ImGui::Text("Task: %s", t.c_str());
   }
   ImGui::SetWindowFontScale(ui);
@@ -518,7 +520,7 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
               std::to_string(m_structure_inv[m_selected_structure].count);
   }
   hud_text += "\nTime: " + std::to_string((int)m_elapsed) +
-              "\nBiomass: " + std::to_string(m_biomass) +
+              "\nBiomass: " + FormatBiomass(m_biomass) +
               " g\nTier: " + std::to_string(m_tier);
 
   ImGui::SetNextWindowPos(ImVec2(w * 0.05f, h - 250.0f), ImGuiCond_Always,
@@ -530,6 +532,20 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
   ImGui::Text("%s", hud_text.c_str());
   ImGui::SetWindowFontScale(ui);
   ImGui::End();
+
+  // crosshair — screen-center cross, hidden while a menu has the cursor
+  if (m_show_crosshair && m_menu_mode == MenuMode::None) {
+    ImDrawList *dl = ImGui::GetForegroundDrawList();
+    ImVec2 c(w * 0.5f, h * 0.5f);
+    float arm = 7.0f * ui;
+    float gap = 3.0f * ui;                       // hollow center so it doesn't hide the aim point
+    ImU32 col = IM_COL32(235, 210, 170, 120);   // warm parchment, faded
+    float th = 2.0f;
+    dl->AddLine(ImVec2(c.x - arm, c.y), ImVec2(c.x - gap, c.y), col, th);
+    dl->AddLine(ImVec2(c.x + gap, c.y), ImVec2(c.x + arm, c.y), col, th);
+    dl->AddLine(ImVec2(c.x, c.y - arm), ImVec2(c.x, c.y - gap), col, th);
+    dl->AddLine(ImVec2(c.x, c.y + gap), ImVec2(c.x, c.y + arm), col, th);
+  }
 
   // rendering shop menu
   bool panel_open = (m_menu_mode != MenuMode::None);
@@ -549,7 +565,7 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
                                                      // must take clicks
     ImGui::SetWindowFontScale(ui);
 
-    ImGui::Text("Biomass: %lld g", m_biomass);
+    ImGui::Text("Biomass: %s g", FormatBiomass(m_biomass).c_str());
     ImGui::Separator();
 
     for (int n = 0; n < (int)m_seeds.size(); n++) {
@@ -593,12 +609,13 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
     ImGui::SetNextWindowBgAlpha(0.9f);
     ImGui::Begin("Upgrade Store", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
     ImGui::SetWindowFontScale(ui);
-    ImGui::Text("Biomass: %lld g", m_biomass);
+    ImGui::Text("Biomass: %s g", FormatBiomass(m_biomass).c_str());
     ImGui::Separator();
     if (m_tier >= (int)TIER_COST.size()) {
       ImGui::Text("Max tier reached.");
     } else {
-      ImGui::Text("Tier %d -> Tier %d - %lld g", m_tier, m_tier + 1, TIER_COST[m_tier]);
+      ImGui::Text("Tier %d -> Tier %d - %s g", m_tier, m_tier + 1,
+                  FormatBiomass(TIER_COST[m_tier]).c_str());
       if (ImGui::Button("Upgrade")) {
         if (m_biomass >= TIER_COST[m_tier]) {
           m_biomass -= TIER_COST[m_tier];
@@ -694,7 +711,7 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
                                                         // must take clicks
         ImGui::SetWindowFontScale(ui);
 
-        ImGui::Text("Biomass: %lld g", m_biomass);
+        ImGui::Text("Biomass: %s g", FormatBiomass(m_biomass).c_str());
         ImGui::Separator();
 
         for (int n = 0; n < (int)m_structure_inv.size(); n++) {
@@ -745,6 +762,7 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
     ImGui::SliderFloat("Mouse Sensitivity", &m_controller.MouseSensitivity,
                        0.01f, 0.15f);
     ImGui::Checkbox("Invert Y", &m_controller.InvertY);
+    ImGui::Checkbox("Crosshair", &m_show_crosshair);
 
     ImGui::SliderFloat("UI Scale", &m_font_size, 1.0f, 3.0f);
 

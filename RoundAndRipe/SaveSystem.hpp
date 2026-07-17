@@ -20,7 +20,7 @@ struct StructureSave
 };
 
 struct GameState {
-    int version = 3;
+    int version = 4;
     double elapsed = 0.0;
     long long biomass = 0;
     int tier = 0;
@@ -39,6 +39,7 @@ struct GameSettings {
     bool  invert_y = false;
     float ui_scale = 2.0f;
     bool  borderless = true;   // fullscreen by default
+    bool  crosshair = true;
 };
 
 namespace SaveSystem {

@@ -17,6 +17,7 @@
 #include "glm/ext/vector_float3.hpp"
 
 #include <cstddef>
+#include <cstdio>
 #include <memory>
 #include <random>
 #include <string>
@@ -121,6 +122,7 @@ private:
   float m_master_volume = 1.0f;
   float m_brightness = 1.0f; // scales the ambient light
   bool m_borderless = true;
+  bool m_show_crosshair = true;
 
   const glm::vec4 FLOOR_COLOR = glm::vec4(0.45f, 0.44f, 0.42f, 1.0f);
   const glm::vec4 SOIL_COLOR = glm::vec4(0.58f, 0.28f, 0.20f, 1.0f);
@@ -258,6 +260,19 @@ public:
     return false;
   }
 
+  // 8421 → "8421", 43718254 → "43.7M", 1000000000 → "1.0B"
+  static std::string FormatBiomass(long long g) {
+    if (g < 10000) return std::to_string(g);   // small numbers read fine raw
+    const char *suffix[] = {"k", "M", "B", "T"};
+    double v = (double)g;
+    int i = -1;
+    while (v >= 1000.0 && i < 3) { v /= 1000.0; i++; }
+    char buf[32];
+    if (v >= 100.0) snprintf(buf, sizeof(buf), "%.0f%s", v, suffix[i]);
+    else            snprintf(buf, sizeof(buf), "%.1f%s", v, suffix[i]);
+    return buf;
+  }
+
   bool IsLookingDown() const { return m_camera.GetForward().y < -0.98f; }
   int HarvestCount() const { return m_harvest_count; }
   void SetTaskText(const std::string &text) { m_task_text = text; }
@@ -266,8 +281,7 @@ public:
   void QUIT() { m_quit_game = true; };
 
   void PlaySound(const std::string &name, float volume = 1.0f) {
-    sound_manager.PlaySound(name);
-    sound_manager.SetSoundVolume(name, volume);
+    sound_manager.PlaySound(name, volume);   
   }
   void StartEvent(std::unique_ptr<Event> e) {
     e->OnStart();
@@ -457,7 +471,7 @@ public:
     return m_font_size * (float)h / 1440.0f; // 1440p = your tuning reference
   };
 
-  const int SAVE_VERSION = 3;
+  const int SAVE_VERSION = 4;   // v4: crop roster renamed/re-tiered, field 12×30
   const std::string SAVE_PATH = "./save.json";
   const std::string SETTINGS_PATH = "./settings.json";
 
