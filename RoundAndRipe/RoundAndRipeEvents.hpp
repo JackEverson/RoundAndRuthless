@@ -67,7 +67,7 @@ inline std::vector<VoiceLine> TierUpLines(int tier) {
   case 1: return {"Tier 1. You get access to new seeds and sprinklers.",
                   "Start automating that watering! I'll be here... in your liver"};
   case 2: return {"Tier 2. Kidney beans and harvesting things!"};
-  case 3: return {"Tier 3. You unlocked staring Mellon......",
+  case 3: return {"Tier 3. You unlocked staring Melon......",
                   VoiceLine("I don't like them.... they feel.... judgey...", "meow_sad")};
   case 4: return {"Tier 4......",
                   "You have gained access to the LIVER BOUQUET!",
@@ -201,7 +201,7 @@ public:
         VoiceLine{"I now offer you a choice: MAKE QUOTA OR I KEEP THE LIVER.", "meow_angry"},
         "Lets get you started. This field has been left a mess... pull out your shovel and clear out these rocks",
         },delta)) {
-        m_scene.SetTaskText("Select shovel [5] and clear the rocks [LMB] or [E]");
+        m_scene.SetTaskText("Select shovel [6] and clear the rocks [LMB] or [E]");
         m_step = Step::WaitForNoRocks;
       }
       break;

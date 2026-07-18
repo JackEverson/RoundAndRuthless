@@ -288,7 +288,7 @@ public:
   }
 
   // 8421 → "8421", 43718254 → "43.7M", 1000000000 → "1.0B"
-  static std::string FormatBiomass(long long g) {
+  static std::string FormatBiomass(long long g) { 
     if (g < 10000) return std::to_string(g);   // small numbers read fine raw
     const char *suffix[] = {"k", "M", "B", "T"};
     double v = (double)g;
@@ -475,8 +475,8 @@ public:
     glm::vec3 pos(fx(rng), m_apple.size.y / 2.0f, fz(rng));
 
     m_apple.position = pos;
-    m_triggers[m_apple_trigger_index].position =
-        pos; // move the *registered* trigger
+    m_triggers[m_apple_trigger_index].position = pos; // move the *registered* trigger
+    m_triggers[m_apple_trigger_index].size = glm::vec3(m_apple.size.x * 1.5f);
     m_apple_collected = false;
   }
 

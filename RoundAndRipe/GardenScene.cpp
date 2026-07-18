@@ -56,7 +56,7 @@ GardenScene::GardenScene()
       m_staring_melon_ripe_texture("./res/textures/eye_plant_ripe.png"),
       m_liverbounty_grow("./res/textures/liver_grow.png"),
       m_liverbounty_ripe("./res/textures/liver_ripe.png"),
-      m_field(glm::vec3(-5.0f, 0.0f, -5.0f), 13, 30, 1.0f, &m_soil_texture, SOIL_COLOR,
+      m_field(glm::vec3(-5.0f, 0.0f, -5.0f), 12, 30, 1.0f, &m_soil_texture, SOIL_COLOR,
               &m_rock_texture, &m_till_texture, &m_seeded_texture, 10) {};
 
 void GardenScene::onEnter(GLFWwindow &window) {
