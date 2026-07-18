@@ -52,8 +52,8 @@ GardenScene::GardenScene()
       m_tomato_texture("./res/textures/tomato_bush.png"),
       m_blueberry_texture("./res/textures/blueberry_bush.png"),
       m_kidneybean_texture("./res/textures/kidneybean_bush.png"),
-      m_staring_mellon_growing_texture("./res/textures/eye_plant.png"),
-      m_staring_mellon_ripe_texture("./res/textures/eye_plant_ripe.png"),
+      m_staring_melon_growing_texture("./res/textures/eye_plant.png"),
+      m_staring_melon_ripe_texture("./res/textures/eye_plant_ripe.png"),
       m_liverbounty_grow("./res/textures/liver_grow.png"),
       m_liverbounty_ripe("./res/textures/liver_ripe.png"),
       m_field(glm::vec3(-5.0f, 0.0f, -5.0f), 13, 30, 1.0f, &m_soil_texture, SOIL_COLOR,
@@ -282,7 +282,7 @@ void GardenScene::onEnter(GLFWwindow &window) {
   m_seeds.push_back({Turnip(&m_veg_top_texture, &m_turnip_texture), 0});
   m_seeds.push_back({Tomato(&m_bush_texture, &m_tomato_texture), 0});
   m_seeds.push_back({KidneyBean(&m_bush_texture, &m_kidneybean_texture), 0});
-  m_seeds.push_back({StaringMelon(&m_staring_mellon_growing_texture,&m_staring_mellon_ripe_texture),0});
+  m_seeds.push_back({StaringMelon(&m_staring_melon_growing_texture,&m_staring_melon_ripe_texture),0});
   m_seeds.push_back({LiverBouquet(&m_liverbounty_grow, &m_liverbounty_ripe), 0});
 
   m_structure_inv.push_back({Sprinkler(&m_sprinkler_texture), 0});
