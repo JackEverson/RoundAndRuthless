@@ -495,13 +495,9 @@ public:
     return m_font_size * (float)h / 1440.0f; // 1440p = your tuning reference
   };
 
-  const int SAVE_VERSION = 5; 
-  const std::string SAVE_PATH = "./save.json";
-  const std::string SETTINGS_PATH = "./settings.json";
 
   void Save() {
     GameState s;
-    s.version = SAVE_VERSION;
     s.elapsed = m_elapsed;
     s.biomass = m_biomass;
     s.tier = m_tier;
@@ -525,7 +521,7 @@ public:
 
   bool Load() {
     GameState s;
-    if (!SaveSystem::Load(SAVE_PATH, SAVE_VERSION, s))
+    if (!SaveSystem::Load(SAVE_PATH, s.version, s))
       return false;
     m_elapsed = s.elapsed;
     m_biomass = s.biomass;

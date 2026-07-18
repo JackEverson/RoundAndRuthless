@@ -20,7 +20,7 @@ struct StructureSave
 };
 
 struct GameState {
-    int version = 0;
+    int version = 5;
     double elapsed = 0.0;
     long long biomass = 0;
     int tier = 0;
@@ -42,6 +42,9 @@ struct GameSettings {
     bool  crosshair = true;
 };
 
+inline const std::string SAVE_PATH = "./save.json";
+inline const std::string SETTINGS_PATH = "./settings.json";
+
 namespace SaveSystem {
     void Save(const std::string& path, const GameState& s);          // GameState -> json -> file
     bool Load(const std::string& path, int version, GameState& out); // file -> json -> GameState; false if missing/version-mismatch
@@ -49,5 +52,3 @@ namespace SaveSystem {
     void SaveSettings(const std::string& path, const GameSettings& s);
     bool LoadSettings(const std::string& path, GameSettings& out);   // false if missing/malformed (out keeps defaults)
 }
-
-

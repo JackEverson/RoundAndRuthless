@@ -29,21 +29,23 @@ GardenEngine::GardenEngine(std::string name, bool windowed, int win_width,
 }
 
 void GardenEngine::SetBorderless(GLFWwindow &window, bool borderless) {
-  // remembered windowed rect (single-window engine, so statics suffice)
-  static int win_x = 100, win_y = 100, win_w = 1920, win_h = 1080;
+
+  bool is_borderless = glfwGetWindowMonitor(&window) != nullptr;
+  if (borderless == is_borderless) return;
+
+  GLFWmonitor *mon = glfwGetPrimaryMonitor();
+  const GLFWvidmode *mode = glfwGetVideoMode(mon);
 
   if (borderless) {
-    glfwGetWindowPos(&window, &win_x, &win_y); // remember rect to restore
-    glfwGetWindowSize(&window, &win_w, &win_h);
-    GLFWmonitor *mon = glfwGetPrimaryMonitor();
-    const GLFWvidmode *mode = glfwGetVideoMode(mon);
     // monitor's own video mode == "windowed fullscreen" (alt-tab friendly)
     glfwSetWindowMonitor(&window, mon, 0, 0, mode->width, mode->height,
                          mode->refreshRate);
   } else {
-    glfwSetWindowMonitor(&window, nullptr, win_x, win_y, win_w, win_h, 0);
+    // windowed = a centred 720p window
+    glfwSetWindowMonitor(&window, nullptr, (mode->width - 1280) / 2,
+                         (mode->height - 720) / 2, 1280, 720, 0);
   }
-  glfwSwapInterval(1); 
+  glfwSwapInterval(1);
 }
 
 GardenEngine::~GardenEngine() {

@@ -76,9 +76,7 @@ void GardenScene::onEnter(GLFWwindow &window) {
   m_font_size = cfg.ui_scale;
   m_borderless = cfg.borderless;
   m_show_crosshair = cfg.crosshair;
-  if (m_borderless)
-    GardenEngine::SetBorderless(
-        window, true); // window is created windowed; only switch if needed
+  GardenEngine::SetBorderless(window, m_borderless);
 
   sound_manager.Initialize();
   sound_manager.LoadSound("background_noise", "./res/sounds/ambient-noise.ogg");
@@ -973,8 +971,11 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
 
     ImGui::SliderFloat("UI Scale", &m_font_size, 1.0f, 3.0f);
 
-    if (ImGui::Checkbox("Windowed Fullscreen", &m_borderless))
+    bool windowed = !m_borderless;
+    if (ImGui::Checkbox("Windowed", &windowed)) {
+      m_borderless = !windowed;
       GardenEngine::SetBorderless(window, m_borderless);
+    }
 
     ImGui::Separator();
     if (ImGui::Button("Close Menu"))
