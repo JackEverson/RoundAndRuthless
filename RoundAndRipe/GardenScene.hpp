@@ -31,6 +31,7 @@ private:
 
   // Textures
   Texture m_wall_texture;
+  Texture m_fence_texture;
   Texture m_floor_texture;
 
   Texture m_sushi_texture;
@@ -95,6 +96,20 @@ private:
   struct StructureInv {
     StructureDef def;
     int count = 0;
+  };
+
+  // set dressing beyond the fence — never interacted with, never simulated
+  struct AmbientSprite {
+    SpriteInstance sprite;
+    float phase = 0.0f;   // desyncs the sway so it reads as wind
+    float sway = 1.0f;    // 0 = rigid (machines don't lean)
+  };
+
+  struct Wanderer {
+    SpriteInstance sprite;
+    glm::vec3 target{0.0f};
+    glm::vec2 pen_min{0.0f}, pen_max{0.0f};  // stays inside its own pen
+    float pause = 0.0f;                       // standing still (doing chores)
   };
 
   // events
@@ -162,6 +177,10 @@ private:
   std::vector<Seed> m_seeds;
   std::vector<StructureInv> m_structure_inv;
 
+  // surroundings
+  std::vector<AmbientSprite> m_ambient_sprites;
+  std::vector<Wanderer> m_wanderers;
+
   const glm::vec2 TOOL_SIZE = glm::vec2(0.35f);
   const float TOOL_FWD = 0.6f;
   const float TOOL_SIDE = 0.30f;
@@ -173,6 +192,13 @@ private:
   const std::vector<long long> TIER_COST = {100, 1000,10000, 1000000, 1000000000};
 
   const float FLOOR_TILE_SIZE = 100.0f;
+
+  // the pen: low fence the camera (1.6) sees over but the player can't cross
+  const float FENCE_HEIGHT = 1.0f;    // full visible height — rails sit ON the ground
+  const float FENCE_TILE_WIDTH = 2.0f; // world units per repeat of fence.png
+  const glm::vec2 PEN_MIN = glm::vec2(-14.0f, -14.0f);   // x, z
+  const glm::vec2 PEN_MAX = glm::vec2(14.0f, 30.0f);
+  const float WANDERER_SPEED = 0.8f;
 
   const float HOUSE_SIZE = 2.0f;
   const glm::vec3 HOUSE_POS = glm::vec3(-5.0f, HOUSE_SIZE / 2.0, -10.0f);
@@ -194,8 +220,7 @@ private:
   const glm::vec2 BODY_SIZE = glm::vec2(BODY_DROP, PLAYER_HEIGHT);
 
   const float FADE_SPEED = 2.0f;
-  const float APPLE_RESPAWN_TIME = 60.0f; 
-  const float APPLE_SPAWN_RANGE = 16.0f; 
+  const float APPLE_RESPAWN_TIME = 60.0f;
 
   // const float DAY_LENGTH = 10.0f; 
   const float DAY_LENGTH = 300.0f; 
@@ -442,16 +467,12 @@ public:
   }
 
   void PlaceApple() {
-    // Spawn in a band just around the farm (field is x,z ∈ [-5, 5]) so the
-    // apple is a short forage, not a wasteland expedition. Reject on-farm
-    // rolls.
+    // Somewhere on the field itself (origin (-5,-5), 13x30) — the pen fence
+    // made the old wasteland band unreachable.
     static std::mt19937 rng(std::random_device{}());
-    std::uniform_real_distribution<float> coord(-APPLE_SPAWN_RANGE,
-                                                APPLE_SPAWN_RANGE);
-    glm::vec3 pos;
-    do {
-      pos = glm::vec3(coord(rng), m_apple.size.y / 2.0f, coord(rng));
-    } while (pos.x > -5.0f && pos.x < 5.0f && pos.z > -5.0f && pos.z < 5.0f);
+    std::uniform_real_distribution<float> fx(-4.5f, 7.5f);
+    std::uniform_real_distribution<float> fz(-4.5f, 24.5f);
+    glm::vec3 pos(fx(rng), m_apple.size.y / 2.0f, fz(rng));
 
     m_apple.position = pos;
     m_triggers[m_apple_trigger_index].position =
@@ -474,7 +495,7 @@ public:
     return m_font_size * (float)h / 1440.0f; // 1440p = your tuning reference
   };
 
-  const int SAVE_VERSION = 5;   // v4: crop roster renamed/re-tiered, field 12×30
+  const int SAVE_VERSION = 5; 
   const std::string SAVE_PATH = "./save.json";
   const std::string SETTINGS_PATH = "./settings.json";
 

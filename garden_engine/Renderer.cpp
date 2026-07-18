@@ -113,6 +113,8 @@ void Renderer::RendBatch(glm::mat4 view, glm::mat4 projection, glm::vec3 campos,
       instances.push_back(s.model_mat[i][2]);
       instances.push_back(s.model_mat[i][3]);
     }
+    instances.push_back(s.uv_scale.x);
+    instances.push_back(s.uv_scale.y);
   }
   GLCall(glBufferSubData(GL_ARRAY_BUFFER, 0, instances.size() * sizeof(float),
                          instances.data()));
@@ -163,6 +165,8 @@ void Renderer::RendBatch(glm::mat4 view, glm::mat4 projection, glm::vec3 campos,
       tinstances.push_back(s.model_mat[i][2]);
       tinstances.push_back(s.model_mat[i][3]);
     }
+    tinstances.push_back(s.uv_scale.x);
+    tinstances.push_back(s.uv_scale.y);
   }
   GLCall(glBufferSubData(GL_ARRAY_BUFFER, 0, tinstances.size() * sizeof(float),
                          tinstances.data()));
@@ -259,4 +263,10 @@ void Renderer::initRenderData() {
                           (void *)(sizeof(float) * (9 + i * 4)));
     glVertexAttribDivisor(5 + i, 1);
   }
+
+  // instance uv scale (tiling)
+  glEnableVertexAttribArray(9);
+  glVertexAttribPointer(9, 2, GL_FLOAT, GL_FALSE, sizeof(float) * m_vertexSize,
+                        (void *)(sizeof(float) * 25));
+  glVertexAttribDivisor(9, 1);
 }

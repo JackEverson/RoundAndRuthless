@@ -8,6 +8,7 @@ constexpr const char *TextureVertexShader =
     layout (location = 3) in vec2 i_size;
     layout (location = 4) in vec4 i_color;
     layout (location = 5) in mat4 i_model;
+    layout (location = 9) in vec2 i_uv_scale;
 
     uniform mat4 u_projection;
     uniform mat4 u_view;
@@ -25,7 +26,7 @@ constexpr const char *TextureVertexShader =
       gl_Position = u_projection * u_view * worldpos;
 
       v_color = i_color;
-      v_tex_coord = a_tex_coord;
+      v_tex_coord = a_tex_coord * i_uv_scale;
       v_world_pos = worldpos.xyz;
     };
   )";
@@ -70,6 +71,9 @@ constexpr const char *TextureFragmentShader =
       }
       vec4 texture_color = v_color * texture(u_texture, v_tex_coord) * vec4(clamp(light_total, 0.0, 1.0), 1.0);
 
+      // cutout pixels write neither color nor DEPTH — without this, the
+      // invisible parts of sprites/fences occlude whatever draws after them
+      if (texture_color.a < 0.1) discard;
 
       vec4 final_color = mix(u_fog_color, texture_color, fog_factor);
       FragColor = vec4(final_color.rgb, texture_color.a);

@@ -149,20 +149,24 @@ protected:
   // Submits all surfaces to the renderer. Call between BeginBatchDraw and RendBatch.
   void SetupRenderingObjects(Renderer &renderer, int opaque = 400, int transparent = 400 ) {
     for (auto &surface : m_surfaces) {
+      if (!surface.visible) continue;   // collision-only surfaces
       SpriteInstance sprite;
       sprite.position = surface.position;
       sprite.size = surface.size;
       sprite.color = surface.color;
+      sprite.uv_scale = surface.uv_scale;
       sprite.texture = surface.texture;
       sprite.model_mat = surface.rotation;
       renderer.SubmitSprite(sprite);
     }
     
     for (auto &surface : m_tsurfaces) {
+      if (!surface.visible) continue;
       SpriteInstance sprite;
       sprite.position = surface.position;
       sprite.size = surface.size;
       sprite.color = surface.color;
+      sprite.uv_scale = surface.uv_scale;
       sprite.texture = surface.texture;
       sprite.model_mat = surface.rotation;
       renderer.SubmitTransparentSprite(sprite);

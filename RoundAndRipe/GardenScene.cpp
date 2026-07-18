@@ -21,6 +21,7 @@
 GardenScene::GardenScene()
     : sound_manager(SimpleSoundManager::Instance()),
       m_wall_texture("./res/textures/concrete_wall.png"),
+      m_fence_texture("./res/textures/fence.png", true),   // repeat-wrapped for tiling
       m_floor_texture("./res/textures/gravel_floor.png"),
       m_sushi_texture("./res/textures/sushi.png"),
       m_sushi_eat_texture("./res/textures/sushi_eat.png"),
@@ -117,6 +118,93 @@ void GardenScene::onEnter(GLFWwindow &window) {
                  glm::vec2(FLOOR_TILE_SIZE, 4.0f), 90.0f, &m_wall_texture);
   AddWallRotated(glm::vec3(-FLOOR_TILE_SIZE / 2, 0.0f, 0.0f),
                  glm::vec2(FLOOR_TILE_SIZE, 4.0f), 90.0f, &m_wall_texture);
+
+  // ── the pen: low fence you see over. Collision tests at CAMERA height
+  // (1.6), so the visible rail alone is walk-through — each side also gets
+  // an invisible 6-high collider when solid.
+  // rails use the TRANSPARENT batch (via AddGlassRotated) so the picket gaps
+  // show what's behind them — opaque quads write depth even at alpha-0 pixels
+  auto add_fence = [this](glm::vec2 mn, glm::vec2 mx, bool solid) {
+    glm::vec2 c((mn.x + mx.x) * 0.5f, (mn.y + mx.y) * 0.5f);
+    glm::vec2 sz(mx.x - mn.x, mx.y - mn.y);
+    float y = FENCE_HEIGHT * 0.5f;   // rail bottom sits on the ground
+    AddGlassRotated(glm::vec3(c.x, y, mx.y), glm::vec2(sz.x, FENCE_HEIGHT), 0.0f, 1.0f, &m_fence_texture)
+        .uv_scale = glm::vec2(sz.x / FENCE_TILE_WIDTH, 1.0f);
+    AddGlassRotated(glm::vec3(c.x, y, mn.y), glm::vec2(sz.x, FENCE_HEIGHT), 0.0f, 1.0f, &m_fence_texture)
+        .uv_scale = glm::vec2(sz.x / FENCE_TILE_WIDTH, 1.0f);
+    AddGlassRotated(glm::vec3(mx.x, y, c.y), glm::vec2(sz.y, FENCE_HEIGHT), 90.0f, 1.0f, &m_fence_texture)
+        .uv_scale = glm::vec2(sz.y / FENCE_TILE_WIDTH, 1.0f);
+    AddGlassRotated(glm::vec3(mn.x, y, c.y), glm::vec2(sz.y, FENCE_HEIGHT), 90.0f, 1.0f, &m_fence_texture)
+        .uv_scale = glm::vec2(sz.y / FENCE_TILE_WIDTH, 1.0f);
+    if (solid) {
+      AddWall(glm::vec3(c.x, 0.0f, mx.y), glm::vec2(sz.x, 6.0f), &m_wall_texture).visible = false;
+      AddWall(glm::vec3(c.x, 0.0f, mn.y), glm::vec2(sz.x, 6.0f), &m_wall_texture).visible = false;
+      AddWallRotated(glm::vec3(mx.x, 0.0f, c.y), glm::vec2(sz.y, 6.0f), 90.0f, &m_wall_texture).visible = false;
+      AddWallRotated(glm::vec3(mn.x, 0.0f, c.y), glm::vec2(sz.y, 6.0f), 90.0f, &m_wall_texture).visible = false;
+    }
+  };
+  add_fence(PEN_MIN, PEN_MAX, true);
+
+  // ── the neighbours: mock pens — dirt patch, fake crops, a parked machine.
+  // Nothing out here is simulated; it only has to survive being looked at
+  // over a fence.
+  struct MockPen { glm::vec2 mn, mx; Texture *crop; Texture *machine; };
+  // first four host a wanderer; no staring melon out here — that crop is a
+  // tier-3 surprise, not scenery
+  const MockPen pens[] = {
+      {{20.0f, -5.0f},  {33.0f, 25.0f},  &m_tomato_texture,     &m_sprinkler_texture},
+      {{-33.0f, -5.0f}, {-20.0f, 25.0f}, &m_kidneybean_texture, &m_harvester_texture},
+      {{-24.0f, 36.0f}, {-4.0f, 46.0f},  &m_turnip_texture,     &m_hoer_texture},
+      {{4.0f, -28.0f},  {24.0f, -18.0f}, &m_radish_texture,     &m_sprinkler_texture},
+      {{4.0f, 36.0f},   {24.0f, 46.0f},  &m_blueberry_texture,  &m_sprinkler_texture},
+      {{-24.0f, -28.0f},{-4.0f, -18.0f}, &m_tomato_texture,     &m_harvester_texture},
+  };
+  for (const auto &p : pens) {
+    glm::vec2 c((p.mn.x + p.mx.x) * 0.5f, (p.mn.y + p.mx.y) * 0.5f);
+    glm::vec2 sz(p.mx.x - p.mn.x, p.mx.y - p.mn.y);
+    AddFloor(glm::vec3(c.x, 0.01f, c.y), sz, &m_soil_texture, SOIL_COLOR);
+    add_fence(p.mn, p.mx, false);   // pure decor: no colliders needed out there
+
+    // ragged crop rows: jittered grid so it doesn't read as copy-paste
+    for (float x = p.mn.x + 1.5f; x < p.mx.x - 1.0f; x += 3.0f) {
+      for (float z = p.mn.y + 1.5f; z < p.mx.y - 1.0f; z += 4.0f) {
+        AmbientSprite a;
+        float s = 0.7f + (rand() % 40) / 100.0f;   // 0.7–1.1
+        a.sprite.texture = p.crop;
+        a.sprite.size = glm::vec2(s, s);
+        a.sprite.color = glm::vec4(1.0f);
+        a.sprite.position =
+            glm::vec3(x + (rand() % 60 - 30) / 100.0f, s / 2.0f,
+                      z + (rand() % 60 - 30) / 100.0f);
+        a.phase = (rand() % 628) / 100.0f;         // 0..2π
+        m_ambient_sprites.push_back(a);
+      }
+    }
+
+    AmbientSprite machine;                         // parked mid-pen, rigid
+    machine.sprite.texture = p.machine;
+    machine.sprite.size = glm::vec2(0.8f);
+    machine.sprite.color = glm::vec4(1.0f);
+    machine.sprite.position = glm::vec3(c.x, 0.4f, c.y);
+    machine.sway = 0.0f;
+    m_ambient_sprites.push_back(machine);
+  }
+
+  // ── fellow prisoners: one pacing each of the first four pens
+  for (int i = 0; i < 4; i++) {
+    const MockPen &p = pens[i];
+    Wanderer w;
+    w.sprite.texture = &m_human_texture;
+    w.sprite.size = BODY_SIZE;
+    w.sprite.color = glm::vec4(1.0f);
+    w.pen_min = p.mn + glm::vec2(1.0f);
+    w.pen_max = p.mx - glm::vec2(1.0f);
+    glm::vec2 c = (w.pen_min + w.pen_max) * 0.5f;
+    w.sprite.position = glm::vec3(c.x, BODY_SIZE.y / 2.0f, c.y);
+    w.target = w.sprite.position;
+    w.pause = (rand() % 300) / 100.0f;   // desync their first moves
+    m_wanderers.push_back(w);
+  }
 
   // Seed maker
   m_seed_maker.texture = &m_seed_maker_texture;
@@ -247,6 +335,28 @@ Scene *GardenScene::update(GLFWwindow &window, float delta) {
 
   for (auto &t : m_field.Tiles())
     t.Update(delta);
+
+  // neighbours pace their pens: walk → pause (chores) → pick a new spot
+  for (auto &w : m_wanderers) {
+    if (w.pause > 0.0f) {
+      w.pause -= delta;
+      if (w.pause <= 0.0f) {
+        float tx = w.pen_min.x +
+                   (rand() % 100) / 100.0f * (w.pen_max.x - w.pen_min.x);
+        float tz = w.pen_min.y +
+                   (rand() % 100) / 100.0f * (w.pen_max.y - w.pen_min.y);
+        w.target = glm::vec3(tx, w.sprite.position.y, tz);
+      }
+      continue;
+    }
+    glm::vec3 to = w.target - w.sprite.position;
+    float dist = glm::length(to);
+    if (dist < 0.05f) {
+      w.pause = 2.0f + (rand() % 400) / 100.0f;   // 2–6s of standing around
+    } else {
+      w.sprite.position += (to / dist) * std::min(WANDERER_SPEED * delta, dist);
+    }
+  }
 
   // event updates
   for (auto &e : m_events)
@@ -424,6 +534,30 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
   right = glm::normalize(right);
 
   m_field.Render(renderer, campos);
+
+  // ambient dressing: neighbours' crops sway in the wind, machines stand rigid
+  for (auto &a : m_ambient_sprites) {
+    glm::vec3 to_cam = campos - a.sprite.position;
+    float yaw = std::atan2(to_cam.x, to_cam.z);
+    glm::mat4 m = glm::rotate(glm::mat4(1.0f), yaw, glm::vec3(0, 1, 0));
+    if (a.sway > 0.0f) {
+      float lean = std::sin((float)m_elapsed * 1.5f + a.phase) * 0.06f * a.sway;
+      m = m * glm::rotate(glm::mat4(1.0f), lean, glm::vec3(0, 0, 1));
+    }
+    a.sprite.model_mat = m;
+    renderer.SubmitTransparentSprite(a.sprite);
+  }
+
+  // fellow prisoners: yaw-billboard + a small bob while walking
+  for (auto &w : m_wanderers) {
+    glm::vec3 to_cam = campos - w.sprite.position;
+    float yaw = std::atan2(to_cam.x, to_cam.z);
+    SpriteInstance s = w.sprite;   // copy: the bob must not accumulate
+    s.model_mat = glm::rotate(glm::mat4(1.0f), yaw, glm::vec3(0, 1, 0));
+    if (w.pause <= 0.0f)
+      s.position.y += std::sin((float)m_elapsed * 10.0f) * 0.03f;
+    renderer.SubmitTransparentSprite(s);
+  }
 
   glm::mat4 billboard = glm::transpose(glm::mat4(glm::mat3(view)));
 

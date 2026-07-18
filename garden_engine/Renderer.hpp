@@ -13,11 +13,13 @@ struct SpriteInstance
   glm::vec2 size;
   glm::vec4 color;
   glm::mat4 model_mat;
+  glm::vec2 uv_scale;   // >1 tiles the texture (needs a repeat-wrapped Texture)
   Texture *texture;
 
   SpriteInstance()
       : position(glm::vec3(0.0f)), size(glm::vec2(1.0f)),
-        color(glm::vec4(1.0f)), model_mat(glm::mat4(1)), texture(nullptr) {}
+        color(glm::vec4(1.0f)), model_mat(glm::mat4(1)),
+        uv_scale(glm::vec2(1.0f)), texture(nullptr) {}
 };
 
 class Renderer
@@ -36,7 +38,7 @@ private:
   std::vector<SpriteInstance> batch;
   std::vector<SpriteInstance> transparent_batch;
 
-  int m_vertexSize = 25;
+  int m_vertexSize = 27;   // 3 pos + 2 size + 4 color + 16 model + 2 uv_scale
 
   float m_ambient_light = 0.25f;
   std::vector<PointLight> m_point_lights;
