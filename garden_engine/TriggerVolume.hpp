@@ -4,6 +4,7 @@
 #include <glm/ext/matrix_transform.hpp>
 
 #include <functional>
+#include <string>
 
 enum class TriggerType { Interact, Proximity, LookAt };
 
@@ -13,6 +14,7 @@ struct TriggerVolume {
     glm::vec3 size = glm::vec3(1.0f);
     glm::mat4 rotation = glm::mat4(1.0f);
     float interaction_distance = 3.0f;
+    std::string label; // shown by the scene when aimed at ("" = no note)
     std::function<void()> on_triggered;
     
     float time_to_trigger = 0.0f;

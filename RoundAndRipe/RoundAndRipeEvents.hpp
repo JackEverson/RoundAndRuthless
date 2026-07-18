@@ -6,6 +6,7 @@
 #include "imgui.h"
 #include <GLFW/glfw3.h>
 
+#include <algorithm>
 #include <functional>
 #include <memory>
 #include <string>
@@ -30,17 +31,18 @@ protected:
 
   using Event::Event;   // inherit the (GardenScene&) constructor
 
-  // One line per line_time; returns true when the set finishes. Empty text = skip.
   bool PlayLines(const std::vector<VoiceLine> &lines, float dt,
                  float line_time = LINE_TIME) {
     m_line_timer -= dt;
     if (m_line_timer <= 0.0f) {
       if (m_line >= lines.size()) { m_line = 0; m_line_timer = 0; return true; }
       if (lines[m_line].text.empty()) { m_line++; return false; }
-      m_scene.PushNotification(lines[m_line].text, line_time);
+      float t = std::max(line_time,
+                         1.5f + 0.075f * (float)lines[m_line].text.size());
+      m_scene.PushNotification(lines[m_line].text, t);
       m_scene.PlaySound(lines[m_line].voice);
       m_line++;
-      m_line_timer = line_time;
+      m_line_timer = t;
     }
     return false;
   }
@@ -199,7 +201,7 @@ public:
         VoiceLine{"I now offer you a choice: MAKE QUOTA OR I KEEP THE LIVER.", "meow_angry"},
         "Lets get you started. This field has been left a mess... pull out your shovel and clear out these rocks",
         },delta)) {
-        m_scene.SetTaskText("Select shovel [5] and clear the rocks from the field [LMB] or [E]");
+        m_scene.SetTaskText("Select shovel [5] and clear the rocks [LMB] or [E]");
         m_step = Step::WaitForNoRocks;
       }
       break;

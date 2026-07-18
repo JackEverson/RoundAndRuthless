@@ -142,7 +142,8 @@ private:
   const int RANDOM_EVENT_SPREAD = 90;
   bool m_quit_game = false;
   Outcome m_outcome = Outcome::Playing;
-  double m_final_time = 0.0;   // m_elapsed frozen at the winning purchase
+  double m_final_time = 0.0;    // m_elapsed frozen at the winning purchase
+  int m_final_harvests = 0;     // m_harvest_count frozen at the same moment
 
   const float SAVE_INTERVAL = 30.0f;
   float m_save_timer = 0.0f;
@@ -348,10 +349,11 @@ public:
     case Tool::SeedPacket:
       if (t.HasStructure()) {
         Structure *s = m_field.StructureAtTile(t);
-        if (s && s->def->kind == StructureKind::Planter && !s->crop &&
-            m_selected_seed >= 0) {
+        if (s && s->def->kind == StructureKind::Planter &&
+            m_selected_seed >= 0 &&
+            s->crop != &m_seeds[m_selected_seed].def) {   // same seed = no-op
           if (m_seeds[m_selected_seed].count >= s->def->seed_load) {
-            s->crop = &m_seeds[m_selected_seed].def;
+            s->crop = &m_seeds[m_selected_seed].def;      // swap: old seeds are gone
             m_seeds[m_selected_seed].count -= s->def->seed_load;
             PushNotification("Planter loaded: " + s->crop->name);
             PlaySound("pop");

@@ -13,6 +13,7 @@
 // this and plays one sound per action wave (not one per tile).
 struct StructureReport {
   long long collected = 0;   // harvester income → biomass
+  int harvests = 0;          // plants collected this frame → harvest counter
   bool tilled = false;
   bool planted = false;
   bool harvested = false;
@@ -194,6 +195,7 @@ inline StructureReport Field::RunStructures(float delta) {
         case StructureKind::Harvester:
           if (n.IsHarvestable()) {
             report.collected += n.Harvest();
+            report.harvests++;
             report.harvested = true;
           }
           break;

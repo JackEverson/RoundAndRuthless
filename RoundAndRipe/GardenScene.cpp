@@ -13,6 +13,7 @@
 #include "glm/ext/vector_float3.hpp"
 #include "glm/geometric.hpp"
 #include "imgui.h"
+#include <cctype>
 #include <json.hpp>
 #include <string>
 
@@ -129,6 +130,7 @@ void GardenScene::onEnter(GLFWwindow &window) {
   seed_maker_trigger.size = glm::vec3(SUSHI_SIZE, SUSHI_SIZE, SUSHI_SIZE);
   seed_maker_trigger.time_to_trigger = 0.01f;
   seed_maker_trigger.type = TriggerType::Interact;
+  seed_maker_trigger.label = "Seed Maker";
   seed_maker_trigger.on_triggered = [this]() {
     m_menu_mode = MenuMode::SeedShop;
   };
@@ -146,6 +148,7 @@ void GardenScene::onEnter(GLFWwindow &window) {
   house_trigger.size = glm::vec3(HOUSE_SIZE, HOUSE_SIZE, 0.10f);
   house_trigger.time_to_trigger = 0.01f;
   house_trigger.type = TriggerType::Interact;
+  house_trigger.label = "Structure Maker";
   house_trigger.on_triggered = [this]() { m_menu_mode = MenuMode::StructureShop; };
   m_triggers.push_back(house_trigger);
 
@@ -161,6 +164,7 @@ void GardenScene::onEnter(GLFWwindow &window) {
   chest_trigger.size = glm::vec3(CHEST_SIZE, CHEST_SIZE, 0.10f);
   chest_trigger.time_to_trigger = 0.01f;
   chest_trigger.type = TriggerType::Interact;
+  chest_trigger.label = "Quota Chest";
   chest_trigger.on_triggered = [this]() {
     m_menu_mode = MenuMode::UpgradeShop;
   };
@@ -262,6 +266,7 @@ Scene *GardenScene::update(GLFWwindow &window, float delta) {
 
   StructureReport machines = m_field.RunStructures(delta);
   m_biomass += machines.collected;
+  m_harvest_count += machines.harvests;
   if (machines.tilled)                        PlaySound("dig", 0.35f);
   if (machines.planted || machines.harvested) PlaySound("pop", 0.35f);
 
@@ -485,8 +490,8 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
 
   // HUD and UI (ImGUI)
 
-  ImGui::SetNextWindowPos(ImVec2(w * 0.75f, h - 60.0f), ImGuiCond_Always,
-                            ImVec2(0.5f, 0.0f));
+  ImGui::SetNextWindowPos(ImVec2(w * 0.95f, h - 100.0f), ImGuiCond_Always,
+                            ImVec2(1.0f, 0.0f));
   ImGui::SetNextWindowBgAlpha(0.0f);
   ImGui::Begin("##task", nullptr,
                 ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
@@ -545,6 +550,59 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
     dl->AddLine(ImVec2(c.x + gap, c.y), ImVec2(c.x + arm, c.y), col, th);
     dl->AddLine(ImVec2(c.x, c.y - arm), ImVec2(c.x, c.y - gap), col, th);
     dl->AddLine(ImVec2(c.x, c.y + gap), ImVec2(c.x, c.y + arm), col, th);
+  }
+
+  // interaction note — what you're aiming at: building > structure > tile
+  if (m_menu_mode == MenuMode::None && m_outcome == Outcome::Playing) {
+    std::string aim_text;
+
+    if (const TriggerVolume *tv = m_controller.AimedInteractable(m_triggers)) {
+      aim_text = tv->label;
+    } else if (Tile *t = m_field.TileAtRay(campos, forward)) {
+      if (t->HasStructure()) {
+        if (Structure *s = m_field.StructureAtTile(*t)) {
+          aim_text = s->def->name;
+          if (!aim_text.empty()) aim_text[0] = (char)toupper(aim_text[0]);
+          if (s->def->kind == StructureKind::Planter)
+            aim_text += s->crop ? "\nLoaded: " + s->crop->name
+                                : "\nEmpty - load with a seed packet";
+        }
+      } else if (t->IsRefuse()) {
+        aim_text = "Rock - clear it with the shovel";
+      } else if (t->IsTilled()) {
+        aim_text = "Tilled soil - ready for seeds";
+      } else if (t->HasPlant()) {
+        aim_text = t->GetPlantName();
+        aim_text += t->IsHarvestable() ? " - ready to harvest" : " - growing";
+      }
+      // bare empty soil: no note — silence keeps the field calm
+    }
+
+    if (!aim_text.empty()) {
+      ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f + 30.0f * ui),
+                              ImGuiCond_Always, ImVec2(0.5f, 0.0f));
+      ImGui::SetNextWindowBgAlpha(0.35f);
+      ImGui::Begin("##aimnote", nullptr,
+                   ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
+                       ImGuiWindowFlags_NoMove |
+                       ImGuiWindowFlags_AlwaysAutoResize);
+      ImGui::SetWindowFontScale(ui);
+      // centre each line: window is as wide as the longest line, so
+      // shorter lines need their cursor nudged to the middle
+      size_t start = 0;
+      while (start <= aim_text.size()) {
+        size_t end = aim_text.find('\n', start);
+        std::string line = aim_text.substr(
+            start, end == std::string::npos ? std::string::npos : end - start);
+        float pad = (ImGui::GetWindowSize().x -
+                     ImGui::CalcTextSize(line.c_str()).x) * 0.5f;
+        ImGui::SetCursorPosX(pad > 0.0f ? pad : 0.0f);
+        ImGui::TextUnformatted(line.c_str());
+        if (end == std::string::npos) break;
+        start = end + 1;
+      }
+      ImGui::End();
+    }
   }
 
   // rendering shop menu
@@ -615,9 +673,11 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
     ImGui::Separator();
     if (m_tier >= (int)TIER_COST.size()) {
       int total = (int)(m_final_time > 0.0 ? m_final_time : m_elapsed);
+      int harvests = m_final_harvests > 0 ? m_final_harvests : m_harvest_count;
       ImGui::Text("Max tier reached.");
       ImGui::Text("Your sentence was %d minutes %d seconds", total / 60,
                   total % 60);
+      ImGui::Text("Plants harvested: %d", harvests);
     } else {
       ImGui::Text("Tier %d -> Tier %d - %s", m_tier, m_tier + 1,
                   FormatBiomass(TIER_COST[m_tier]).c_str());
@@ -629,6 +689,7 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
 
           if (m_tier >= (int)TIER_COST.size()) {
             m_final_time = m_elapsed;
+            m_final_harvests = m_harvest_count;
             StartEvent(std::make_unique<RoundAndRipeEvents::EndEvent>(*this));
           } else {
             StartEvent(std::make_unique<RoundAndRipeEvents::NotificationEvent>(

@@ -49,6 +49,22 @@ public:
   void CheckTriggers(GLFWwindow &window, float delta,
                      std::vector<TriggerVolume> &interactables);
 
+  // The labelled Interact trigger the player could fire right now (same
+  // distance + ray tests as CheckTriggers), or nullptr. Read-only: for UI.
+  const TriggerVolume *
+  AimedInteractable(const std::vector<TriggerVolume> &interactables) const {
+    glm::vec3 origin = m_camera.GetLocation();
+    glm::vec3 dir = m_camera.GetForward();
+    for (const auto &t : interactables) {
+      if (t.type != TriggerType::Interact || t.label.empty()) continue;
+      if (glm::length(t.position - origin) > t.interaction_distance &&
+          t.interaction_distance > 0) continue;
+      if (!RayInBox(origin, dir, t.position, t.size, t.rotation)) continue;
+      return &t;
+    }
+    return nullptr;
+  }
+
   bool InteractionHeld() const { return m_interaction_held; }
 
   bool InputDisabled() const { return m_input_disabled; }
