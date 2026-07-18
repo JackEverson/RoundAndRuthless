@@ -142,6 +142,7 @@ private:
   const int RANDOM_EVENT_SPREAD = 90;
   bool m_quit_game = false;
   Outcome m_outcome = Outcome::Playing;
+  double m_final_time = 0.0;   // m_elapsed frozen at the winning purchase
 
   const float SAVE_INTERVAL = 30.0f;
   float m_save_timer = 0.0f;
@@ -471,7 +472,7 @@ public:
     return m_font_size * (float)h / 1440.0f; // 1440p = your tuning reference
   };
 
-  const int SAVE_VERSION = 4;   // v4: crop roster renamed/re-tiered, field 12×30
+  const int SAVE_VERSION = 5;   // v4: crop roster renamed/re-tiered, field 12×30
   const std::string SAVE_PATH = "./save.json";
   const std::string SETTINGS_PATH = "./settings.json";
 

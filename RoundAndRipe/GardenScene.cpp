@@ -54,7 +54,7 @@ GardenScene::GardenScene()
       m_staring_mellon_ripe_texture("./res/textures/eye_plant_ripe.png"),
       m_liverbounty_grow("./res/textures/liver_grow.png"),
       m_liverbounty_ripe("./res/textures/liver_ripe.png"),
-      m_field(glm::vec3(-5.0f, 0.0f, -5.0f), 12, 30, 1.0f, &m_soil_texture, SOIL_COLOR,
+      m_field(glm::vec3(-5.0f, 0.0f, -5.0f), 13, 30, 1.0f, &m_soil_texture, SOIL_COLOR,
               &m_rock_texture, &m_till_texture, &m_seeded_texture, 10) {};
 
 void GardenScene::onEnter(GLFWwindow &window) {
@@ -192,8 +192,8 @@ void GardenScene::onEnter(GLFWwindow &window) {
   m_seeds.push_back({Turnip(&m_veg_top_texture, &m_turnip_texture), 0});
   m_seeds.push_back({Tomato(&m_bush_texture, &m_tomato_texture), 0});
   m_seeds.push_back({KidneyBean(&m_bush_texture, &m_kidneybean_texture), 0});
-  m_seeds.push_back({StaringMellon(&m_staring_mellon_growing_texture,&m_staring_mellon_ripe_texture),0});
-  m_seeds.push_back({LiverBounty(&m_liverbounty_grow, &m_liverbounty_ripe), 0});
+  m_seeds.push_back({StaringMelon(&m_staring_mellon_growing_texture,&m_staring_mellon_ripe_texture),0});
+  m_seeds.push_back({LiverBouquet(&m_liverbounty_grow, &m_liverbounty_ripe), 0});
 
   m_structure_inv.push_back({Sprinkler(&m_sprinkler_texture), 0});
   m_structure_inv.push_back({Harvester(&m_harvester_texture), 0});
@@ -312,8 +312,9 @@ void GardenScene::handleInput(GLFWwindow &window, float delta) {
   HandleCommonInput(window, delta);
 
   // ESC: edge-detected toggle — opens Settings, or closes whatever menu is up
+  // (dead once the ending is running — the end screen must stay up)
   bool esc = glfwGetKey(&window, GLFW_KEY_ESCAPE) == GLFW_PRESS;
-  if (esc && !m_esc_held) {
+  if (esc && !m_esc_held && m_outcome == Outcome::Playing) {
     m_menu_mode =
         (m_menu_mode == MenuMode::None) ? MenuMode::Settings : MenuMode::None;
   }
@@ -497,7 +498,7 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
     ImGui::Text("Task: %s", task_text);
   }
   else if (m_tier < (int)TIER_COST.size()){
-    std::string t = "Reach tier " + std::to_string(m_tier) + " - " + FormatBiomass(TIER_COST[m_tier]) + "g";
+    std::string t = "Reach tier " + std::to_string(m_tier) + " - " + FormatBiomass(TIER_COST[m_tier]);
     ImGui::Text("Task: %s", t.c_str());
   }
   ImGui::SetWindowFontScale(ui);
@@ -519,9 +520,8 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
         : m_structure_inv[m_selected_structure].def.name + " x" +
               std::to_string(m_structure_inv[m_selected_structure].count);
   }
-  hud_text += "\nTime: " + std::to_string((int)m_elapsed) +
-              "\nBiomass: " + FormatBiomass(m_biomass) +
-              " g\nTier: " + std::to_string(m_tier);
+  hud_text += "\nBiomass: " + FormatBiomass(m_biomass) +
+              "\nTier: " + std::to_string(m_tier);
 
   ImGui::SetNextWindowPos(ImVec2(w * 0.05f, h - 250.0f), ImGuiCond_Always,
                           ImVec2(0.0f, 0.0f));
@@ -561,11 +561,12 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
     ImGui::SetNextWindowBgAlpha(
         0.9f); // visible panel (your HUD used 0 = invisible)
     ImGui::Begin("Seed Store", nullptr,
-                 ImGuiWindowFlags_AlwaysAutoResize); // NOTE: no NoInputs — it
-                                                     // must take clicks
+                 ImGuiWindowFlags_AlwaysAutoResize |
+                     ImGuiWindowFlags_NoCollapse); // NOTE: no NoInputs — it
+                                                   // must take clicks
     ImGui::SetWindowFontScale(ui);
 
-    ImGui::Text("Biomass: %s g", FormatBiomass(m_biomass).c_str());
+    ImGui::Text("Biomass: %s", FormatBiomass(m_biomass).c_str());
     ImGui::Separator();
 
     for (int n = 0; n < (int)m_seeds.size(); n++) {
@@ -607,14 +608,18 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
     ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f), ImGuiCond_Always,
                             ImVec2(0.5f, 0.5f));
     ImGui::SetNextWindowBgAlpha(0.9f);
-    ImGui::Begin("Upgrade Store", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+    ImGui::Begin("Upgrade Store", nullptr,
+                 ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse);
     ImGui::SetWindowFontScale(ui);
-    ImGui::Text("Biomass: %s g", FormatBiomass(m_biomass).c_str());
+    ImGui::Text("Biomass: %s", FormatBiomass(m_biomass).c_str());
     ImGui::Separator();
     if (m_tier >= (int)TIER_COST.size()) {
+      int total = (int)(m_final_time > 0.0 ? m_final_time : m_elapsed);
       ImGui::Text("Max tier reached.");
+      ImGui::Text("Your sentence was %d minutes %d seconds", total / 60,
+                  total % 60);
     } else {
-      ImGui::Text("Tier %d -> Tier %d - %s g", m_tier, m_tier + 1,
+      ImGui::Text("Tier %d -> Tier %d - %s", m_tier, m_tier + 1,
                   FormatBiomass(TIER_COST[m_tier]).c_str());
       if (ImGui::Button("Upgrade")) {
         if (m_biomass >= TIER_COST[m_tier]) {
@@ -623,6 +628,7 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
           sound_manager.PlaySound("bell");
 
           if (m_tier >= (int)TIER_COST.size()) {
+            m_final_time = m_elapsed;
             StartEvent(std::make_unique<RoundAndRipeEvents::EndEvent>(*this));
           } else {
             StartEvent(std::make_unique<RoundAndRipeEvents::NotificationEvent>(
@@ -634,14 +640,17 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
           m_notification_manager.Push("Not enough biomass", 1.5f);
       }
     }
-    if (ImGui::Button("Close"))
-      m_menu_mode = MenuMode::None;
+    if (m_tier < (int)TIER_COST.size()) {   // ending on screen — no way out
+      if (ImGui::Button("Close"))
+        m_menu_mode = MenuMode::None;
+    }
     ImGui::End();
   } else if (m_menu_mode == MenuMode::SeedSelection) {
     ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f), ImGuiCond_Always,
                             ImVec2(0.5f, 0.5f));
     ImGui::SetNextWindowBgAlpha(0.9f);
-    ImGui::Begin("Seeds", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+    ImGui::Begin("Seeds", nullptr,
+                 ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse);
     ImGui::SetWindowFontScale(ui);
 
     bool any_shown = false;
@@ -673,7 +682,8 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
     ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f), ImGuiCond_Always,
                                 ImVec2(0.5f, 0.5f));
         ImGui::SetNextWindowBgAlpha(0.9f);
-        ImGui::Begin("Structures", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+        ImGui::Begin("Structures", nullptr,
+                     ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse);
         ImGui::SetWindowFontScale(ui);
 
         bool any_shown = false;
@@ -707,11 +717,12 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
         ImGui::SetNextWindowBgAlpha(
             0.9f); // visible panel (your HUD used 0 = invisible)
         ImGui::Begin("Structure Store", nullptr,
-                    ImGuiWindowFlags_AlwaysAutoResize); // NOTE: no NoInputs — it
-                                                        // must take clicks
+                    ImGuiWindowFlags_AlwaysAutoResize |
+                        ImGuiWindowFlags_NoCollapse); // NOTE: no NoInputs — it
+                                                      // must take clicks
         ImGui::SetWindowFontScale(ui);
 
-        ImGui::Text("Biomass: %s g", FormatBiomass(m_biomass).c_str());
+        ImGui::Text("Biomass: %s", FormatBiomass(m_biomass).c_str());
         ImGui::Separator();
 
         for (int n = 0; n < (int)m_structure_inv.size(); n++) {
@@ -750,7 +761,8 @@ void GardenScene::render(GLFWwindow &window, Renderer &renderer) {
     ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f), ImGuiCond_Always,
                             ImVec2(0.5f, 0.5f));
     ImGui::SetNextWindowBgAlpha(0.9f);
-    ImGui::Begin("Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+    ImGui::Begin("Settings", nullptr,
+                 ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse);
     ImGui::SetWindowFontScale(ui);
 
     if (ImGui::SliderFloat("Volume", &m_master_volume, 0.0f, 1.0f))

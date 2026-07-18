@@ -20,7 +20,7 @@ struct StructureSave
 };
 
 struct GameState {
-    int version = 4;
+    int version = 5;
     double elapsed = 0.0;
     long long biomass = 0;
     int tier = 0;

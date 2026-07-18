@@ -95,12 +95,12 @@ inline PlantDef KidneyBean(Texture* growing, Texture* ripe){
     return crop;
 }
 
-inline PlantDef StaringMellon(Texture* growing, Texture* ripe){
+inline PlantDef StaringMelon(Texture* growing, Texture* ripe){
     PlantDef cabbage;
-    cabbage.name = "Staring Mellon";
+    cabbage.name = "Staring Melon";
     cabbage.type = PlantType::Harvestable;
     cabbage.seconds_to_grow = 40;
-    cabbage.biomass_yield = 1000;
+    cabbage.biomass_yield = 1500;
     cabbage.biomass_cost = 100;
     cabbage.growing_texture = growing;
     cabbage.ripe_texture = ripe;
@@ -109,13 +109,13 @@ inline PlantDef StaringMellon(Texture* growing, Texture* ripe){
     return cabbage;
 }
 
-inline PlantDef LiverBounty(Texture* growing, Texture* ripe){
+inline PlantDef LiverBouquet(Texture* growing, Texture* ripe){
     PlantDef crop;
-    crop.name = "Liver Bounty";
+    crop.name = "Liver Bouquet";
     crop.type = PlantType::Harvestable;
     crop.seconds_to_grow = 40;
     crop.biomass_yield = 1000000; 
-    crop.biomass_cost = 10000;
+    crop.biomass_cost = 2500;
     crop.growing_texture = growing;
     crop.ripe_texture = ripe;
     crop.full_size = glm::vec2(1.1f, 1.1f);

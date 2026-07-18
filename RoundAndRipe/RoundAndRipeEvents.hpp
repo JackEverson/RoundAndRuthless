@@ -291,7 +291,7 @@ class EndEvent : public LineEvent {
 
   void Update(float delta) override {
     switch (m_end_phase) {
-    case EndPhase::None: 
+    case EndPhase::None:
     m_scene.EaseLookDown(delta);
     if (PlayLines({
         VoiceLine{"You have reached your final tier. The FOUR GODS OF ROUND acknowledge your existence", "meow_talk"},
