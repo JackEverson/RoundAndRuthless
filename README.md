@@ -27,7 +27,6 @@ cmake -B ./build -S . -G "MinGW Makefiles"
 
 cmake --build ./build --parallel
 
-
 # release build for windows
 cmake -B build-release -S . -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXE_LINKER_FLAGS="-static"
 cmake --build build-release --parallel

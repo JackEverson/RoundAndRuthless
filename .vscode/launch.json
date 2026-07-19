@@ -2,12 +2,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            // "name": "Run RoundAndRuthless",
-            "name": "Run RoundAndRipe",
+            "name": "Run RoundAndRuthless",
             "type": "cppdbg",
             "request": "launch",
-            // "program": "${workspaceFolder}/build/RoundAndRuthless",
-            "program": "${workspaceFolder}/build/RoundAndRipe",
+            "program": "${workspaceFolder}/build/RoundAndRuthless",
             "args": [],
             "cwd": "${workspaceFolder}/build",
             "MIMode": "gdb",

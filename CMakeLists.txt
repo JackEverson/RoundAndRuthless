@@ -118,45 +118,20 @@ COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
 
 set(APP_ICON_RESOURCE "${CMAKE_CURRENT_SOURCE_DIR}/resources.rc")
 
-#RoundAndRipe executable
-set(RoundAndRipe_files
-  RoundAndRipe/GardenScene.cpp
-  RoundAndRipe/SaveSystem.cpp
 
-  RoundAndRipe/Event.hpp
-  RoundAndRipe/GardenScene.hpp
-  RoundAndRipe/GardenRoom.hpp
-  RoundAndRipe/Tile.hpp
-  RoundAndRipe/Field.hpp
-  RoundAndRipe/Plants.hpp
-  RoundAndRipe/SaveSystem.hpp
-  RoundAndRipe/RoundAndRipeEvents.hpp
-  RoundAndRipe/Structures.hpp
+#RoundAndRuthless executable
+set(GamePlay_files
+  game/TestScene.hpp
+  game/Room1Scene.hpp
 )
+add_library(GamePlay STATIC ${GamePlay_files})
+target_include_directories(GamePlay PUBLIC game)
+target_compile_features(GamePlay PUBLIC cxx_std_23)
+target_link_libraries(GamePlay PUBLIC garden_engine)
 
-add_library(RoundAndRipe_game STATIC ${RoundAndRipe_files})
-target_include_directories(RoundAndRipe_game PUBLIC RoundAndRipe)
-target_compile_features(RoundAndRipe_game PUBLIC cxx_std_23)
-target_link_libraries(RoundAndRipe_game PUBLIC garden_engine)
-
-add_executable(RoundAndRipe RoundAndRipe/RoundAndRipe.cpp ${APP_ICON_RESOURCE})
-target_link_libraries(RoundAndRipe PUBLIC RoundAndRipe_game )
-add_dependencies(RoundAndRipe copy_resources)
-
-
-# #RoundAndRuthless executable
-# set(GamePlay_files
-#   game/TestScene.hpp
-#   game/Room1Scene.hpp
-# )
-# add_library(GamePlay STATIC ${GamePlay_files})
-# target_include_directories(GamePlay PUBLIC game)
-# target_compile_features(GamePlay PUBLIC cxx_std_23)
-# target_link_libraries(GamePlay PUBLIC garden_engine)
-
-# add_executable(${PROJECT_NAME} game/RoundAndRuthless.cpp ${APP_ICON_RESOURCE})
-# target_link_libraries(${PROJECT_NAME} PUBLIC
-# garden_engine
-# GamePlay
-# )
-# add_dependencies(${PROJECT_NAME} copy_resources)
+add_executable(${PROJECT_NAME} game/RoundAndRuthless.cpp ${APP_ICON_RESOURCE})
+target_link_libraries(${PROJECT_NAME} PUBLIC
+garden_engine
+GamePlay
+)
+add_dependencies(${PROJECT_NAME} copy_resources)
