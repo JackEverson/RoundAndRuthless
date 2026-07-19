@@ -105,6 +105,10 @@ target_precompile_headers(garden_engine PUBLIC
   <imgui.h>
 )
 
+# ── Everything below is games/resources — only when built directly, not when
+# this repo is consumed as a submodule (which wants just the libraries above)
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+
 #Copy Resources
 add_custom_target(copy_resources
 COMMENT "Copying Resources"
@@ -135,3 +139,5 @@ garden_engine
 GamePlay
 )
 add_dependencies(${PROJECT_NAME} copy_resources)
+
+endif()   # top-level only
