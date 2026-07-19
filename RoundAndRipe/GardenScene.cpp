@@ -262,9 +262,9 @@ void GardenScene::onEnter(GLFWwindow &window) {
   m_apple.size = glm::vec2(apple_size, apple_size);
   m_apple.color = glm::vec4(1.0f);
 
-  m_apple_trigger.time_to_trigger = 0.1f;
+  m_apple_trigger.time_to_trigger = 0.01f;
   m_apple_trigger.type = TriggerType::Interact;
-  m_apple_trigger.size = glm::vec3(apple_size, apple_size, apple_size);
+  m_apple_trigger.size = glm::vec3(apple_size * 1.5f);
   m_apple_trigger.on_triggered = [this]() {
     if (m_apple_collected)
       return;

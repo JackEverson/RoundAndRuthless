@@ -108,6 +108,9 @@ inline void FPSController::HandleInput(GLFWwindow &window, float delta) {
     m_camera.ShiftCamera(-flat_right * speed * delta);
   if (glfwGetKey(&window, KeyRight) == GLFW_PRESS)
     m_camera.ShiftCamera(flat_right * speed * delta);
+
+
+  // flight with space/c
   // if (glfwGetKey(&window, KeyJump) == GLFW_PRESS)
   //   m_camera.ShiftCamera(glm::vec3(0, 1, 0) * speed * delta);
   // if (glfwGetKey(&window, KeyCrouch) == GLFW_PRESS)

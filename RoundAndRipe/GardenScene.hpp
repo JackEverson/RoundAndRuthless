@@ -476,7 +476,6 @@ public:
 
     m_apple.position = pos;
     m_triggers[m_apple_trigger_index].position = pos; // move the *registered* trigger
-    m_triggers[m_apple_trigger_index].size = glm::vec3(m_apple.size.x * 1.5f);
     m_apple_collected = false;
   }
 
